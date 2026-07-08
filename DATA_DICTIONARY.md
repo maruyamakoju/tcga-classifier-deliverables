@@ -1,6 +1,6 @@
 # Data dictionary
 
-Release: `v1.1.3-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.4-gdc-starcounts` (`2026-07-08`)
 
 This file defines the stable input and output fields used by the lightweight
 release. Run `python validate_output_contracts.py` to verify the bundled
@@ -89,6 +89,11 @@ accepted.
 `run_tumor_normal_workflow.py` writes `manifest.json` with input paths, sample
 and gene counts, QC status, call counts, threshold, output filenames, and
 optional calibration summary.
+
+When the workflow stops before scoring, `status` can be
+`stopped_after_qc_fail` or `stopped_after_invalid_input`. The invalid-input
+case includes an `alignment` object summarizing invalid matched model-gene
+cells and example affected genes/samples.
 
 ## Model Gene Metadata
 

@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -16,7 +17,13 @@ from calibrate_threshold import (
 )
 from explain_scores import explain_dataframe, load_gene_metadata
 from inspect_expression_input import inspect_dataframe, load_reference
-from score_tumor_normal import load_lr_weights, read_matrix, score_dataframe_lr_weights
+from score_tumor_normal import (
+    load_lr_weights,
+    print_invalid_alignment_summary,
+    read_matrix,
+    score_dataframe_lr_weights,
+    validate_alignment_report,
+)
 
 
 def write_json(path, data):
@@ -80,7 +87,7 @@ def format_float(value, digits=4):
 
 
 def build_report(input_path, qc, scores, out_files, calibration_summary=None,
-                 explanations_rows=None):
+                 explanations_rows=None, stop_reason="QC"):
     gene = qc["gene_match"]
     value = qc["value_summary"]
     dist = qc["distribution_summary"]
@@ -117,7 +124,7 @@ def build_report(input_path, qc, scores, out_files, calibration_summary=None,
     lines.extend(["## Scores", ""])
     if scores is None:
         lines.extend([
-            "- Scoring was not run because the workflow stopped after QC.",
+            f"- Scoring was not run because the workflow stopped after {stop_reason}.",
             f"- Input samples inspected: {qc['shape']['samples']}",
             "",
         ])
@@ -186,6 +193,12 @@ def main(argv=None):
     parser.add_argument("--min-match-fraction", type=float, default=1.0,
                         help="minimum fraction of scored samples that must have labels (default 1.0)")
     parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument("--max-invalid-cell-fraction", type=float, default=0.0,
+                        help=("maximum allowed missing, non-numeric, NaN, or infinite cells "
+                              "among matched model genes before failing (default 0)"))
+    parser.add_argument("--allow-invalid-values", action="store_true",
+                        help=("warn instead of failing when matched model-gene cells are "
+                              "missing, non-numeric, NaN, or infinite"))
     parser.add_argument("--extra-threshold", type=float, action="append", default=[])
     parser.add_argument("--top-n", type=int, default=10)
     parser.add_argument("--skip-explanations", action="store_true")
@@ -206,6 +219,8 @@ def main(argv=None):
 
     if not 0 <= args.threshold <= 1:
         parser.error("--threshold must be between 0 and 1")
+    if not 0 <= args.max_invalid_cell_fraction <= 1:
+        parser.error("--max-invalid-cell-fraction must be between 0 and 1")
     for threshold in args.extra_threshold:
         try:
             validate_threshold(threshold, "--extra-threshold")
@@ -253,7 +268,59 @@ def main(argv=None):
         print("[workflow] stopped before scoring; pass --allow-qc-fail to continue")
         return 1
 
-    scores, n_matched, missing = score_dataframe_lr_weights(df, weights, args.threshold)
+    scores, n_matched, missing, alignment_report = score_dataframe_lr_weights(
+        df, weights, args.threshold, return_alignment_report=True
+    )
+    print_invalid_alignment_summary(alignment_report, sys.stderr)
+    alignment_issues = validate_alignment_report(
+        alignment_report,
+        max_invalid_cell_fraction=args.max_invalid_cell_fraction,
+    )
+    if alignment_issues and not args.allow_invalid_values:
+        manifest = {
+            "status": "stopped_after_invalid_input",
+            "input": args.input,
+            "outputs": {"qc_json": paths["qc_json"].name},
+            "qc_status": qc["status"],
+            "alignment": {
+                "invalid_matched_cells": int(alignment_report["invalid_matched_cells"]),
+                "matched_cells": int(alignment_report["matched_cells"]),
+                "invalid_matched_fraction": float(alignment_report["invalid_matched_fraction"]),
+                "n_genes_with_invalid_values": int(
+                    alignment_report["n_genes_with_invalid_values"]
+                ),
+                "n_samples_with_invalid_values": int(
+                    alignment_report["n_samples_with_invalid_values"]
+                ),
+                "first_genes_with_invalid_values": alignment_report[
+                    "first_genes_with_invalid_values"
+                ],
+                "first_samples_with_invalid_values": alignment_report[
+                    "first_samples_with_invalid_values"
+                ],
+            },
+        }
+        write_json(paths["manifest_json"], manifest)
+        report = build_report(
+            args.input,
+            qc,
+            None,
+            {"qc_json": paths["qc_json"].name,
+             "manifest_json": paths["manifest_json"].name},
+            stop_reason="invalid matched expression values",
+        )
+        paths["report_md"].write_text(report, encoding="utf-8")
+        for issue in alignment_issues:
+            print(f"[workflow] ERROR: {issue}", file=sys.stderr)
+        print(
+            "[workflow] stopped before writing scores; fix invalid values or "
+            "pass --allow-invalid-values",
+            file=sys.stderr,
+        )
+        return 1
+    if alignment_issues:
+        for issue in alignment_issues:
+            print(f"[workflow] WARNING: {issue}", file=sys.stderr)
     scores.to_csv(paths["scores_csv"], index=False)
 
     calibration_summary = None

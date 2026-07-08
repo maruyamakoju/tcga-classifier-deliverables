@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Release: `v1.1.3-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.4-gdc-starcounts` (`2026-07-08`)
 
 Start with:
 
@@ -101,13 +101,24 @@ refit/recalibrate for that pipeline.
 
 ### Workflow stops before writing `scores.csv`
 
-This is expected when QC status is `FAIL`. Review:
+This is expected when QC status is `FAIL` or when matched model-gene cells are
+missing, non-numeric, `NaN`, or infinite. Review:
 
 - `qc.json`
 - `workflow_report.md`
 - `manifest.json`
 
 You can force scoring with `--allow-qc-fail`, but that is only for debugging.
+For invalid matched expression values, fix the matrix first. If reviewed mean
+imputation is intentional, use `--max-invalid-cell-fraction` to set an explicit
+tolerance or `--allow-invalid-values` to downgrade the scorer stop to warnings.
+
+### Scorer says `invalid matched values`
+
+The input has at least one matched model-gene cell that cannot be used as a
+finite number. Common causes are blank cells, `NA` strings, spreadsheet export
+markers, or infinite values from an upstream transform. The scorer reports
+example genes and samples before refusing to write scores.
 
 ### Many normal samples are called tumor
 

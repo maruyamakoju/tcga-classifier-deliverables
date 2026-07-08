@@ -1,6 +1,6 @@
 # User guide
 
-Release: `v1.1.3-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.4-gdc-starcounts` (`2026-07-08`)
 
 This guide is for people who want to run the lightweight classifier on a new
 expression matrix. For a short project-level handoff, read
@@ -115,11 +115,18 @@ Common messages:
 | `no_model_genes_matched` | No model genes matched | Verify that genes are columns or use `--transpose` |
 | `expression_values_high` | Values look too large for log2(TPM+1) | Check that data are not raw TPM/counts |
 | `expression_values_too_large` | Values are far too large | Convert from TPM to log2(TPM+1), or stop if counts are raw |
+| `nonfinite_or_missing_values` | Some model-gene cells are blank, non-numeric, `NaN`, or infinite | Fix the matrix before scoring, or explicitly review imputation |
 | `cohort_distribution_shift` | Cohort differs from model scaler distribution | Check platform, normalization, tissue mix, and batch |
 | `unexpected_tumor_calls` | Normal-expected cohort has many tumor calls | Check domain compatibility before hard calls |
 
 A `PASS` result does not validate a new RNA-seq pipeline. It only says the
 input did not trip the current guardrails.
+
+Matched model-gene cells that are missing, non-numeric, `NaN`, or infinite are
+not silently accepted by the scorer/workflow. By default they stop before
+`scores.csv` is written. Fix the input first; use `--max-invalid-cell-fraction`
+or `--allow-invalid-values` only when you have reviewed and accepted training
+mean imputation for those cells.
 
 ## 6. Thresholds
 

@@ -1,11 +1,11 @@
 # TCGA tumor-vs-normal classifier — deliverables
 
 [![CI](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml/badge.svg)](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.3-gdc-starcounts)
+[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.4-gdc-starcounts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Citation](https://img.shields.io/badge/citation-CITATION.cff-blue.svg)](CITATION.cff)
 
-Release: `v1.1.3-gdc-starcounts` (`2026-07-08`). For a single guided path
+Release: `v1.1.4-gdc-starcounts` (`2026-07-08`). For a single guided path
 through the whole deliverable (base model → generalization → external
 validation → cross-platform adaptation → cancer-type classifier), start with
 `INDEX.md`. Otherwise start with `EXECUTIVE_SUMMARY.md` if you need a short
@@ -54,6 +54,10 @@ python explain_scores.py expr.csv --top-n 10             # per-sample LR gene co
 - **Input QC:** `inspect_expression_input.py` writes a JSON report with gene match rate,
   expression range, standardized distribution-shift metrics, and score summary. Run it
   before scoring when the matrix came from a new pipeline or collaborator.
+- **Invalid matched values:** matched model-gene cells that are missing, non-numeric,
+  `NaN`, or infinite now stop the scorer/workflow by default before scores are written.
+  Fix the input, set a reviewed tolerance with `--max-invalid-cell-fraction`, or pass
+  `--allow-invalid-values` only when mean imputation is intentional.
 - **Runnable example:** `example_input.csv` (5 real samples) → `example_output.csv`
   (first 3 tumor at p>0.99, last 2 normal at p<0.06 — matches their true labels).
 - **Default scorer:** pure NumPy logistic regression from `deployable_lr_weights.npz`

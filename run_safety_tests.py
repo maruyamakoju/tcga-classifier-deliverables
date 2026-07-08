@@ -58,6 +58,12 @@ def write_raw_count_like_input(example, out_path):
     raw_like.to_csv(out_path)
 
 
+def write_invalid_matched_input(example, out_path):
+    invalid = example.copy().astype(object)
+    invalid.iloc[:, 0] = "not_numeric"
+    invalid.to_csv(out_path)
+
+
 def main():
     example = pd.read_csv(ROOT / "example_input.csv", index_col=0)
     temp_root = Path(tempfile.mkdtemp(prefix="tcga_safety_", dir=ROOT))
@@ -68,9 +74,12 @@ def main():
         raw_like_input = temp_root / "raw_counts_like.csv"
         raw_like_qc = temp_root / "raw_counts_like.qc.json"
         expected_normal_qc = temp_root / "expected_normal.qc.json"
+        invalid_input = temp_root / "invalid_matched_values.csv"
+        invalid_workflow = temp_root / "invalid_matched_workflow"
 
         write_no_gene_match_input(example, no_match_input)
         write_raw_count_like_input(example, raw_like_input)
+        write_invalid_matched_input(example, invalid_input)
 
         result = run([sys.executable, "score_tumor_normal.py", "example_input.csv",
                       "--threshold", "1.5"])
@@ -89,6 +98,17 @@ def main():
         require_fail(result, "legacy RF scorer")
         require("invalid choice" in result.stderr and "'rf'" in result.stderr,
                 "legacy RF rejection message missing")
+
+        result = run([sys.executable, "score_tumor_normal.py", str(invalid_input)])
+        require_fail(result, "invalid matched values scorer")
+        require("invalid matched values" in result.stderr,
+                "invalid matched-value summary missing")
+        require("Refusing to write scores" in result.stderr,
+                "invalid matched-value refusal missing")
+
+        result = run([sys.executable, "score_tumor_normal.py", str(invalid_input),
+                      "--allow-invalid-values"])
+        require_ok(result, "invalid matched values explicit allow")
 
         result = run([sys.executable, "explain_scores.py", "example_input.csv",
                       "--top-n", "0"])
@@ -112,6 +132,15 @@ def main():
                 "workflow did not stop after QC FAIL")
         require(not (no_match_workflow / "scores.csv").exists(),
                 "workflow wrote scores.csv after QC FAIL")
+
+        result = run([sys.executable, "run_tumor_normal_workflow.py",
+                      str(invalid_input), "--output-dir", str(invalid_workflow)])
+        require_fail(result, "workflow invalid matched values")
+        manifest = json.loads((invalid_workflow / "manifest.json").read_text(encoding="utf-8"))
+        require(manifest["status"] == "stopped_after_invalid_input",
+                "workflow did not stop after invalid matched values")
+        require(not (invalid_workflow / "scores.csv").exists(),
+                "workflow wrote scores.csv after invalid matched values")
 
         result = run([sys.executable, "inspect_expression_input.py",
                       str(raw_like_input), "-o", str(raw_like_qc)])
