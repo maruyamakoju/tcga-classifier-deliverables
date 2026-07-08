@@ -9,6 +9,7 @@ Use this checklist before making the repository or a release public.
 - [ ] Confirm `.gitignore` excludes large training artifacts and caches.
 - [ ] Confirm no private credentials, tokens, or unpublished data are present.
 - [ ] Confirm `LICENSE`, `NOTICE.md`, and `CITATION.cff` are present.
+- [ ] Run `python audit_publication_readiness.py`.
 
 ## Release
 
