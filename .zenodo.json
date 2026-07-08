@@ -20,5 +20,5 @@
   "publication_date": "2026-07-09",
   "title": "TCGA/GDC tumor-vs-normal RNA-seq classifier",
   "upload_type": "software",
-  "version": "v1.1.5-gdc-starcounts"
+  "version": "v1.1.6-gdc-starcounts"
 }

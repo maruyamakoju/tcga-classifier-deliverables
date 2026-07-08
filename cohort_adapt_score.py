@@ -37,9 +37,14 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from calibrate_threshold import normalize_label  # noqa: E402
-from tcga_rnaseq import load_lr_model, read_matrix, predict_proba, write_json  # noqa: E402
+from score_tumor_normal import (  # noqa: E402
+    print_invalid_alignment_summary,
+    validate_alignment_report,
+)
+from tcga_rnaseq import load_lr_model, read_matrix  # noqa: E402
+from tcga_rnaseq.align import align_to_genes_with_report  # noqa: E402
 from tcga_rnaseq import metrics as M  # noqa: E402
-from tcga_rnaseq.score import ADAPT_MODES  # noqa: E402
+from tcga_rnaseq.score import ADAPT_MODES, predict_proba_from_aligned  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -87,16 +92,52 @@ def main(argv=None):
     ap.add_argument("--weights", default=os.path.join(HERE, "deployable_lr_weights.npz"))
     ap.add_argument("--out", default=None)
     ap.add_argument("--min-samples", type=int, default=20)
+    ap.add_argument("--max-invalid-cell-fraction", type=float, default=0.0,
+                    help=("maximum allowed missing, non-numeric, NaN, or infinite cells "
+                          "among matched model genes before failing (default 0)"))
+    ap.add_argument("--allow-invalid-values", action="store_true",
+                    help=("warn instead of failing when matched model-gene cells are "
+                          "missing, non-numeric, NaN, or infinite"))
     args = ap.parse_args(argv)
 
     if not 0.0 <= args.threshold <= 1.0:
         ap.error("--threshold must be between 0 and 1")
+    if not 0 <= args.max_invalid_cell_fraction <= 1:
+        ap.error("--max-invalid-cell-fraction must be between 0 and 1")
 
     model = load_lr_model(args.weights)
     X = read_matrix(args.input_csv)
     n = X.shape[0]
+    values, alignment_report = align_to_genes_with_report(
+        X, model["genes"], impute_mean=model["mean"]
+    )
 
     warnings = []
+    print(
+        f"[adapt] {n} samples; matched "
+        f"{alignment_report['n_matched_genes']}/{alignment_report['n_model_genes']} "
+        f"model genes ({alignment_report['n_missing_genes']} filled with training mean)",
+        file=sys.stderr,
+    )
+    print_invalid_alignment_summary(alignment_report, sys.stderr, prefix="[adapt]")
+    alignment_issues = validate_alignment_report(
+        alignment_report,
+        max_invalid_cell_fraction=args.max_invalid_cell_fraction,
+    )
+    if alignment_issues and not args.allow_invalid_values:
+        for issue in alignment_issues:
+            print(f"[adapt] ERROR: {issue}", file=sys.stderr)
+        print(
+            "[adapt] Refusing to write adapted scores with invalid matched expression "
+            "values; fix the input or pass --allow-invalid-values after reviewing the "
+            "imputation.",
+            file=sys.stderr,
+        )
+        return 1
+    if alignment_issues:
+        for issue in alignment_issues:
+            warnings.append(issue)
+            print(f"[adapt] WARNING: {issue}", file=sys.stderr)
     if args.adapt != "none" and n < args.min_samples:
         warnings.append(f"cohort has only {n} samples (< {args.min_samples}); "
                         f"cohort statistics may be unreliable")
@@ -104,7 +145,7 @@ def main(argv=None):
         warnings.append("cohort standardization assumes an internal tumor/normal mix; "
                         "a near-single-class cohort is only partially corrected")
 
-    p = predict_proba(model, X, adapt=args.adapt)
+    p = predict_proba_from_aligned(model, values, adapt=args.adapt)
     calls = np.where(p >= args.threshold, "tumor", "normal")
     out_df = pd.DataFrame({"sample": X.index.astype(str),
                            "tumor_probability": p.round(6), "call": calls})
@@ -142,6 +183,10 @@ def main(argv=None):
     out_df.to_csv(out_path, index=False)
 
     report = {"n_samples": int(n), "adapt": args.adapt, "threshold": args.threshold,
+              "matched_model_genes": int(alignment_report["n_matched_genes"]),
+              "missing_model_genes": int(alignment_report["n_missing_genes"]),
+              "invalid_matched_cells": int(alignment_report["invalid_matched_cells"]),
+              "invalid_matched_fraction": float(alignment_report["invalid_matched_fraction"]),
               "tumor_calls": int((p >= args.threshold).sum()),
               "normal_calls": int((p < args.threshold).sum()),
               "median_tumor_probability": float(np.median(p)),

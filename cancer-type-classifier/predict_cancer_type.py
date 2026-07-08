@@ -22,7 +22,13 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))  # deliverables root, for tcga_rnaseq
-from tcga_rnaseq import load_lr_model, read_matrix, predict_proba  # noqa: E402
+from score_tumor_normal import (  # noqa: E402
+    print_invalid_alignment_summary,
+    validate_alignment_report,
+)
+from tcga_rnaseq import load_lr_model, read_matrix  # noqa: E402
+from tcga_rnaseq.align import align_to_genes_with_report  # noqa: E402
+from tcga_rnaseq.score import predict_proba_from_aligned  # noqa: E402
 
 
 def main(argv=None):
@@ -31,6 +37,12 @@ def main(argv=None):
     ap.add_argument("--weights", default=os.path.join(HERE, "cancer_type_lr_weights.npz"))
     ap.add_argument("--out", default=None)
     ap.add_argument("--topk", type=int, default=3, help="report top-k types per sample")
+    ap.add_argument("--max-invalid-cell-fraction", type=float, default=0.0,
+                    help=("maximum allowed missing, non-numeric, NaN, or infinite cells "
+                          "among matched model genes before failing (default 0)"))
+    ap.add_argument("--allow-invalid-values", action="store_true",
+                    help=("warn instead of failing when matched model-gene cells are "
+                          "missing, non-numeric, NaN, or infinite"))
     args = ap.parse_args(argv)
 
     model = load_lr_model(args.weights)
@@ -38,8 +50,37 @@ def main(argv=None):
         ap.error("weights file is not a multi-class cancer-type model")
     if args.topk < 1:
         ap.error("--topk must be >= 1")
+    if not 0 <= args.max_invalid_cell_fraction <= 1:
+        ap.error("--max-invalid-cell-fraction must be between 0 and 1")
     X = read_matrix(args.input_csv)
-    P = predict_proba(model, X)
+    values, alignment_report = align_to_genes_with_report(
+        X, model["genes"], impute_mean=model["mean"]
+    )
+    print(
+        f"[cancer-type] {X.shape[0]} samples; matched "
+        f"{alignment_report['n_matched_genes']}/{alignment_report['n_model_genes']} "
+        f"model genes ({alignment_report['n_missing_genes']} filled with training mean)",
+        file=sys.stderr,
+    )
+    print_invalid_alignment_summary(alignment_report, sys.stderr, prefix="[cancer-type]")
+    alignment_issues = validate_alignment_report(
+        alignment_report,
+        max_invalid_cell_fraction=args.max_invalid_cell_fraction,
+    )
+    if alignment_issues and not args.allow_invalid_values:
+        for issue in alignment_issues:
+            print(f"[cancer-type] ERROR: {issue}", file=sys.stderr)
+        print(
+            "[cancer-type] Refusing to write predictions with invalid matched "
+            "expression values; fix the input or pass --allow-invalid-values after "
+            "reviewing the imputation.",
+            file=sys.stderr,
+        )
+        return 1
+    if alignment_issues:
+        for issue in alignment_issues:
+            print(f"[cancer-type] WARNING: {issue}", file=sys.stderr)
+    P = predict_proba_from_aligned(model, values)
     classes = model["classes"]
     if args.topk > len(classes):
         ap.error(f"--topk must be <= number of classes ({len(classes)})")
@@ -58,6 +99,10 @@ def main(argv=None):
     out_path = args.out or (os.path.splitext(args.input_csv)[0] + ".cancer_type_pred.csv")
     out.to_csv(out_path, index=False)
     print(json.dumps({"n_samples": int(X.shape[0]), "n_types": len(classes),
+                      "matched_model_genes": int(alignment_report["n_matched_genes"]),
+                      "missing_model_genes": int(alignment_report["n_missing_genes"]),
+                      "invalid_matched_cells": int(alignment_report["invalid_matched_cells"]),
+                      "invalid_matched_fraction": float(alignment_report["invalid_matched_fraction"]),
                       "scores_csv": out_path,
                       "call_distribution": out["predicted_type"].value_counts().to_dict()}, indent=2))
     return 0
