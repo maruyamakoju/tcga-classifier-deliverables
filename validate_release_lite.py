@@ -69,6 +69,8 @@ FORBIDDEN_NAMES = {
 TRANSIENT_NAMES = {"__pycache__"}
 TRANSIENT_PREFIXES = ("_smoke_", "_acceptance_")
 TRANSIENT_SUFFIXES = (".pyc",)
+BINARY_SUFFIXES = {".npy", ".npz", ".pkl", ".png", ".zip"}
+TEXT_NAMES = {"LICENSE", "VERSION"}
 
 
 def sha256_bytes(data):
@@ -102,6 +104,13 @@ def release_files(release_dir):
         for path in release_dir.rglob("*")
         if path.is_file()
     }
+
+
+def is_text_release_path(rel):
+    path = Path(rel)
+    if path.name in TEXT_NAMES:
+        return True
+    return path.suffix.lower() not in BINARY_SUFFIXES
 
 
 def parse_sha256sums(path):
@@ -174,6 +183,8 @@ def validate_release_dir(release_dir, max_file_bytes):
             errors.append(f"Transient test/cache file present: {rel}")
         if path.stat().st_size > max_file_bytes:
             errors.append(f"File exceeds max size {max_file_bytes} bytes: {rel}")
+        if is_text_release_path(rel) and b"\r" in path.read_bytes():
+            errors.append(f"Text release file contains CR newline bytes: {rel}")
 
     checksum_path = release_dir / "SHA256SUMS.txt"
     if not checksum_path.exists():

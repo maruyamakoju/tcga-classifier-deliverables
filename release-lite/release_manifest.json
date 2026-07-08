@@ -329,9 +329,9 @@
       "sha256": "2fe2f3228ffcf6f492ef95bd985aec4fa3efb6d67c0a0c090697c6aad9164b16"
     },
     {
-      "bytes": 15325,
+      "bytes": 15730,
       "path": "validate_release_lite.py",
-      "sha256": "791fba5c8f35b3da1a37f3ff29531f9b97fb2902e15cafc1571c8d0965b76c52"
+      "sha256": "d891c13ae4b50fe960d78c8e6e7ed36d165b71fb9203ed40dd42e28e5ce1dd16"
     },
     {
       "bytes": 7901,

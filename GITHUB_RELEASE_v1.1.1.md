@@ -37,8 +37,8 @@ PASS
 
 ```text
 tcga-tumor-normal-release-lite.zip
-SHA256: 8034068e616293afa249dcc4b5691c5dcf4fe6fcb4bbd0af4cbfda22b4fdf6c5
-Bytes: 294962
+SHA256: a83e7944fc52a54cabdf6c69bf9248d606708353218181c42e1a63407449c227
+Bytes: 295053
 Entries: 70
 ```
 

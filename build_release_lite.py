@@ -110,6 +110,10 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def write_text_lf(path, text, encoding="utf-8"):
+    path.write_bytes(text.encode(encoding))
+
+
 def clean_release_dir():
     target = assert_inside_root(RELEASE_DIR)
     if target.exists():
@@ -182,9 +186,9 @@ def write_manifest():
         "forbidden_artifact_names": sorted(FORBIDDEN_NAMES),
         "files": records,
     }
-    (RELEASE_DIR / "release_manifest.json").write_text(
+    write_text_lf(
+        RELEASE_DIR / "release_manifest.json",
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
     )
     return len(records)
 
@@ -197,7 +201,7 @@ def write_checksums():
         rel = path.relative_to(RELEASE_DIR).as_posix()
         rows.append(f"{sha256(path)}  {rel}")
     checksum_path = RELEASE_DIR / "SHA256SUMS.txt"
-    checksum_path.write_text("\n".join(rows) + "\n", encoding="ascii")
+    write_text_lf(checksum_path, "\n".join(rows) + "\n", encoding="ascii")
     return len(rows)
 
 
@@ -262,8 +266,7 @@ def write_artifact_metadata(zip_entries):
             "python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip"
         ),
     }
-    ARTIFACTS_PATH.write_text(json.dumps(artifact, indent=2, sort_keys=True) + "\n",
-                              encoding="utf-8")
+    write_text_lf(ARTIFACTS_PATH, json.dumps(artifact, indent=2, sort_keys=True) + "\n")
 
 
 def cleanup_transient_files():
