@@ -21,6 +21,12 @@ python validate_release_lite.py --release-dir release-lite --zip tcga-tumor-norm
 python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
 ```
 
+Run after publishing or changing hosted repository settings:
+
+```bash
+python audit_github_repository.py
+```
+
 ## Release rules
 
 - Bump `VERSION`, `RELEASE_METADATA.json`, `CITATION.cff`, `.zenodo.json`,

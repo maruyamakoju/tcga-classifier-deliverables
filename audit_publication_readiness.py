@@ -40,6 +40,7 @@ REQUIRED_FILES = {
     "RELEASE_ARTIFACTS.json",
     "SECURITY.md",
     "VERSION",
+    "audit_github_repository.py",
     "codemeta.json",
     ZIP_NAME,
 }
