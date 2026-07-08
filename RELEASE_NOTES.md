@@ -1,5 +1,27 @@
 # Release notes
 
+## v1.1.4-gdc-starcounts — 2026-07-08
+
+Invalid-input guardrail update. The fitted model weights and headline
+validation metrics are unchanged from v1.1.3; this release prevents malformed
+matched expression values from being silently mean-imputed into deployable
+scores.
+
+### Added
+
+- Alignment diagnostics for matched model-gene cells that are missing,
+  non-numeric, `NaN`, or infinite before training-mean imputation.
+- `--max-invalid-cell-fraction` and `--allow-invalid-values` on
+  `score_tumor_normal.py` and `run_tumor_normal_workflow.py`.
+- Safety coverage showing the scorer and workflow stop before writing
+  `scores.csv` when invalid matched expression values are present.
+
+### Changed
+
+- `score_tumor_normal.py` and the one-command workflow now stop by default
+  before writing scores if any matched model-gene values are invalid. Users
+  must fix the input or explicitly opt into reviewed mean imputation.
+
 ## v1.1.3-gdc-starcounts — 2026-07-08
 
 Quality hardening update. The fitted model weights and headline validation

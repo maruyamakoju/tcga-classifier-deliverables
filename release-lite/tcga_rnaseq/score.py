@@ -1,7 +1,7 @@
 """Standardization (with cross-platform domain adaptation) and logistic scoring."""
 import numpy as np
 
-from .align import align_to_genes
+from .align import align_to_genes, align_to_genes_with_report
 
 ADAPT_MODES = ("none", "cohort_zscore", "cohort_center")
 
@@ -80,17 +80,22 @@ def score_binary_dataframe(
     positive_label="tumor",
     negative_label="normal",
     round_digits=6,
+    return_alignment_report=False,
 ):
     """Return the stable public scoring CSV shape for a binary model.
 
     Returns ``(dataframe, n_matched, missing)``. The DataFrame columns are
     ``sample,tumor_probability,call`` to preserve the release contract.
+    When ``return_alignment_report`` is true, returns
+    ``(dataframe, n_matched, missing, report)``.
     """
     if model["kind"] != "binary":
         raise ValueError("score_binary_dataframe requires a binary model")
-    values, n_matched, missing = align_to_genes(
+    values, report = align_to_genes_with_report(
         X, model["genes"], impute_mean=model["mean"]
     )
+    n_matched = report["n_matched_genes"]
+    missing = report["missing_genes"]
     proba = predict_proba_from_aligned(model, values, adapt=adapt)
     calls = np.where(proba >= threshold, positive_label, negative_label)
     import pandas as pd
@@ -100,6 +105,8 @@ def score_binary_dataframe(
         "tumor_probability": np.round(proba, round_digits),
         "call": calls,
     })
+    if return_alignment_report:
+        return result, n_matched, missing, report
     return result, n_matched, missing
 
 

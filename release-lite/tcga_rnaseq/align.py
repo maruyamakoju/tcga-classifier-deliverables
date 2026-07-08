@@ -54,7 +54,11 @@ def build_gene_column_lookups(columns):
     return exact, stripped
 
 
-def align_to_genes(X, genes, impute_mean=None):
+def _fraction(numerator, denominator):
+    return float(numerator) / float(denominator) if denominator else 0.0
+
+
+def align_to_genes_with_report(X, genes, impute_mean=None):
     """Reindex an expression DataFrame to the model's gene order.
 
     Matches Ensembl IDs with OR without the ``.version`` suffix (so a user CSV
@@ -66,7 +70,8 @@ def align_to_genes(X, genes, impute_mean=None):
     genes        (g,) model gene order (may be versioned)
     impute_mean  (g,) per-gene training mean, or None to fill missing with NaN
 
-    Returns (values ndarray (n_samples, g), n_matched int, missing list).
+    Returns ``(values, report)``. The report describes matched/missing genes and
+    any matched cells that were non-numeric, NaN, or infinite before imputation.
     """
     genes = [str(g) for g in genes]
     exact, stripped = build_gene_column_lookups(X.columns)
@@ -82,6 +87,11 @@ def align_to_genes(X, genes, impute_mean=None):
 
     out = np.empty((X.shape[0], len(genes)), dtype=float)
     missing = []
+    invalid_cells = 0
+    invalid_gene_reports = []
+    all_invalid_genes = []
+    sample_invalid_counts = np.zeros(X.shape[0], dtype=int)
+
     for j, g in enumerate(genes):
         src = exact.get(g)
         if src is None:
@@ -91,5 +101,75 @@ def align_to_genes(X, genes, impute_mean=None):
             missing.append(g)
         else:
             values = pd.to_numeric(X[src], errors="coerce").to_numpy(dtype=float)
-            out[:, j] = np.where(np.isfinite(values), values, means[j])
-    return out, len(genes) - len(missing), missing
+            finite = np.isfinite(values)
+            invalid_mask = ~finite
+            n_invalid = int(invalid_mask.sum())
+            if n_invalid:
+                invalid_cells += n_invalid
+                sample_invalid_counts += invalid_mask.astype(int)
+                invalid_gene_reports.append({
+                    "gene": g,
+                    "source_column": str(src),
+                    "invalid_cells": n_invalid,
+                    "total_cells": int(values.shape[0]),
+                    "invalid_fraction": _fraction(n_invalid, values.shape[0]),
+                })
+                if values.shape[0] and int(finite.sum()) == 0:
+                    all_invalid_genes.append(g)
+            out[:, j] = np.where(finite, values, means[j])
+
+    n_samples = int(X.shape[0])
+    n_model_genes = len(genes)
+    n_matched = n_model_genes - len(missing)
+    matched_cells = n_samples * n_matched
+    invalid_sample_indices = np.flatnonzero(sample_invalid_counts)
+    all_invalid_sample_indices = (
+        np.flatnonzero(sample_invalid_counts == n_matched) if n_matched else np.array([], dtype=int)
+    )
+    first_invalid_samples = []
+    for i in invalid_sample_indices[:20]:
+        n_invalid = int(sample_invalid_counts[i])
+        first_invalid_samples.append({
+            "sample": str(X.index[i]),
+            "invalid_cells": n_invalid,
+            "matched_genes": int(n_matched),
+            "invalid_fraction": _fraction(n_invalid, n_matched),
+        })
+    max_sample_fraction = (
+        _fraction(int(sample_invalid_counts.max()), n_matched)
+        if n_samples and n_matched else 0.0
+    )
+
+    report = {
+        "n_samples": n_samples,
+        "n_model_genes": int(n_model_genes),
+        "n_matched_genes": int(n_matched),
+        "n_missing_genes": int(len(missing)),
+        "missing_genes": [str(g) for g in missing],
+        "matched_cells": int(matched_cells),
+        "invalid_matched_cells": int(invalid_cells),
+        "invalid_matched_fraction": _fraction(invalid_cells, matched_cells),
+        "invalid_matched_cell_fraction": _fraction(invalid_cells, matched_cells),
+        "n_genes_with_invalid_values": int(len(invalid_gene_reports)),
+        "n_genes_with_all_invalid_values": int(len(all_invalid_genes)),
+        "first_genes_with_invalid_values": invalid_gene_reports[:20],
+        "first_genes_with_all_invalid_values": [str(g) for g in all_invalid_genes[:20]],
+        "n_samples_with_invalid_values": int(len(invalid_sample_indices)),
+        "n_samples_with_all_invalid_values": int(len(all_invalid_sample_indices)),
+        "max_invalid_matched_cell_fraction_per_sample": max_sample_fraction,
+        "first_samples_with_invalid_values": first_invalid_samples,
+        "first_samples_with_all_invalid_values": [
+            str(X.index[i]) for i in all_invalid_sample_indices[:20]
+        ],
+    }
+    return out, report
+
+
+def align_to_genes(X, genes, impute_mean=None):
+    """Reindex an expression DataFrame to the model's gene order.
+
+    Returns (values ndarray (n_samples, g), n_matched int, missing list).
+    """
+    out, report = align_to_genes_with_report(X, genes, impute_mean=impute_mean)
+    missing = report["missing_genes"]
+    return out, report["n_matched_genes"], missing

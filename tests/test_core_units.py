@@ -6,7 +6,7 @@ import pytest
 from tcga_rnaseq import score as S
 from tcga_rnaseq import metrics as M
 from tcga_rnaseq import load_lr_model
-from tcga_rnaseq.align import align_to_genes
+from tcga_rnaseq.align import align_to_genes, align_to_genes_with_report
 from calibrate_threshold import (
     choose_youden_threshold,
     load_scores_and_labels,
@@ -76,6 +76,28 @@ def test_align_imputes_nonfinite_and_validates_mean_length():
     assert v[:, 0].tolist() == [1.0, 7.0, 7.0, 7.0]
     with pytest.raises(ValueError, match="impute_mean length"):
         align_to_genes(X, np.array(["g1", "g2"]), impute_mean=np.array([7.0]))
+
+
+def test_align_report_counts_invalid_matched_values():
+    X = pd.DataFrame(
+        {"g1": ["bad", "also_bad"], "g2": [1.0, np.nan], "not_model": [5.0, 6.0]},
+        index=["s1", "s2"],
+    )
+    values, report = align_to_genes_with_report(
+        X,
+        np.array(["g1", "g2", "g3"]),
+        impute_mean=np.array([10.0, 20.0, 30.0]),
+    )
+    assert values.tolist() == [[10.0, 1.0, 30.0], [10.0, 20.0, 30.0]]
+    assert report["n_matched_genes"] == 2
+    assert report["missing_genes"] == ["g3"]
+    assert report["matched_cells"] == 4
+    assert report["invalid_matched_cells"] == 3
+    assert report["n_genes_with_invalid_values"] == 2
+    assert report["n_genes_with_all_invalid_values"] == 1
+    assert report["first_genes_with_all_invalid_values"] == ["g1"]
+    assert report["n_samples_with_invalid_values"] == 2
+    assert report["max_invalid_matched_cell_fraction_per_sample"] == pytest.approx(1.0)
 
 
 def test_align_rejects_duplicate_and_version_colliding_columns():
@@ -230,6 +252,12 @@ def test_score_binary_dataframe_contract():
     assert scored["sample"].tolist() == ["s1", "s2"]
     assert scored["call"].tolist() == ["tumor", "normal"]
     assert n_matched == 2 and missing == []
+    scored2, _, _, report = S.score_binary_dataframe(
+        model, pd.DataFrame({"g1": ["bad"], "g2": [2.0]}, index=["s3"]),
+        return_alignment_report=True,
+    )
+    assert list(scored2.columns) == ["sample", "tumor_probability", "call"]
+    assert report["invalid_matched_cells"] == 1
 
 
 def test_load_lr_model_rejects_inconsistent_shapes(tmp_path):

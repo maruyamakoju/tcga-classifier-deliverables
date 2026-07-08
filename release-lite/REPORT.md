@@ -1,6 +1,6 @@
 # Pan-cancer tumor-vs-normal classifier from TCGA RNA-seq
 
-Release: `v1.1.3-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.4-gdc-starcounts` (`2026-07-08`)
 
 ## Data
 
@@ -180,6 +180,11 @@ For deployment, `run_tumor_normal_workflow.py` wraps the release tools into a
 single command. It writes QC, scores, optional labeled-threshold calibration,
 per-sample explanations, a machine-readable manifest, and a Markdown workflow
 report in one output directory.
+
+As of v1.1.4, matched model-gene cells that are missing, non-numeric, `NaN`, or
+infinite stop the scorer/workflow before output scores are written unless a
+reviewed tolerance or explicit override is supplied. This prevents a malformed
+matched input column or sample from being silently neutral-imputed.
 
 ## Cross-platform adaptation (restoring Toil accuracy)
 
