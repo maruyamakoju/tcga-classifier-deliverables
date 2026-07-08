@@ -17,6 +17,7 @@ from calibrate_threshold import (
 from score_tumor_normal import load_lr_weights, score_dataframe_lr_weights
 from run_tumor_normal_workflow import build_report
 from explain_scores import EXPLANATION_COLUMNS, explain_dataframe
+from cohort_adapt_score import load_label_vector
 
 
 def test_sigmoid_stable_no_overflow(recwarn):
@@ -75,6 +76,21 @@ def test_align_imputes_nonfinite_and_validates_mean_length():
     assert v[:, 0].tolist() == [1.0, 7.0, 7.0, 7.0]
     with pytest.raises(ValueError, match="impute_mean length"):
         align_to_genes(X, np.array(["g1", "g2"]), impute_mean=np.array([7.0]))
+
+
+def test_align_rejects_duplicate_and_version_colliding_columns():
+    with pytest.raises(ValueError, match="Duplicate gene columns"):
+        align_to_genes(
+            pd.DataFrame([[1.0, 2.0]], columns=["g1", "g1"]),
+            np.array(["g1"]),
+            impute_mean=np.array([0.0]),
+        )
+    with pytest.raises(ValueError, match="Ambiguous gene columns"):
+        align_to_genes(
+            pd.DataFrame({"ENSG1.1": [1.0], "ENSG1.2": [2.0]}),
+            np.array(["ENSG1"]),
+            impute_mean=np.array([0.0]),
+        )
 
 
 def test_standardize_modes_differ():
@@ -148,6 +164,35 @@ def test_calibration_rejects_bad_inputs(tmp_path):
 
     with pytest.raises(ValueError, match="between 0 and 1"):
         validate_threshold(2.0)
+
+
+def test_calibration_rejects_accidental_label_subset(tmp_path):
+    scores = tmp_path / "scores.csv"
+    labels = tmp_path / "labels.csv"
+    scores.write_text(
+        "sample,tumor_probability\ns1,0.1\ns2,0.9\n",
+        encoding="utf-8",
+    )
+    labels.write_text("sample,label\ns1,normal\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="below --min-match-fraction"):
+        load_scores_and_labels(scores, labels, "sample", "label")
+
+
+def test_cohort_adapt_labels_preserve_numeric_strings_and_missing(tmp_path):
+    labels = tmp_path / "labels.csv"
+    labels.write_text(
+        "sample,label\ns1,1\ns2,0\nextra,tumor\n",
+        encoding="utf-8",
+    )
+    y, matched, stats = load_label_vector(labels, pd.Index(["s1", "s2", "s3"]))
+    assert y.tolist()[:2] == [1.0, 0.0]
+    assert matched.tolist() == [True, True, False]
+    assert stats == {
+        "n_labels": 3,
+        "n_labeled": 2,
+        "n_unmatched_samples": 1,
+        "n_extra_labels": 1,
+    }
 
 
 def test_accuracy_balanced_and_prf():

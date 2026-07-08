@@ -53,7 +53,11 @@ def normalize_label(value):
     raise ValueError(f"Unrecognized label: {value!r}")
 
 
-def load_scores_and_labels(scores_path, labels_path, sample_col, label_col):
+def load_scores_and_labels(scores_path, labels_path, sample_col, label_col,
+                           min_match_fraction=1.0):
+    min_match_fraction = float(min_match_fraction)
+    if not np.isfinite(min_match_fraction) or not 0 < min_match_fraction <= 1:
+        raise ValueError("min_match_fraction must be finite and in (0, 1]")
     scores = pd.read_csv(scores_path)
     if "tumor_probability" not in scores.columns:
         raise ValueError("scores CSV must contain tumor_probability")
@@ -75,9 +79,14 @@ def load_scores_and_labels(scores_path, labels_path, sample_col, label_col):
             labels[["_sample_key", label_col]], on="_sample_key", how="inner",
             validate="one_to_one"
         )
+        match_fraction = len(merged) / len(scores) if len(scores) else 0.0
         if len(merged) != len(scores):
-            print(f"[calibrate] WARNING: matched {len(merged)}/{len(scores)} scored samples",
-                  file=sys.stderr)
+            message = f"matched {len(merged)}/{len(scores)} scored samples"
+            if match_fraction < min_match_fraction:
+                raise ValueError(
+                    f"{message}; below --min-match-fraction {min_match_fraction:g}"
+                )
+            print(f"[calibrate] WARNING: {message}", file=sys.stderr)
     else:
         if label_col not in scores.columns:
             raise ValueError(f"scores CSV must contain {label_col!r} when labels CSV is omitted")
@@ -142,6 +151,8 @@ def main(argv=None):
     parser.add_argument("--sample-column", default="sample")
     parser.add_argument("--label-column", default="label")
     parser.add_argument("--default-threshold", type=float, default=0.5)
+    parser.add_argument("--min-match-fraction", type=float, default=1.0,
+                        help="minimum fraction of scored samples that must have labels (default 1.0)")
     parser.add_argument("--extra-threshold", type=float, action="append", default=[],
                         help="additional threshold to evaluate; may be repeated")
     args = parser.parse_args(argv)
@@ -153,8 +164,13 @@ def main(argv=None):
     except ValueError as exc:
         parser.error(str(exc))
 
-    data = load_scores_and_labels(args.scores, args.labels, args.sample_column,
-                                  args.label_column)
+    try:
+        data = load_scores_and_labels(
+            args.scores, args.labels, args.sample_column, args.label_column,
+            args.min_match_fraction,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
     y_true = data["label_binary"].to_numpy(dtype=int)
     scores = data["tumor_probability"].to_numpy(dtype=float)
 

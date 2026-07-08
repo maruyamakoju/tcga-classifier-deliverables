@@ -31,9 +31,10 @@ def read_json(path):
 
 
 def calibration_from_labels(scores_path, labels_path, sample_column, label_column,
-                            default_threshold, extra_thresholds):
+                            default_threshold, extra_thresholds,
+                            min_match_fraction):
     data = load_scores_and_labels(str(scores_path), str(labels_path), sample_column,
-                                  label_column)
+                                  label_column, min_match_fraction)
     y_true = data["label_binary"].to_numpy(dtype=int)
     scores = data["tumor_probability"].to_numpy(dtype=float)
 
@@ -182,6 +183,8 @@ def main(argv=None):
     parser.add_argument("--labels", help="optional CSV with sample + label columns")
     parser.add_argument("--sample-column", default="sample")
     parser.add_argument("--label-column", default="label")
+    parser.add_argument("--min-match-fraction", type=float, default=1.0,
+                        help="minimum fraction of scored samples that must have labels (default 1.0)")
     parser.add_argument("--threshold", type=float, default=0.5)
     parser.add_argument("--extra-threshold", type=float, action="append", default=[])
     parser.add_argument("--top-n", type=int, default=10)
@@ -257,7 +260,7 @@ def main(argv=None):
     if args.labels:
         threshold_metrics, calibration_summary = calibration_from_labels(
             paths["scores_csv"], args.labels, args.sample_column, args.label_column,
-            args.threshold, args.extra_threshold
+            args.threshold, args.extra_threshold, args.min_match_fraction
         )
         threshold_metrics.to_csv(paths["thresholds_csv"], index=False)
         write_json(paths["calibration_json"], calibration_summary)

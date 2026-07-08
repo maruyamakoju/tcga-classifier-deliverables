@@ -15,6 +15,7 @@ import pandas as pd
 
 from score_tumor_normal import load_lr_weights
 from tcga_rnaseq import read_matrix, sigmoid
+from tcga_rnaseq.align import build_gene_column_lookups, strip_version
 
 
 DEFAULT_RULES = {
@@ -67,10 +68,7 @@ def load_reference(path):
 
 
 def align_raw_to_genes(df, selected_genes):
-    cols = {str(c): c for c in df.columns}
-    stripped = {}
-    for c in df.columns:
-        stripped.setdefault(str(c).split(".")[0], c)
+    cols, stripped = build_gene_column_lookups(df.columns)
 
     out = np.empty((df.shape[0], len(selected_genes)), dtype=float)
     out[:] = np.nan
@@ -79,7 +77,7 @@ def align_raw_to_genes(df, selected_genes):
     for j, gene in enumerate(selected_genes):
         src = cols.get(str(gene))
         if src is None:
-            src = stripped.get(str(gene).split(".")[0])
+            src = stripped.get(strip_version(gene))
         if src is None:
             missing.append(gene)
             continue

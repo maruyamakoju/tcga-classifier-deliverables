@@ -36,9 +36,13 @@ def main(argv=None):
     model = load_lr_model(args.weights)
     if model["kind"] != "multiclass":
         ap.error("weights file is not a multi-class cancer-type model")
+    if args.topk < 1:
+        ap.error("--topk must be >= 1")
     X = read_matrix(args.input_csv)
     P = predict_proba(model, X)
     classes = model["classes"]
+    if args.topk > len(classes):
+        ap.error(f"--topk must be <= number of classes ({len(classes)})")
     order = np.argsort(-P, axis=1)
 
     rows = []

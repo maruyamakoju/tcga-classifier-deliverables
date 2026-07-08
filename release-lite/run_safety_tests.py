@@ -78,6 +78,18 @@ def main():
         require("threshold must be between 0 and 1" in result.stderr,
                 "threshold validation message missing")
 
+        result = run([sys.executable, "score_tumor_normal.py", "example_input.csv",
+                      "--use-pickle-lr"])
+        require_fail(result, "legacy pickle LR")
+        require("legacy pickle/RF scoring is not available" in result.stderr,
+                "legacy scorer rejection message missing")
+
+        result = run([sys.executable, "score_tumor_normal.py", "example_input.csv",
+                      "--model", "rf"])
+        require_fail(result, "legacy RF scorer")
+        require("invalid choice" in result.stderr and "'rf'" in result.stderr,
+                "legacy RF rejection message missing")
+
         result = run([sys.executable, "explain_scores.py", "example_input.csv",
                       "--top-n", "0"])
         require_fail(result, "invalid explanation top-n")

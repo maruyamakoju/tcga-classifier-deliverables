@@ -36,11 +36,42 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from calibrate_threshold import normalize_label  # noqa: E402
 from tcga_rnaseq import load_lr_model, read_matrix, predict_proba, write_json  # noqa: E402
 from tcga_rnaseq import metrics as M  # noqa: E402
 from tcga_rnaseq.score import ADAPT_MODES  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def load_label_vector(labels_path, sample_index, sample_col="sample", label_col="label"):
+    labels = pd.read_csv(labels_path)
+    if sample_col not in labels.columns:
+        raise ValueError(f"labels CSV must contain {sample_col!r}")
+    if label_col not in labels.columns:
+        raise ValueError(f"labels CSV must contain {label_col!r}")
+
+    labels = labels.copy()
+    labels["_sample_key"] = labels[sample_col].astype(str).str.strip()
+    if labels["_sample_key"].isna().any() or (labels["_sample_key"] == "").any():
+        raise ValueError("labels CSV sample identifiers must be non-empty")
+    duplicated = sorted(labels.loc[labels["_sample_key"].duplicated(), "_sample_key"].unique())
+    if duplicated:
+        raise ValueError("labels CSV contains duplicate sample IDs: " + ", ".join(duplicated[:5]))
+
+    labels["label_binary"] = labels[label_col].map(normalize_label)
+    sample_keys = pd.Index(sample_index.astype(str), name="_sample_key")
+    label_series = labels.set_index("_sample_key")["label_binary"]
+    aligned = label_series.reindex(sample_keys)
+    matched = aligned.notna().to_numpy()
+    extra_labels = int((~label_series.index.isin(sample_keys)).sum())
+    stats = {
+        "n_labels": int(len(labels)),
+        "n_labeled": int(matched.sum()),
+        "n_unmatched_samples": int((~matched).sum()),
+        "n_extra_labels": extra_labels,
+    }
+    return aligned.to_numpy(dtype=float), matched, stats
 
 
 def main(argv=None):
@@ -51,6 +82,8 @@ def main(argv=None):
     ap.add_argument("--threshold", type=float, default=0.5)
     ap.add_argument("--labels", default=None,
                     help="optional CSV with columns sample,label (label in {0,1} or {tumor,normal}) to report metrics")
+    ap.add_argument("--sample-column", default="sample")
+    ap.add_argument("--label-column", default="label")
     ap.add_argument("--weights", default=os.path.join(HERE, "deployable_lr_weights.npz"))
     ap.add_argument("--out", default=None)
     ap.add_argument("--min-samples", type=int, default=20)
@@ -78,21 +111,32 @@ def main(argv=None):
 
     metrics = None
     if args.labels:
-        lab = pd.read_csv(args.labels)
-        key = lab.columns[0]
-        s = lab.set_index(lab[key].astype(str))["label"]
-        y = s.reindex(X.index.astype(str))
-        if y.dtype == object:
-            y = (y.astype(str).str.lower() == "tumor").astype(float)
-        y = y.values
-        m = ~np.isnan(y)
-        if m.sum() > 0 and len(set(y[m])) > 1:
+        try:
+            y, m, label_stats = load_label_vector(
+                args.labels, X.index, args.sample_column, args.label_column
+            )
+        except ValueError as exc:
+            ap.error(str(exc))
+        if label_stats["n_labeled"] == 0:
+            ap.error("labels CSV did not match any input samples")
+        if label_stats["n_unmatched_samples"]:
+            warnings.append(
+                f"labels matched {label_stats['n_labeled']}/{n} input samples; "
+                "metrics use matched samples only"
+            )
+        if label_stats["n_extra_labels"]:
+            warnings.append(
+                f"labels CSV contains {label_stats['n_extra_labels']} rows not present in input"
+            )
+        if len(set(y[m])) > 1:
             cm = M.classification_metrics(y[m].astype(int), p[m], args.threshold)
-            metrics = {"n_labeled": int(m.sum()), "auc": round(cm["auc"], 4),
+            metrics = {**label_stats, "auc": round(cm["auc"], 4),
                        "accuracy": round(cm["accuracy"], 4),
                        "balanced_accuracy": round(cm["balanced_accuracy"], 4),
                        "sensitivity": round(cm["sensitivity"], 4),
                        "specificity": round(cm["specificity"], 4)}
+        else:
+            warnings.append("matched labels contain only one class; metrics were not computed")
 
     out_path = args.out or (os.path.splitext(args.input_csv)[0] + ".adapted_scores.csv")
     out_df.to_csv(out_path, index=False)

@@ -2,7 +2,7 @@
 
 This folder is the lightweight deployment bundle for the TCGA/GDC tumor-vs-normal classifier.
 
-Release: `v1.1.2-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.3-gdc-starcounts` (`2026-07-08`)
 
 ## Contents
 
@@ -39,7 +39,7 @@ Release: `v1.1.2-gdc-starcounts` (`2026-07-08`)
 - `MODEL_CARD.md`, `REPORT.md`, `REPRODUCIBILITY.md`: documentation.
 - `external-validation/`: compact validation reports and summary CSVs.
 
-The large training matrices and pickle model checkpoints are intentionally not included. Use the full deliverables folder if you need retraining, RF scoring, or legacy pickle parity checks.
+The large training matrices and pickle model checkpoints are intentionally not included. Use a private full-artifact checkout if you need retraining or legacy pickle parity checks.
 
 In the full deliverables folder, regenerate this bundle with:
 

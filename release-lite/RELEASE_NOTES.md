@@ -1,5 +1,39 @@
 # Release notes
 
+## v1.1.3-gdc-starcounts — 2026-07-08
+
+Quality hardening update. The fitted model weights and headline validation
+metrics are unchanged from v1.1.2; this release tightens public CLI behavior,
+input validation, calibration safety, and hosted repository auditing.
+
+### Added
+
+- `audit_github_repository.py`, a hosted-repository audit for public visibility,
+  branch protection, required CI contexts, release asset digest/size, topics,
+  and stale pip Dependabot PRs.
+- Unit coverage for hosted repository audit helpers, duplicate/colliding gene
+  columns, cohort-adaptation label joins, and accidental calibration subsets.
+- Safety coverage for unsupported legacy pickle/RF scorer options.
+
+### Changed
+
+- The public `score_tumor_normal.py` CLI now exposes only the pure NumPy
+  logistic-regression scorer from `deployable_lr_weights.npz`; legacy pickle/RF
+  options fail clearly because those artifacts are not in the lightweight
+  public release.
+- `calibrate_threshold.py` and the one-command workflow now require all scored
+  samples to have labels by default. Use `--min-match-fraction` only when a
+  partial calibration subset is intentional.
+
+### Fixed
+
+- Duplicate input gene columns and Ensembl-version collisions are rejected
+  before scoring/QC instead of silently choosing one column.
+- `cohort_adapt_score.py` now normalizes labels with the shared label parser,
+  preserves missing label matches, reports label join counts, and no longer
+  maps string labels such as `"1"`/`"0"` incorrectly.
+- `cancer-type-classifier/predict_cancer_type.py` now validates `--topk` bounds.
+
 ## v1.1.2-gdc-starcounts — 2026-07-08
 
 Publication metadata refresh. The fitted model weights, scoring behavior, and

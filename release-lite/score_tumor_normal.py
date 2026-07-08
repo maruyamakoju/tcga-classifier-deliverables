@@ -2,8 +2,7 @@
 """Score new RNA-seq samples as tumor vs normal with the TCGA pan-cancer classifier.
 
 Uses `deployable_lr_weights.npz` by default for pure NumPy logistic-regression
-scoring (2,000 genes; test AUC 0.997, leave-one-cancer-out AUC 0.994). The
-legacy `deployable_pipeline.pkl` path remains available for RF scoring.
+scoring (2,000 genes; test AUC 0.997, leave-one-cancer-out AUC 0.994).
 
 INPUT
   A table of expression values, rows = samples, columns = genes (Ensembl gene IDs,
@@ -14,8 +13,6 @@ INPUT
 USAGE
   python score_tumor_normal.py expr.csv                     # -> expr.scored.csv
   python score_tumor_normal.py expr.csv -o out.csv --threshold 0.5
-  python score_tumor_normal.py expr.pkl --model rf          # random forest instead
-  python score_tumor_normal.py expr.csv --use-pickle-lr     # legacy sklearn LR path
   python score_tumor_normal.py --self-test                  # verify bundled example
 
 THRESHOLD NOTE
@@ -33,8 +30,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tcga_rnaseq import (load_lr_model, load_pipeline, read_matrix,  # noqa: E402
-                         align_to_genes, score_binary_dataframe)
+from tcga_rnaseq import load_lr_model, read_matrix, score_binary_dataframe  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -74,34 +70,13 @@ def score_dataframe_lr_weights(df, model, threshold=0.5):
     return score_binary_dataframe(_as_model(model), df, threshold=threshold)
 
 
-def score_dataframe(df, pipe, model_name="lr", threshold=0.5):
-    """Score with the legacy pickled sklearn pipeline (LR scaled, RF unscaled)."""
-    selected_genes = pipe["selected_genes"]
-    scaler = pipe["scaler"]
-    model = (pipe["logistic_regression_model"]
-             if model_name == "lr" else pipe["random_forest_model"])
-    X, n_matched, missing = align_to_genes(df, selected_genes, impute_mean=scaler.mean_)
-    if model_name == "lr":
-        proba = model.predict_proba(scaler.transform(X))[:, 1]
-    else:
-        proba = model.predict_proba(X)[:, 1]  # RF trained on unscaled selected features
-    call = np.where(proba >= threshold, "tumor", "normal")
-    res = pd.DataFrame({"sample": df.index, "tumor_probability": proba.round(6), "call": call})
-    return res, n_matched, missing
-
-
-def run_self_test(pipeline_path, lr_weights_path, use_pickle_lr=False):
+def run_self_test(lr_weights_path):
     example_in = os.path.join(HERE, "example_input.csv")
     expected_out = os.path.join(HERE, "example_output.csv")
 
-    if not use_pickle_lr and os.path.exists(lr_weights_path):
-        model = load_lr_model(lr_weights_path)
-        observed, n_matched, missing = score_dataframe_lr_weights(read_matrix(example_in), model)
-        n_genes = len(model["genes"])
-    else:
-        pipe = load_pipeline(pipeline_path)
-        observed, n_matched, missing = score_dataframe(read_matrix(example_in), pipe)
-        n_genes = len(pipe["selected_genes"])
+    model = load_lr_model(lr_weights_path)
+    observed, n_matched, missing = score_dataframe_lr_weights(read_matrix(example_in), model)
+    n_genes = len(model["genes"])
     expected = pd.read_csv(expected_out)
 
     same_samples = observed["sample"].tolist() == expected["sample"].tolist()
@@ -138,43 +113,39 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Score samples as tumor vs normal.")
     ap.add_argument("input", nargs="?", help="expression matrix (samples x genes)")
     ap.add_argument("-o", "--output", help="output CSV (default: <input>.scored.csv)")
-    ap.add_argument("-p", "--pipeline", default=os.path.join(HERE, "deployable_pipeline.pkl"),
-                    help="path to deployable_pipeline.pkl (needed for --model rf or --use-pickle-lr)")
     ap.add_argument("--lr-weights", default=os.path.join(HERE, "deployable_lr_weights.npz"),
                     help="path to pure NumPy LR weights (default: deployable_lr_weights.npz)")
-    ap.add_argument("--model", choices=["lr", "rf"], default="lr",
-                    help="lr = logistic regression (default, best); rf = random forest")
+    ap.add_argument("--model", choices=["lr"], default="lr",
+                    help="logistic regression scorer (default; only public-bundle model)")
     ap.add_argument("--threshold", type=float, default=0.5,
                     help="probability cutoff for the tumor call (default 0.5)")
     ap.add_argument("--transpose", action="store_true",
                     help="input has genes as rows, samples as columns")
     ap.add_argument("--self-test", action="store_true",
                     help="score bundled example_input.csv and compare with example_output.csv")
-    ap.add_argument("--use-pickle-lr", action="store_true",
-                    help="use legacy sklearn LR object from deployable_pipeline.pkl")
+    ap.add_argument("-p", "--pipeline", help=argparse.SUPPRESS)
+    ap.add_argument("--use-pickle-lr", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args(argv)
 
     if not 0 <= args.threshold <= 1:
         ap.error("--threshold must be between 0 and 1")
+    if args.pipeline or args.use_pickle_lr:
+        ap.error(
+            "legacy pickle/RF scoring is not available in the public lightweight release; "
+            "use deployable_lr_weights.npz with the default NumPy LR scorer"
+        )
     if args.self_test:
-        return run_self_test(args.pipeline, args.lr_weights, args.use_pickle_lr)
+        return run_self_test(args.lr_weights)
     if not args.input:
         ap.error("input is required unless --self-test is used")
 
     df = read_matrix(args.input, transpose=args.transpose)
-    if args.model == "lr" and not args.use_pickle_lr and os.path.exists(args.lr_weights):
-        model = load_lr_model(args.lr_weights)
-        res, n_matched, missing = score_dataframe_lr_weights(df, model, args.threshold)
-        n_genes = len(model["genes"])
-        scorer = "lr-numpy"
-    else:
-        if args.model == "lr" and not args.use_pickle_lr:
-            print(f"[score] WARNING: {args.lr_weights} not found; falling back to pickle LR",
-                  file=sys.stderr)
-        pipe = load_pipeline(args.pipeline)
-        res, n_matched, missing = score_dataframe(df, pipe, args.model, args.threshold)
-        n_genes = len(pipe["selected_genes"])
-        scorer = args.model
+    if not os.path.exists(args.lr_weights):
+        ap.error(f"LR weights file not found: {args.lr_weights}")
+    model = load_lr_model(args.lr_weights)
+    res, n_matched, missing = score_dataframe_lr_weights(df, model, args.threshold)
+    n_genes = len(model["genes"])
+    scorer = "lr-numpy"
 
     print(f"[score] scorer={scorer}; {df.shape[0]} samples; matched {n_matched}/{n_genes} "
           f"model genes ({len(missing)} filled with training mean)", file=sys.stderr)

@@ -1,8 +1,15 @@
 {
   "release_date": "2026-07-08",
-  "release_name": "GDC STAR-Counts publication metadata release",
+  "release_name": "GDC STAR-Counts quality hardening release",
   "schema_version": "1.0",
-  "version": "v1.1.2-gdc-starcounts",
+  "version": "v1.1.3-gdc-starcounts",
+  "changes_since_v1_1_2": [
+    "Clarified and enforced that the public lightweight scoring CLI supports the pure NumPy logistic-regression path only.",
+    "Rejected ambiguous duplicate or Ensembl-version-colliding gene columns before scoring or QC.",
+    "Hardened cohort-adaptation label handling for numeric-string labels, missing matches, and extra label rows.",
+    "Made threshold calibration fail on accidental partial label joins unless explicitly relaxed.",
+    "Added hosted GitHub repository audit coverage for branch protection, release asset digest, topics, and open pip Dependabot PRs."
+  ],
   "changes_since_v1_1_1": [
     "Added Zenodo and CodeMeta machine-readable software metadata.",
     "Added a hosted-publication readiness audit covering secrets, large Git blobs, line endings, and release metadata consistency.",

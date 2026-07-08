@@ -31,7 +31,7 @@ REQUIRED_FILES = {
     ".zenodo.json",
     "CITATION.cff",
     "CONTRIBUTING.md",
-    "GITHUB_RELEASE_v1.1.2.md",
+    "GITHUB_RELEASE_v1.1.3.md",
     "LICENSE",
     "MAINTENANCE.md",
     "NOTICE.md",
@@ -284,6 +284,7 @@ def check_workflow(messages):
         "python -m pytest",
         "run_release_acceptance.py",
         "validate_release_lite.py",
+        "build_release_lite.py",
     ]:
         if marker not in text:
             add_message(messages, "ERROR", "ci_marker_missing",

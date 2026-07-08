@@ -3,9 +3,55 @@ import numpy as np
 import pandas as pd
 
 
+def _preview(values, limit=5):
+    text = [str(value) for value in values[:limit]]
+    suffix = ", ..." if len(values) > limit else ""
+    return ", ".join(text) + suffix
+
+
 def strip_version(gene_id):
     """Drop the Ensembl version suffix: 'ENSG00000005.6' -> 'ENSG00000005'."""
     return str(gene_id).split(".")[0]
+
+
+def build_gene_column_lookups(columns):
+    """Build exact and version-stripped lookups for input gene columns.
+
+    The model accepts Ensembl IDs with or without ``.version`` suffixes, but
+    duplicate or version-colliding columns are ambiguous enough to reject.
+    """
+    exact = {}
+    duplicate_exact = []
+    for column in columns:
+        key = str(column)
+        if key in exact:
+            duplicate_exact.append(key)
+        else:
+            exact[key] = column
+    if duplicate_exact:
+        raise ValueError(
+            "Duplicate gene columns are not allowed: " + _preview(sorted(set(duplicate_exact)))
+        )
+
+    stripped = {}
+    collisions = {}
+    for column in columns:
+        base = strip_version(column)
+        if base in stripped:
+            collisions.setdefault(base, [str(stripped[base])]).append(str(column))
+        else:
+            stripped[base] = column
+    if collisions:
+        examples = []
+        for base in sorted(collisions)[:5]:
+            examples.append(f"{base} -> {', '.join(collisions[base])}")
+        suffix = ", ..." if len(collisions) > 5 else ""
+        raise ValueError(
+            "Ambiguous gene columns after removing Ensembl version suffix: "
+            + "; ".join(examples)
+            + suffix
+        )
+    return exact, stripped
 
 
 def align_to_genes(X, genes, impute_mean=None):
@@ -23,10 +69,7 @@ def align_to_genes(X, genes, impute_mean=None):
     Returns (values ndarray (n_samples, g), n_matched int, missing list).
     """
     genes = [str(g) for g in genes]
-    exact = {str(c): c for c in X.columns}
-    stripped = {}
-    for c in X.columns:  # first column wins for a given base id
-        stripped.setdefault(strip_version(c), c)
+    exact, stripped = build_gene_column_lookups(X.columns)
 
     if impute_mean is None:
         means = np.full(len(genes), np.nan)

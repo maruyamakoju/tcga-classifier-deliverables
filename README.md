@@ -1,11 +1,11 @@
 # TCGA tumor-vs-normal classifier — deliverables
 
 [![CI](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml/badge.svg)](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.2-gdc-starcounts)
+[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.3-gdc-starcounts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Citation](https://img.shields.io/badge/citation-CITATION.cff-blue.svg)](CITATION.cff)
 
-Release: `v1.1.2-gdc-starcounts` (`2026-07-08`). For a single guided path
+Release: `v1.1.3-gdc-starcounts` (`2026-07-08`). For a single guided path
 through the whole deliverable (base model → generalization → external
 validation → cross-platform adaptation → cancer-type classifier), start with
 `INDEX.md`. Otherwise start with `EXECUTIVE_SUMMARY.md` if you need a short
@@ -57,8 +57,9 @@ python explain_scores.py expr.csv --top-n 10             # per-sample LR gene co
 - **Runnable example:** `example_input.csv` (5 real samples) → `example_output.csv`
   (first 3 tumor at p>0.99, last 2 normal at p<0.06 — matches their true labels).
 - **Default scorer:** pure NumPy logistic regression from `deployable_lr_weights.npz`
-  (small, no scikit-learn pickle warning). Legacy pickle/RF scoring requires full
-  local training artifacts that are intentionally excluded from the public Git history.
+  (small, no scikit-learn pickle warning). The public lightweight CLI does not expose
+  legacy pickle/RF scoring because those artifacts are intentionally excluded from the
+  public Git history.
 
 ### Threshold calibration (important for a new tissue)
 Ranking (AUC) transfers across cancer types, but the fixed **0.5 threshold does not**
@@ -77,10 +78,9 @@ genes, coefficients, training means/scales, and the direction implied by high ex
 
 ### Running environment
 For default LR scoring, use `requirements-light.txt` (NumPy + pandas only, with pyarrow
-for parquet input). Use `requirements.txt` or `environment.yml` only when working from a
-full local training-artifact checkout that includes the legacy pickle/RF files.
-The CLI never imports xgboost (it stubs the pickled xgboost model), so LR/RF scoring is
-unaffected.
+for parquet input). Use `requirements.txt` or `environment.yml` only when retraining,
+running external validation scripts, or doing full-artifact maintenance outside the
+public lightweight bundle.
 
 Run `python check_environment.py --self-test` after installation. If it or the
 workflow QC reports WARN/FAIL, start with `TROUBLESHOOTING.md`.
@@ -111,6 +111,7 @@ pipeline-specific refitting or threshold calibration.
 - `audit_release_docs.py` — documentation and release-bundle reference audit
 - `audit_publication_readiness.py` — public-release audit for secrets, large blobs,
   line endings, and release metadata consistency
+- `audit_github_repository.py` — hosted GitHub settings and release-asset audit
 - `validate_output_contracts.py` — bundled CSV/JSON output contract validator
 - `calibrate_threshold.py` — choose a cutoff from labeled scored samples
 - `explain_scores.py` — per-sample LR contribution explanations

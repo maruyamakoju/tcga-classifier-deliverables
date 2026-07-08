@@ -1,6 +1,6 @@
 # Reproducibility notes
 
-Release: `v1.1.2-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.3-gdc-starcounts` (`2026-07-08`)
 
 ## Recommended scoring environment
 
@@ -17,9 +17,8 @@ python validate_output_contracts.py
 python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
 ```
 
-For legacy pickle/RF scoring or to regenerate the lightweight weights from
-`deployable_pipeline.pkl`, use a full local training-artifact checkout and one
-of:
+For retraining, external-validation maintenance, or regenerating lightweight
+weights from a full local training-artifact checkout, use one of:
 
 ```bash
 pip install -r requirements.txt
@@ -32,13 +31,10 @@ conda env create -f environment.yml
 conda activate tcga-tumor-normal
 ```
 
-These full pickle artifacts are intentionally excluded from the public Git
-history and are not needed for the lightweight release. The deployable pickle
-contains scikit-learn estimators serialized with
-**scikit-learn 1.9.0**. The CLI intentionally does not require `xgboost`. The
-pickled XGBoost object is stubbed during unpickling because the production
-scoring path uses only logistic regression (`--model lr`, default) or random
-forest (`--model rf`).
+Full pickle artifacts are intentionally excluded from the public Git history
+and are not needed for the lightweight release. The public scoring CLI uses
+only the pure NumPy logistic-regression weights in `deployable_lr_weights.npz`;
+legacy pickle/RF CLI modes are not exposed in the lightweight bundle.
 
 ## Smoke test
 
@@ -78,9 +74,10 @@ To test negative-path guardrails alone, run:
 python run_safety_tests.py
 ```
 
-This verifies that invalid thresholds/top-N values fail, QC rejects inputs with
-no model genes or raw-count-like values, and the workflow stops before scoring
-when QC status is FAIL.
+This verifies that invalid thresholds/top-N values fail, unsupported legacy
+pickle/RF scorer options fail clearly, QC rejects inputs with no model genes or
+raw-count-like values, and the workflow stops before scoring when QC status is
+FAIL.
 
 For the development regression suite, run pytest through the active Python
 interpreter:
@@ -138,10 +135,9 @@ during cleanup was:
 - numpy 1.26.4
 - scipy 1.15.3
 
-That environment emits a scikit-learn version warning only when using
-`--use-pickle-lr`, `--model rf`, or `export_lr_weights.py`, because the pickle
-was serialized with 1.9.0. For those legacy paths, prefer the pinned
-`requirements.txt` / `environment.yml`.
+The lightweight release does not load scikit-learn pickle artifacts during
+scoring. For full-artifact maintenance such as regenerating `deployable_lr_weights.npz`,
+prefer the pinned `requirements.txt` / `environment.yml`.
 
 ## Input contract
 
