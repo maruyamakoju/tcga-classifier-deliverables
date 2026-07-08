@@ -132,6 +132,13 @@ def is_text_release_file(rel):
     return path.suffix.lower() not in BINARY_SUFFIXES
 
 
+def sorted_release_paths():
+    return sorted(
+        (path for path in RELEASE_DIR.rglob("*") if path.is_file()),
+        key=lambda path: path.relative_to(RELEASE_DIR).as_posix(),
+    )
+
+
 def write_release_file(src, dst, rel):
     if is_text_release_file(rel):
         data = src.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
@@ -156,8 +163,8 @@ def copy_release_files():
 
 def manifest_file_records():
     records = []
-    for path in sorted(RELEASE_DIR.rglob("*")):
-        if not path.is_file() or path.name in {"SHA256SUMS.txt", "release_manifest.json"}:
+    for path in sorted_release_paths():
+        if path.name in {"SHA256SUMS.txt", "release_manifest.json"}:
             continue
         records.append({
             "path": path.relative_to(RELEASE_DIR).as_posix(),
@@ -197,8 +204,8 @@ def write_manifest():
 
 def write_checksums():
     rows = []
-    for path in sorted(RELEASE_DIR.rglob("*")):
-        if not path.is_file() or path.name == "SHA256SUMS.txt":
+    for path in sorted_release_paths():
+        if path.name == "SHA256SUMS.txt":
             continue
         rel = path.relative_to(RELEASE_DIR).as_posix()
         rows.append(f"{sha256(path)}  {rel}")
@@ -228,14 +235,13 @@ def write_zip():
     fixed_datetime = release_zip_datetime()
     with zipfile.ZipFile(ZIP_PATH, "w", compression=zipfile.ZIP_DEFLATED,
                          compresslevel=9) as zf:
-        for path in sorted(RELEASE_DIR.rglob("*")):
-            if path.is_file():
-                rel = path.relative_to(RELEASE_DIR).as_posix()
-                info = zipfile.ZipInfo(rel, date_time=fixed_datetime)
-                info.compress_type = zipfile.ZIP_DEFLATED
-                info.external_attr = 0o644 << 16
-                zf.writestr(info, path.read_bytes(), compress_type=zipfile.ZIP_DEFLATED,
-                            compresslevel=9)
+        for path in sorted_release_paths():
+            rel = path.relative_to(RELEASE_DIR).as_posix()
+            info = zipfile.ZipInfo(rel, date_time=fixed_datetime)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            zf.writestr(info, path.read_bytes(), compress_type=zipfile.ZIP_DEFLATED,
+                        compresslevel=9)
     with zipfile.ZipFile(ZIP_PATH) as zf:
         bad = zf.testzip()
         if bad is not None:
@@ -248,7 +254,7 @@ def write_artifact_metadata(zip_entries):
     release_metadata = {}
     if release_metadata_path.exists():
         release_metadata = json.loads(release_metadata_path.read_text(encoding="utf-8"))
-    files = [path for path in RELEASE_DIR.rglob("*") if path.is_file()]
+    files = sorted_release_paths()
     artifact = {
         "schema_version": "1.0",
         "version": release_metadata.get("version"),

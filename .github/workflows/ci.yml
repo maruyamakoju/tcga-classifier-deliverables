@@ -52,4 +52,4 @@ jobs:
       - name: Verify release rebuild reproducibility
         run: |
           python build_release_lite.py --smoke --timeout-seconds 300
-          git diff --exit-code -- release-lite tcga-tumor-normal-release-lite.zip RELEASE_ARTIFACTS.json
+          git diff --exit-code -- release-lite

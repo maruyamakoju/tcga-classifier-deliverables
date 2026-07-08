@@ -7,8 +7,8 @@
   "validation_command": "python validate_release_lite.py --release-dir release-lite --zip tcga-tumor-normal-release-lite.zip",
   "version": "v1.1.3-gdc-starcounts",
   "zip_acceptance_command": "python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip",
-  "zip_bytes": 299259,
+  "zip_bytes": 299239,
   "zip_entries": 72,
   "zip_path": "tcga-tumor-normal-release-lite.zip",
-  "zip_sha256": "8d809178bc8931cf486d911b55ebcfcdb8f4a82283a94a330d02f03001549e06"
+  "zip_sha256": "d515e6a5c0715396e3266afb5763ec6c8ab56f53c12683af2ce1333fc75b6842"
 }
