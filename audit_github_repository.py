@@ -27,6 +27,9 @@ EXPECTED_TOPICS = {
     "tcga",
 }
 
+EXPECTED_TAG_RULESET_REF = "refs/tags/v*"
+EXPECTED_TAG_RULESET_RULES = {"deletion", "non_fast_forward", "update"}
+
 
 def add_message(messages, level, code, message, path=None):
     item = {"level": level, "code": code, "message": message}
@@ -78,6 +81,15 @@ def gh_json(endpoint):
     return json.loads(data)
 
 
+def gh_status(endpoint):
+    data = run_command(["gh", "api", "-i", endpoint])
+    first_line = data.splitlines()[0] if data.splitlines() else ""
+    match = re.match(r"^HTTP/\S+\s+(\d+)", first_line)
+    if not match:
+        raise RuntimeError(f"Could not parse GitHub API status line: {first_line!r}")
+    return int(match.group(1))
+
+
 def load_json_file(path, messages):
     if not path.exists():
         add_message(messages, "ERROR", "json_file_missing", f"Missing JSON file: {path.name}", path)
@@ -127,6 +139,15 @@ def check_branch_protection(protection, messages):
     if missing:
         add_message(messages, "ERROR", "required_context_missing",
                     "Branch protection is missing required contexts: " + ", ".join(missing))
+    if (protection.get("enforce_admins") or {}).get("enabled") is not True:
+        add_message(messages, "ERROR", "admins_not_enforced",
+                    "Branch protection does not apply to administrators.")
+    if (protection.get("required_linear_history") or {}).get("enabled") is not True:
+        add_message(messages, "ERROR", "linear_history_not_required",
+                    "Branch protection does not require linear history.")
+    if (protection.get("required_conversation_resolution") or {}).get("enabled") is not True:
+        add_message(messages, "ERROR", "conversation_resolution_not_required",
+                    "Branch protection does not require conversation resolution before merge.")
     if (protection.get("allow_force_pushes") or {}).get("enabled") is not False:
         add_message(messages, "ERROR", "force_pushes_allowed",
                     "Branch protection allows force pushes.")
@@ -181,6 +202,52 @@ def check_open_pull_requests(pulls, messages):
                         f"Open pip Dependabot PR remains: #{pull.get('number')} {pull.get('title')}")
 
 
+def check_release_tag_rulesets(rulesets, messages):
+    candidates = []
+    for ruleset in rulesets:
+        conditions = ruleset.get("conditions") or {}
+        ref_name = conditions.get("ref_name") or {}
+        includes = set(ref_name.get("include") or [])
+        if ruleset.get("target") == "tag" and EXPECTED_TAG_RULESET_REF in includes:
+            candidates.append(ruleset)
+    if not candidates:
+        add_message(messages, "ERROR", "release_tag_ruleset_missing",
+                    f"No tag ruleset protects {EXPECTED_TAG_RULESET_REF}.")
+        return
+
+    protected = False
+    for ruleset in candidates:
+        rule_types = {rule.get("type") for rule in ruleset.get("rules") or []}
+        missing_rules = sorted(EXPECTED_TAG_RULESET_RULES - rule_types)
+        if ruleset.get("enforcement") != "active":
+            add_message(messages, "ERROR", "release_tag_ruleset_inactive",
+                        f"Tag ruleset {ruleset.get('name')!r} is not active.")
+            continue
+        if missing_rules:
+            add_message(messages, "ERROR", "release_tag_rules_missing",
+                        f"Tag ruleset {ruleset.get('name')!r} is missing rules: "
+                        + ", ".join(missing_rules))
+            continue
+        if ruleset.get("current_user_can_bypass") != "never":
+            add_message(messages, "ERROR", "release_tag_ruleset_bypass_allowed",
+                        f"Current user can bypass tag ruleset {ruleset.get('name')!r}.")
+            continue
+        if ruleset.get("bypass_actors"):
+            add_message(messages, "WARNING", "release_tag_ruleset_bypass_actors",
+                        f"Tag ruleset {ruleset.get('name')!r} has bypass actors configured.")
+            continue
+        protected = True
+    if not protected:
+        add_message(messages, "ERROR", "release_tag_ruleset_not_protective",
+                    f"No active tag ruleset fully protects {EXPECTED_TAG_RULESET_REF}.")
+
+
+def check_vulnerability_alerts(status_code, messages):
+    if status_code != 204:
+        add_message(messages, "ERROR", "vulnerability_alerts_disabled",
+                    f"Dependabot vulnerability alerts endpoint returned HTTP {status_code}, expected 204.")
+
+
 def build_report(repo):
     messages = []
     version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
@@ -199,6 +266,7 @@ def build_report(repo):
             "repo": f"repos/{repo}",
             "topics": f"repos/{repo}/topics",
             "protection": f"repos/{repo}/branches/main/protection",
+            "rulesets": f"repos/{repo}/rulesets",
             "release": f"repos/{repo}/releases/tags/{version}",
             "pulls": f"repos/{repo}/pulls?state=open&per_page=100",
         }
@@ -209,6 +277,25 @@ def build_report(repo):
             except Exception as exc:
                 add_message(messages, "ERROR", f"github_{name}_query_failed",
                             f"Could not query GitHub {name}: {exc}")
+        if "rulesets" in loaded:
+            details = []
+            for ruleset in loaded["rulesets"]:
+                ruleset_id = ruleset.get("id")
+                if ruleset_id is None:
+                    continue
+                try:
+                    details.append(gh_json(f"repos/{repo}/rulesets/{ruleset_id}"))
+                except Exception as exc:
+                    add_message(messages, "ERROR", "github_ruleset_detail_query_failed",
+                                f"Could not query GitHub ruleset {ruleset_id}: {exc}")
+            loaded["ruleset_details"] = details
+        try:
+            loaded["vulnerability_alerts_status"] = gh_status(
+                f"repos/{repo}/vulnerability-alerts"
+            )
+        except Exception as exc:
+            add_message(messages, "ERROR", "github_vulnerability_alerts_query_failed",
+                        f"Could not query GitHub vulnerability alerts: {exc}")
 
         if "repo" in loaded:
             check_repository_metadata(loaded["repo"], repo, messages)
@@ -220,6 +307,10 @@ def build_report(repo):
             check_release(loaded["release"], artifacts, version, messages)
         if "pulls" in loaded:
             check_open_pull_requests(loaded["pulls"], messages)
+        if "ruleset_details" in loaded:
+            check_release_tag_rulesets(loaded["ruleset_details"], messages)
+        if "vulnerability_alerts_status" in loaded:
+            check_vulnerability_alerts(loaded["vulnerability_alerts_status"], messages)
 
     levels = {item["level"] for item in messages}
     status = "FAIL" if "ERROR" in levels else "WARN" if "WARNING" in levels else "PASS"
