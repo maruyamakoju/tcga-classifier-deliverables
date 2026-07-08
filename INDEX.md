@@ -1,11 +1,12 @@
 # INDEX — a guided reading path
 
-Release: `v1.1.2-gdc-starcounts`
+Release: `v1.1.7-gdc-starcounts`
 
-This deliverable grew in layers, from a base tumor-vs-normal model to external
-validation, cross-platform adaptation, and a separate cancer-type classifier.
-Read it in this order for the complete story; each stop below has a one-line
-description and a link.
+This lightweight release focuses on the deployable tumor-vs-normal classifier,
+its validation boundary, and the runnable scoring workflow. Read it in this
+order for the public bundle; the full development tree also contains historical
+training, leave-one-cancer-out, cross-platform benchmark, and cancer-type
+classifier sources that are intentionally outside the lite bundle.
 
 ## 1. Base tumor-vs-normal model
 
@@ -15,14 +16,7 @@ description and a link.
 - [`MODEL_CARD.md`](MODEL_CARD.md) — one-page fact sheet: intended use, limits,
   and validation summary.
 
-## 2. Cross-cancer generalization (LOCO)
-
-- [`cross-cancer-holdout/LOCO_REPORT.md`](cross-cancer-holdout/LOCO_REPORT.md) —
-  leave-one-cancer-type-out test: pooled AUC 0.988, macro-mean AUC 0.994, worst
-  held-out type PRAD 0.950. Shows the signature transfers to cancer types never
-  seen in training.
-
-## 3. External validation
+## 2. External validation and limits
 
 - [`external-validation/cptac_gdc/CPTAC_EXTERNAL_VALIDATION.md`](external-validation/cptac_gdc/CPTAC_EXTERNAL_VALIDATION.md)
   — external non-TCGA CPTAC-3 cohort on the same GDC STAR-Counts pipeline
@@ -34,25 +28,24 @@ description and a link.
   — 540 GTEx normals across 27 primary sites; false-positive rate 0.996 at the
   0.5 threshold (cross-platform deployment boundary).
 
-## 4. Cross-platform adaptation
+## 3. Reproducibility and bundle contents
 
-- [`cross-platform-adaptation/CROSS_PLATFORM_ADAPTATION.md`](cross-platform-adaptation/CROSS_PLATFORM_ADAPTATION.md)
-  — label-free cohort standardization that restores Toil accuracy from 0.515 to
-  0.935 without refitting the model.
-
-## 5. Cancer-type classifier
-
-- [`cancer-type-classifier/CANCER_TYPE_CLASSIFIER.md`](cancer-type-classifier/CANCER_TYPE_CLASSIFIER.md)
-  — a separate 17-class tissue-of-origin classifier (patient-held-out accuracy
-  0.930, balanced accuracy 0.878, macro-F1 0.877).
+- [`REPRODUCIBILITY.md`](REPRODUCIBILITY.md) — exact commands and expected checks
+  for rebuilding and validating the lightweight release.
+- [`RELEASE_BUNDLE.md`](RELEASE_BUNDLE.md) — file-by-file contents of the public
+  bundle.
+- [`DATA_DICTIONARY.md`](DATA_DICTIONARY.md) — schemas for inputs, outputs,
+  manifests, and validation reports.
 
 ## Code & tests
 
 - [`tcga_rnaseq/`](tcga_rnaseq/) — shared core library (I/O, gene alignment,
   scoring, metrics) reused across the scoring entry points.
-- [`tests/`](tests/) — pytest suite covering core units and numerical
-  reproducibility.
+- [`run_smoke_tests.py`](run_smoke_tests.py) — lightweight end-to-end smoke tests.
+- [`run_safety_tests.py`](run_safety_tests.py) — public safety tests for malformed
+  inputs and invalid matched expression values.
 
 Scoring entry points: `score_tumor_normal.py` (tumor-vs-normal),
 `cohort_adapt_score.py` (cross-platform adaptation + scoring), and
-`cancer-type-classifier/predict_cancer_type.py` (tissue-of-origin).
+`run_tumor_normal_workflow.py` (QC, scoring, optional calibration, explanations,
+and report generation).

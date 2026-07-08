@@ -67,14 +67,31 @@ def test_align_matches_across_version_suffix():
 
 
 def test_align_coerces_nonnumeric():
-    v, _, _ = align_to_genes(pd.DataFrame({"g1": ["1.5", "oops"]}),
-                             np.array(["g1"]), impute_mean=np.array([7.0]))
+    with pytest.raises(ValueError, match="invalid matched values"):
+        align_to_genes(
+            pd.DataFrame({"g1": ["1.5", "oops"]}),
+            np.array(["g1"]),
+            impute_mean=np.array([7.0]),
+        )
+    v, _, _ = align_to_genes(
+        pd.DataFrame({"g1": ["1.5", "oops"]}),
+        np.array(["g1"]),
+        impute_mean=np.array([7.0]),
+        allow_invalid_values=True,
+    )
     assert v[:, 0].tolist() == [1.5, 7.0]  # non-numeric -> imputed at mean
 
 
 def test_align_imputes_nonfinite_and_validates_mean_length():
     X = pd.DataFrame({"g1": [1.0, np.inf, -np.inf, np.nan]})
-    v, n_matched, missing = align_to_genes(X, np.array(["g1"]), impute_mean=np.array([7.0]))
+    with pytest.raises(ValueError, match="invalid matched values"):
+        align_to_genes(X, np.array(["g1"]), impute_mean=np.array([7.0]))
+    v, n_matched, missing = align_to_genes(
+        X,
+        np.array(["g1"]),
+        impute_mean=np.array([7.0]),
+        allow_invalid_values=True,
+    )
     assert n_matched == 1 and missing == []
     assert v[:, 0].tolist() == [1.0, 7.0, 7.0, 7.0]
     with pytest.raises(ValueError, match="impute_mean length"):
@@ -257,10 +274,56 @@ def test_score_binary_dataframe_contract():
     assert n_matched == 2 and missing == []
     scored2, _, _, report = S.score_binary_dataframe(
         model, pd.DataFrame({"g1": ["bad"], "g2": [2.0]}, index=["s3"]),
+        allow_invalid_values=True,
         return_alignment_report=True,
     )
     assert list(scored2.columns) == ["sample", "tumor_probability", "call"]
     assert report["invalid_matched_cells"] == 1
+
+
+def test_core_scoring_rejects_invalid_matched_values_by_default():
+    model = {
+        "genes": np.array(["g1", "g2"]),
+        "mean": np.array([0.0, 0.0]),
+        "scale": np.array([1.0, 1.0]),
+        "coef": np.array([1.0, -1.0]),
+        "intercept": 0.0,
+        "classes": np.array([0, 1]),
+        "kind": "binary",
+    }
+    X = pd.DataFrame({"g1": ["bad"], "g2": [2.0]}, index=["s1"])
+    with pytest.raises(ValueError, match="invalid matched values"):
+        S.predict_proba(model, X)
+    with pytest.raises(ValueError, match="invalid matched values"):
+        S.score_binary_dataframe(model, X)
+
+    p, report = S.predict_proba(model, X, allow_invalid_values=True, return_alignment_report=True)
+    assert p.shape == (1,)
+    assert report["invalid_matched_cells"] == 1
+    scored, _, _, report = S.score_binary_dataframe(
+        model,
+        X,
+        allow_invalid_values=True,
+        return_alignment_report=True,
+    )
+    assert list(scored.columns) == ["sample", "tumor_probability", "call"]
+    assert report["invalid_matched_cells"] == 1
+
+
+def test_predict_proba_from_aligned_validates_shape_and_finiteness():
+    model = {
+        "genes": np.array(["g1", "g2"]),
+        "mean": np.array([0.0, 0.0]),
+        "scale": np.array([1.0, 1.0]),
+        "coef": np.array([1.0, -1.0]),
+        "intercept": 0.0,
+        "classes": np.array([0, 1]),
+        "kind": "binary",
+    }
+    with pytest.raises(ValueError, match="expected 2 model genes"):
+        S.predict_proba_from_aligned(model, np.array([[1.0]]))
+    with pytest.raises(ValueError, match="non-finite"):
+        S.predict_proba_from_aligned(model, np.array([[1.0, np.nan]]))
 
 
 def test_load_lr_model_rejects_inconsistent_shapes(tmp_path):

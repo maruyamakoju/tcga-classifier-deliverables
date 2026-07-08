@@ -21,7 +21,8 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 from tcga_rnaseq import load_lr_model, read_matrix, predict_proba  # noqa: E402
 from tcga_rnaseq import metrics as M  # noqa: E402
-from tcga_rnaseq.align import align_to_genes  # noqa: E402
+from tcga_rnaseq.align import align_to_genes_with_report, validate_alignment_report  # noqa: E402
+from tcga_rnaseq.score import predict_proba_from_aligned  # noqa: E402
 
 EV = os.path.join(ROOT, "external-validation")
 MODES = ["none", "cohort_center", "cohort_zscore"]
@@ -78,7 +79,10 @@ def imbalance_curve(model):
     X = read_matrix(os.path.join(EV, "tcga_toil_xena/tcga_toil_selected_genes_model_scale.pkl"))
     lab = pd.read_csv(os.path.join(EV, "tcga_toil_xena/tcga_toil_predictions.csv"))
     y = lab.set_index(lab["sample"].astype(str))["label"].reindex(X.index.astype(str)).astype(int).values
-    V, _, _ = align_to_genes(X, model["genes"], impute_mean=model["mean"])
+    V, report = align_to_genes_with_report(X, model["genes"], impute_mean=model["mean"])
+    issues = validate_alignment_report(report)
+    if issues:
+        raise ValueError("invalid matched values in TCGA-Toil matrix: " + " ".join(issues))
     Vt, Vn = V[y == 1], V[y == 0]
     rng = np.random.default_rng(0)
     irows = []
@@ -89,10 +93,10 @@ def imbalance_curve(model):
             nt = max(1, min(n - 1, int(round(frac * n))))
             it = rng.choice(len(Vt), nt, replace=True)
             ino = rng.choice(len(Vn), n - nt, replace=True)
-            Xs = pd.DataFrame(np.vstack([Vt[it], Vn[ino]]), columns=model["genes"])
+            Xs = np.vstack([Vt[it], Vn[ino]])
             ys = np.r_[np.ones(nt), np.zeros(n - nt)].astype(int)
-            pb = predict_proba(model, Xs, adapt="none")
-            pdz = predict_proba(model, Xs, adapt="cohort_zscore")
+            pb = predict_proba_from_aligned(model, Xs, adapt="none")
+            pdz = predict_proba_from_aligned(model, Xs, adapt="cohort_zscore")
             b_base.append(_metrics(ys, pb)["bacc"])
             b_da.append(_metrics(ys, pdz)["bacc"])
             auc_da.append(M.roc_auc(ys, pdz))

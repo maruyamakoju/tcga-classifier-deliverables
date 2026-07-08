@@ -1,7 +1,10 @@
 """Standardization (with cross-platform domain adaptation) and logistic scoring."""
 import numpy as np
 
-from .align import align_to_genes, align_to_genes_with_report
+from .align import (
+    align_to_genes_with_report,
+    format_alignment_issues,
+)
 
 ADAPT_MODES = ("none", "cohort_zscore", "cohort_center")
 
@@ -47,13 +50,28 @@ def standardize(values, model, adapt="none"):
     return (v - mu) / sd  # cohort_zscore
 
 
-def predict_proba_from_aligned(model, values, adapt="none"):
+def _validate_aligned_values(model, values):
+    if values.ndim != 2:
+        raise ValueError("aligned values must be a 2-D samples x genes matrix")
+    n_genes = len(model["genes"])
+    if values.shape[1] != n_genes:
+        raise ValueError(
+            f"aligned values have {values.shape[1]} columns; expected {n_genes} model genes"
+        )
+    if not np.isfinite(values).all():
+        raise ValueError("aligned values contain non-finite values")
+
+
+def predict_proba_from_aligned(model, values, adapt="none", validate_values=True):
     """Score already-aligned feature values.
 
     ``values`` must be samples x model genes in ``model["genes"]`` order.
     This helper lets CLIs align once, then reuse the same matrix for reporting
     matched/missing genes and probabilities.
     """
+    values = np.asarray(values, dtype=float)
+    if validate_values:
+        _validate_aligned_values(model, values)
     z = standardize(values, model, adapt=adapt)
     coef = model["coef"]
     if model["kind"] == "binary":
@@ -61,15 +79,40 @@ def predict_proba_from_aligned(model, values, adapt="none"):
     return softmax(z @ coef.T + model["intercept"], axis=1)
 
 
-def predict_proba(model, X, adapt="none"):
+def _raise_for_invalid_alignment(report, max_invalid_cell_fraction):
+    message = format_alignment_issues(
+        report,
+        max_invalid_cell_fraction=max_invalid_cell_fraction,
+    )
+    if message:
+        raise ValueError(message)
+
+
+def predict_proba(
+    model,
+    X,
+    adapt="none",
+    max_invalid_cell_fraction=0.0,
+    allow_invalid_values=False,
+    return_alignment_report=False,
+):
     """Score an expression DataFrame.
 
     Returns P(positive class) as a 1-D array for a binary model, or an
     (n_samples, n_classes) probability matrix for a multi-class model.
-    Missing model genes are imputed at the training mean.
+    Missing model genes are imputed at the training mean. Invalid values in
+    matched model-gene cells raise ``ValueError`` by default; pass
+    ``allow_invalid_values=True`` only after reviewing mean imputation.
     """
-    values, _n_matched, _missing = align_to_genes(X, model["genes"], impute_mean=model["mean"])
-    return predict_proba_from_aligned(model, values, adapt=adapt)
+    values, report = align_to_genes_with_report(
+        X, model["genes"], impute_mean=model["mean"]
+    )
+    if not allow_invalid_values:
+        _raise_for_invalid_alignment(report, max_invalid_cell_fraction)
+    proba = predict_proba_from_aligned(model, values, adapt=adapt)
+    if return_alignment_report:
+        return proba, report
+    return proba
 
 
 def score_binary_dataframe(
@@ -80,6 +123,8 @@ def score_binary_dataframe(
     positive_label="tumor",
     negative_label="normal",
     round_digits=6,
+    max_invalid_cell_fraction=0.0,
+    allow_invalid_values=False,
     return_alignment_report=False,
 ):
     """Return the stable public scoring CSV shape for a binary model.
@@ -96,6 +141,8 @@ def score_binary_dataframe(
     )
     n_matched = report["n_matched_genes"]
     missing = report["missing_genes"]
+    if not allow_invalid_values:
+        _raise_for_invalid_alignment(report, max_invalid_cell_fraction)
     proba = predict_proba_from_aligned(model, values, adapt=adapt)
     calls = np.where(proba >= threshold, positive_label, negative_label)
     import pandas as pd
@@ -110,13 +157,26 @@ def score_binary_dataframe(
     return result, n_matched, missing
 
 
-def predict(model, X, adapt="none", threshold=0.5):
+def predict(
+    model,
+    X,
+    adapt="none",
+    threshold=0.5,
+    max_invalid_cell_fraction=0.0,
+    allow_invalid_values=False,
+):
     """Return hard class calls.
 
     Binary: array of the two class labels using `threshold` on P(positive).
     Multi-class: array of argmax class labels.
     """
-    proba = predict_proba(model, X, adapt=adapt)
+    proba = predict_proba(
+        model,
+        X,
+        adapt=adapt,
+        max_invalid_cell_fraction=max_invalid_cell_fraction,
+        allow_invalid_values=allow_invalid_values,
+    )
     classes = model["classes"]
     if model["kind"] == "binary":
         return np.where(proba >= threshold, classes[1], classes[0])

@@ -26,7 +26,7 @@ from sklearn.metrics import (accuracy_score, average_precision_score,
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from score_tumor_normal import load_pipeline, score_dataframe  # noqa: E402
+from tcga_rnaseq import load_lr_model, score_binary_dataframe  # noqa: E402
 
 GDC_FILES_ENDPOINT = "https://api.gdc.cancer.gov/files"
 GDC_DATA_ENDPOINT = "https://api.gdc.cancer.gov/data"
@@ -285,7 +285,7 @@ def write_report(path: Path, summary: dict, sampled: pd.DataFrame,
 - Project scored: {sampled['project'].iloc[0]}
 - Sampled files: {len(sampled)} ({summary['n_tumor']} primary tumor, {summary['n_normal']} solid tissue normal)
 - Workflow: GDC STAR-Counts, `tpm_unstranded` converted to log2(TPM+1)
-- Model: bundled logistic regression from `deployable_pipeline.pkl`
+- Model: bundled logistic regression from `deployable_lr_weights.npz`
 
 ## Result at threshold {summary['threshold']}
 
@@ -339,8 +339,16 @@ def main() -> int:
     parser.add_argument("--threshold", type=float, default=0.5)
     parser.add_argument("--refresh-manifest", action="store_true")
     parser.add_argument("--out-dir", default=str(ROOT / "external-validation" / "cptac_gdc"))
-    parser.add_argument("--pipeline", default=str(ROOT / "deployable_pipeline.pkl"))
+    parser.add_argument("--weights", default=str(ROOT / "deployable_lr_weights.npz"))
+    parser.add_argument("--max-invalid-cell-fraction", type=float, default=0.0,
+                        help=("maximum allowed missing, non-numeric, NaN, or infinite cells "
+                              "among matched model genes before failing (default 0)"))
+    parser.add_argument("--allow-invalid-values", action="store_true",
+                        help=("warn instead of failing when matched model-gene cells are "
+                              "missing, non-numeric, NaN, or infinite"))
     args = parser.parse_args()
+    if not 0 <= args.max_invalid_cell_fraction <= 1:
+        parser.error("--max-invalid-cell-fraction must be between 0 and 1")
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -353,16 +361,29 @@ def main() -> int:
     sampled.to_csv(sampled_path, index=False)
     print(f"[cptac] sampled {len(sampled)} files -> {sampled_path}", file=sys.stderr)
 
-    pipe = load_pipeline(args.pipeline)
-    selected_genes = pipe["selected_genes"]
+    model = load_lr_model(args.weights)
+    selected_genes = model["genes"].astype(str).tolist()
     matrix = build_expression_matrix(sampled, selected_genes, cache_dir, args.workers,
                                      args.retries)
     matrix_path = out_dir / "expression_selected_genes.pkl"
     matrix.to_pickle(matrix_path)
 
-    scored, n_matched, missing = score_dataframe(matrix, pipe, "lr", args.threshold)
+    scored, n_matched, missing, alignment_report = score_binary_dataframe(
+        model,
+        matrix,
+        threshold=args.threshold,
+        max_invalid_cell_fraction=args.max_invalid_cell_fraction,
+        allow_invalid_values=args.allow_invalid_values,
+        return_alignment_report=True,
+    )
     if missing:
         print(f"[cptac] WARNING: {len(missing)} missing model genes", file=sys.stderr)
+    if alignment_report["invalid_matched_cells"]:
+        print(
+            f"[cptac] WARNING: imputed {alignment_report['invalid_matched_cells']} "
+            "invalid matched cells",
+            file=sys.stderr,
+        )
     print(f"[cptac] matched {n_matched}/{len(selected_genes)} model genes", file=sys.stderr)
 
     predictions = sampled[["file_id", "project", "case_submitter_id",

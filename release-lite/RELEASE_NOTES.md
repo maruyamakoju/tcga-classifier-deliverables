@@ -1,5 +1,40 @@
 # Release notes
 
+## v1.1.7-gdc-starcounts — 2026-07-09
+
+Core guardrail release. Model weights, training data, and headline validation
+metrics are unchanged from v1.1.6; this release moves invalid matched-value
+protection from only the public CLIs into the shared scoring API and associated
+reproducibility scripts.
+
+### Added
+
+- Strict default invalid matched-value checks in `tcga_rnaseq.predict_proba()`
+  and `tcga_rnaseq.score_binary_dataframe()`.
+- Strict default invalid matched-value checks in the legacy low-level
+  `align_to_genes()` helper; callers that intentionally reproduce historical
+  mean-imputed benchmarks must pass `allow_invalid_values=True`.
+- Shape and finite-value validation in `predict_proba_from_aligned()`.
+- Markdown local-link validation in `audit_release_docs.py`, including
+  `INDEX.md` version coverage.
+
+### Changed
+
+- Invalid alignment summary and validation helpers now live in the shared
+  `tcga_rnaseq` core instead of only `score_tumor_normal.py`.
+- External validation and cross-platform benchmark scripts use
+  `deployable_lr_weights.npz` and explicit invalid-value handling.
+- Release artifact metadata now advertises the strict source-parity validation
+  command with `--source-root . --artifacts RELEASE_ARTIFACTS.json`.
+- `INDEX.md` is release-lite-safe and no longer links to full-repo-only paths.
+
+### Tests
+
+- Unit coverage for strict core scoring, aligned-matrix shape/finiteness checks,
+  and default rejection of invalid matched values.
+- Reproducibility tests now explicitly mark historical Toil/GTEx external
+  benchmarks as mean-imputed via `allow_invalid_values=True`.
+
 ## v1.1.6-gdc-starcounts — 2026-07-09
 
 Remaining CLI guardrail update. The fitted model weights and headline

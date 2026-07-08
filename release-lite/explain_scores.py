@@ -7,12 +7,14 @@ import sys
 import numpy as np
 import pandas as pd
 
-from score_tumor_normal import (
-    load_lr_weights,
+from score_tumor_normal import load_lr_weights
+from tcga_rnaseq import (
+    align_to_genes_with_report,
     print_invalid_alignment_summary,
+    read_matrix,
+    sigmoid,
     validate_alignment_report,
 )
-from tcga_rnaseq import align_to_genes_with_report, read_matrix, sigmoid
 
 
 EXPLANATION_COLUMNS = [

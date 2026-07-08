@@ -37,11 +37,12 @@ import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from calibrate_threshold import normalize_label  # noqa: E402
-from score_tumor_normal import (  # noqa: E402
+from tcga_rnaseq import (  # noqa: E402
+    load_lr_model,
     print_invalid_alignment_summary,
+    read_matrix,
     validate_alignment_report,
 )
-from tcga_rnaseq import load_lr_model, read_matrix  # noqa: E402
 from tcga_rnaseq.align import align_to_genes_with_report  # noqa: E402
 from tcga_rnaseq import metrics as M  # noqa: E402
 from tcga_rnaseq.score import ADAPT_MODES, predict_proba_from_aligned  # noqa: E402

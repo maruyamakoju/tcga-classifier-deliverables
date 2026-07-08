@@ -269,7 +269,11 @@ def main(argv=None):
         return 1
 
     scores, n_matched, missing, alignment_report = score_dataframe_lr_weights(
-        df, weights, args.threshold, return_alignment_report=True
+        df,
+        weights,
+        args.threshold,
+        allow_invalid_values=True,
+        return_alignment_report=True,
     )
     print_invalid_alignment_summary(alignment_report, sys.stderr)
     alignment_issues = validate_alignment_report(

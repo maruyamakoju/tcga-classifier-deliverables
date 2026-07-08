@@ -30,7 +30,13 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tcga_rnaseq import load_lr_model, read_matrix, score_binary_dataframe  # noqa: E402
+from tcga_rnaseq import (  # noqa: E402
+    load_lr_model,
+    print_invalid_alignment_summary,
+    read_matrix,
+    score_binary_dataframe,
+    validate_alignment_report,
+)
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -64,85 +70,24 @@ def _as_model(model):
             "kind": "binary"}
 
 
-def score_dataframe_lr_weights(df, model, threshold=0.5, return_alignment_report=False):
+def score_dataframe_lr_weights(
+    df,
+    model,
+    threshold=0.5,
+    max_invalid_cell_fraction=0.0,
+    allow_invalid_values=False,
+    return_alignment_report=False,
+):
     """Score with the pure-NumPy npz logistic-regression model.
     `model` may be a tcga_rnaseq model dict or a legacy load_lr_weights dict."""
     return score_binary_dataframe(
         _as_model(model),
         df,
         threshold=threshold,
+        max_invalid_cell_fraction=max_invalid_cell_fraction,
+        allow_invalid_values=allow_invalid_values,
         return_alignment_report=return_alignment_report,
     )
-
-
-def validate_alignment_report(report, max_invalid_cell_fraction=0.0):
-    """Return blocking issues for invalid values in matched model-gene cells."""
-    max_invalid_cell_fraction = float(max_invalid_cell_fraction)
-    issues = []
-    invalid_cells = int(report.get("invalid_matched_cells", 0))
-    if invalid_cells <= 0:
-        return issues
-
-    all_invalid_genes = int(report.get("n_genes_with_all_invalid_values", 0))
-    all_invalid_samples = int(report.get("n_samples_with_all_invalid_values", 0))
-    invalid_fraction = float(report.get("invalid_matched_fraction", 0.0))
-    max_sample_fraction = float(
-        report.get("max_invalid_matched_cell_fraction_per_sample", 0.0)
-    )
-    if all_invalid_genes:
-        examples = ", ".join(report.get("first_genes_with_all_invalid_values", [])[:5])
-        suffix = f" Examples: {examples}." if examples else ""
-        issues.append(
-            f"{all_invalid_genes} matched model genes have no finite values.{suffix}"
-        )
-    if all_invalid_samples:
-        examples = ", ".join(report.get("first_samples_with_all_invalid_values", [])[:5])
-        suffix = f" Examples: {examples}." if examples else ""
-        issues.append(
-            f"{all_invalid_samples} samples have no finite matched model-gene values.{suffix}"
-        )
-    if invalid_fraction > max_invalid_cell_fraction:
-        issues.append(
-            "Invalid matched-value fraction "
-            f"{invalid_fraction:.3%} exceeds --max-invalid-cell-fraction "
-            f"{max_invalid_cell_fraction:.3%}."
-        )
-    if max_sample_fraction > max_invalid_cell_fraction:
-        issues.append(
-            "Worst-sample invalid matched-value fraction "
-            f"{max_sample_fraction:.3%} exceeds --max-invalid-cell-fraction "
-            f"{max_invalid_cell_fraction:.3%}."
-        )
-    return issues
-
-
-def print_invalid_alignment_summary(report, stream, prefix="[score]"):
-    invalid_cells = int(report.get("invalid_matched_cells", 0))
-    if invalid_cells <= 0:
-        return
-    matched_cells = int(report.get("matched_cells", 0))
-    invalid_fraction = float(report.get("invalid_matched_fraction", 0.0))
-    print(
-        f"{prefix} invalid matched values: "
-        f"{invalid_cells}/{matched_cells} ({invalid_fraction:.3%}); "
-        f"{report.get('n_genes_with_invalid_values', 0)} genes, "
-        f"{report.get('n_samples_with_invalid_values', 0)} samples",
-        file=stream,
-    )
-    gene_examples = report.get("first_genes_with_invalid_values", [])[:3]
-    if gene_examples:
-        text = ", ".join(
-            f"{item['gene']}:{item['invalid_cells']}/{item['total_cells']}"
-            for item in gene_examples
-        )
-        print(f"{prefix} invalid gene examples: {text}", file=stream)
-    sample_examples = report.get("first_samples_with_invalid_values", [])[:3]
-    if sample_examples:
-        text = ", ".join(
-            f"{item['sample']}:{item['invalid_cells']}/{item['matched_genes']}"
-            for item in sample_examples
-        )
-        print(f"{prefix} invalid sample examples: {text}", file=stream)
 
 
 def run_self_test(lr_weights_path):
@@ -227,7 +172,11 @@ def main(argv=None):
         ap.error(f"LR weights file not found: {args.lr_weights}")
     model = load_lr_model(args.lr_weights)
     res, n_matched, missing, alignment_report = score_dataframe_lr_weights(
-        df, model, args.threshold, return_alignment_report=True
+        df,
+        model,
+        args.threshold,
+        allow_invalid_values=True,
+        return_alignment_report=True,
     )
     n_genes = len(model["genes"])
     scorer = "lr-numpy"

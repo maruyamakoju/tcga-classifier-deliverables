@@ -4,6 +4,7 @@ import argparse
 import json
 import re
 import sys
+from urllib.parse import unquote
 from pathlib import Path
 
 
@@ -11,6 +12,7 @@ ROOT = Path(__file__).resolve().parent
 
 VERSIONED_DOCS = [
     "DATA_DICTIONARY.md",
+    "INDEX.md",
     "README.md",
     "USER_GUIDE.md",
     "RELEASE_BUNDLE.md",
@@ -22,6 +24,10 @@ VERSIONED_DOCS = [
 ]
 
 COMMAND_DOCS = VERSIONED_DOCS + ["MODEL_CARD.md"]
+
+OPTIONAL_FULL_REPO_DOCS = [
+    "PUBLICATION_CHECKLIST.md",
+]
 
 CORE_FILES = [
     "audit_cli_entrypoints.py",
@@ -41,6 +47,7 @@ CORE_FILES = [
     "codemeta.json",
     "explain_scores.py",
     "inspect_expression_input.py",
+    "INDEX.md",
     "model_gene_metadata.csv",
     "model_qc_reference.json",
     "README.md",
@@ -63,6 +70,7 @@ CORE_FILES = [
 FULL_DELIVERABLE_COMMANDS = {"build_release_lite.py"}
 
 CODE_SPAN_RE = re.compile(r"`([^`\n]+)`")
+MARKDOWN_LINK_RE = re.compile(r"!?\[[^\]\n]*\]\(([^)\n]+)\)")
 PYTHON_SCRIPT_COMMAND_RE = re.compile(
     r"(?m)^\s*python\s+([A-Za-z0-9_./\\-]+\.py)\b"
 )
@@ -124,6 +132,14 @@ def check_version_consistency(messages):
         if text is not None and version not in text:
             add_message(messages, "ERROR", "doc_version_missing",
                         f"{rel} does not mention release version {version}.", path)
+    for rel in OPTIONAL_FULL_REPO_DOCS:
+        path = ROOT / rel
+        if not path.exists():
+            continue
+        text = read_text(path, messages)
+        if text is not None and version not in text:
+            add_message(messages, "ERROR", "doc_version_missing",
+                        f"{rel} does not mention release version {version}.", path)
 
 
 def check_release_bundle_contents(messages):
@@ -181,12 +197,62 @@ def check_python_commands(messages):
                         f"{rel} references missing Python script: {script}", script_path)
 
 
+def is_external_link(target):
+    lower = target.lower()
+    return (
+        lower.startswith(("http://", "https://", "mailto:"))
+        or lower.startswith("#")
+    )
+
+
+def normalize_markdown_target(raw_target):
+    target = raw_target.strip()
+    if not target or is_external_link(target):
+        return None
+    if target.startswith("<") and target.endswith(">"):
+        target = target[1:-1].strip()
+    target = target.split("#", 1)[0].split("?", 1)[0]
+    if not target:
+        return None
+    return unquote(target)
+
+
+def check_markdown_links(messages):
+    docs = list(dict.fromkeys(COMMAND_DOCS + OPTIONAL_FULL_REPO_DOCS))
+    for rel in docs:
+        path = ROOT / rel
+        if not path.exists():
+            continue
+        text = read_text(path, messages)
+        if text is None:
+            continue
+        for match in MARKDOWN_LINK_RE.finditer(text):
+            target = normalize_markdown_target(match.group(1))
+            if target is None:
+                continue
+            if target.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", target):
+                add_message(messages, "ERROR", "markdown_absolute_local_link",
+                            f"{rel} uses an absolute local Markdown link: {target}", path)
+                continue
+            link_path = (path.parent / target).resolve()
+            try:
+                link_path.relative_to(ROOT.resolve())
+            except ValueError:
+                add_message(messages, "ERROR", "markdown_link_outside_root",
+                            f"{rel} links outside the release root: {target}", path)
+                continue
+            if not link_path.exists():
+                add_message(messages, "ERROR", "markdown_link_missing",
+                            f"{rel} links to missing local path: {target}", link_path)
+
+
 def build_report():
     messages = []
     check_core_files(messages)
     check_version_consistency(messages)
     check_release_bundle_contents(messages)
     check_python_commands(messages)
+    check_markdown_links(messages)
     levels = {item["level"] for item in messages}
     status = "FAIL" if "ERROR" in levels else "WARN" if "WARNING" in levels else "PASS"
     return {

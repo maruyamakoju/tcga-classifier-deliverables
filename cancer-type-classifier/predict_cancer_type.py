@@ -22,11 +22,12 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))  # deliverables root, for tcga_rnaseq
-from score_tumor_normal import (  # noqa: E402
+from tcga_rnaseq import (  # noqa: E402
+    load_lr_model,
     print_invalid_alignment_summary,
+    read_matrix,
     validate_alignment_report,
 )
-from tcga_rnaseq import load_lr_model, read_matrix  # noqa: E402
 from tcga_rnaseq.align import align_to_genes_with_report  # noqa: E402
 from tcga_rnaseq.score import predict_proba_from_aligned  # noqa: E402
 
