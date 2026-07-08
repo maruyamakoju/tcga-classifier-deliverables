@@ -1,5 +1,32 @@
 # Release notes
 
+## v1.1.6-gdc-starcounts — 2026-07-09
+
+Remaining CLI guardrail update. The fitted model weights and headline
+validation metrics are unchanged from v1.1.5; this release extends invalid
+matched expression value checks to the remaining prediction/adaptation entry
+points.
+
+### Added
+
+- `--max-invalid-cell-fraction` and `--allow-invalid-values` on
+  `cohort_adapt_score.py`.
+- Invalid matched-value reporting on
+  `cancer-type-classifier/predict_cancer_type.py`.
+- Adaptation output metadata for matched/missing model genes and invalid
+  matched-value counts.
+- Safety coverage showing `cohort_adapt_score.py` refuses invalid matched
+  values unless explicitly allowed.
+- Unit coverage showing the cancer-type CLI refuses invalid matched values
+  unless explicitly allowed.
+
+### Changed
+
+- `cohort_adapt_score.py` now aligns once, validates matched values, and then
+  scores from the validated aligned matrix.
+- `cancer-type-classifier/predict_cancer_type.py` now stops by default before
+  writing predictions if any matched model-gene values are invalid.
+
 ## v1.1.5-gdc-starcounts — 2026-07-09
 
 Explanation guardrail update. The fitted model weights and headline validation

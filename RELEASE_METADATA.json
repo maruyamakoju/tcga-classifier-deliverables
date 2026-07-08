@@ -1,8 +1,14 @@
 {
   "release_date": "2026-07-09",
-  "release_name": "GDC STAR-Counts explanation guardrail release",
+  "release_name": "GDC STAR-Counts remaining CLI guardrail release",
   "schema_version": "1.0",
-  "version": "v1.1.5-gdc-starcounts",
+  "version": "v1.1.6-gdc-starcounts",
+  "changes_since_v1_1_5": [
+    "Made cohort_adapt_score.py stop before writing adapted scores when matched values are missing, non-numeric, NaN, or infinite unless explicitly allowed.",
+    "Made cancer-type-classifier/predict_cancer_type.py reject invalid matched values before writing predictions unless explicitly allowed.",
+    "Added invalid-value summaries and output metadata for adaptation and cancer-type prediction CLIs.",
+    "Expanded safety and unit coverage for the remaining invalid matched-value CLI paths."
+  ],
   "changes_since_v1_1_4": [
     "Made explain_scores.py stop before writing explanations when matched values are missing, non-numeric, NaN, or infinite unless explicitly allowed.",
     "Added the same --max-invalid-cell-fraction and --allow-invalid-values controls to explanation generation as scoring.",

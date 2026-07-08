@@ -1,4 +1,7 @@
 """Unit tests for the tcga_rnaseq core primitives."""
+import subprocess
+import sys
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -279,6 +282,45 @@ def test_binary_cli_rejects_multiclass_weights(root, cancer_type_model):
         load_lr_weights(f"{root}/cancer-type-classifier/cancer_type_lr_weights.npz")
     with pytest.raises(ValueError, match="requires a binary model"):
         score_dataframe_lr_weights(pd.DataFrame({"g1": [1.0]}), cancer_type_model)
+
+
+def test_cancer_type_cli_rejects_invalid_matched_values(tmp_path, root, cancer_type_model):
+    gene = str(cancer_type_model["genes"][0])
+    input_path = tmp_path / "invalid_cancer_type.csv"
+    output_path = tmp_path / "predictions.csv"
+    input_path.write_text(f"sample,{gene}\ns1,not_numeric\n", encoding="utf-8")
+    result = subprocess.run(
+        [
+            sys.executable,
+            "cancer-type-classifier/predict_cancer_type.py",
+            str(input_path),
+            "--out",
+            str(output_path),
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode != 0
+    assert "invalid matched values" in result.stderr
+    assert "Refusing to write predictions" in result.stderr
+    assert not output_path.exists()
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "cancer-type-classifier/predict_cancer_type.py",
+            str(input_path),
+            "--out",
+            str(output_path),
+            "--allow-invalid-values",
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode == 0
+    assert output_path.exists()
 
 
 def test_workflow_qc_fail_report_does_not_claim_zero_scored_samples():

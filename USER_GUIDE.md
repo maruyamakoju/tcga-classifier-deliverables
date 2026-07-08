@@ -1,6 +1,6 @@
 # User guide
 
-Release: `v1.1.5-gdc-starcounts` (`2026-07-09`)
+Release: `v1.1.6-gdc-starcounts` (`2026-07-09`)
 
 This guide is for people who want to run the lightweight classifier on a new
 expression matrix. For a short project-level handoff, read
@@ -123,9 +123,9 @@ A `PASS` result does not validate a new RNA-seq pipeline. It only says the
 input did not trip the current guardrails.
 
 Matched model-gene cells that are missing, non-numeric, `NaN`, or infinite are
-not silently accepted by the scorer, workflow, or explainer. By default they
-stop before `scores.csv` or `explanations.csv` is written. Fix the input first;
-use `--max-invalid-cell-fraction` or `--allow-invalid-values` only when you have
+not silently accepted by the scorer, workflow, explainer, or adaptation scorer.
+By default they stop before output files are written. Fix the input first; use
+`--max-invalid-cell-fraction` or `--allow-invalid-values` only when you have
 reviewed and accepted training mean imputation for those cells.
 
 ## 6. Thresholds

@@ -1,6 +1,6 @@
 # Pan-cancer tumor-vs-normal classifier from TCGA RNA-seq
 
-Release: `v1.1.5-gdc-starcounts` (`2026-07-09`)
+Release: `v1.1.6-gdc-starcounts` (`2026-07-09`)
 
 ## Data
 
@@ -182,9 +182,10 @@ per-sample explanations, a machine-readable manifest, and a Markdown workflow
 report in one output directory.
 
 Matched model-gene cells that are missing, non-numeric, `NaN`, or infinite stop
-the scorer, workflow, and explainer before output files are written unless a
-reviewed tolerance or explicit override is supplied. This prevents a malformed
-matched input column or sample from being silently neutral-imputed.
+the scorer, workflow, explainer, adaptation scorer, and cancer-type predictor
+before output files are written unless a reviewed tolerance or explicit
+override is supplied. This prevents a malformed matched input column or sample
+from being silently neutral-imputed.
 
 ## Cross-platform adaptation (restoring Toil accuracy)
 

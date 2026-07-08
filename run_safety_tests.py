@@ -124,6 +124,21 @@ def main():
                       "--allow-invalid-values"])
         require_ok(result, "invalid matched values explanations explicit allow")
 
+        invalid_adapted_scores = invalid_input.with_suffix(".adapted_scores.csv")
+        result = run([sys.executable, "cohort_adapt_score.py", str(invalid_input),
+                      "--adapt", "none"])
+        require_fail(result, "invalid matched values cohort adaptation")
+        require("invalid matched values" in result.stderr,
+                "invalid matched-value adaptation summary missing")
+        require("Refusing to write adapted scores" in result.stderr,
+                "invalid matched-value adaptation refusal missing")
+        require(not invalid_adapted_scores.exists(),
+                "cohort_adapt_score.py wrote scores after invalid matched values")
+
+        result = run([sys.executable, "cohort_adapt_score.py", str(invalid_input),
+                      "--adapt", "none", "--allow-invalid-values"])
+        require_ok(result, "invalid matched values cohort adaptation explicit allow")
+
         result = run([sys.executable, "explain_scores.py", "example_input.csv",
                       "--top-n", "0"])
         require_fail(result, "invalid explanation top-n")
