@@ -1,0 +1,36 @@
+name: Usage question
+description: Ask about intended use, input format, QC interpretation, or release files.
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project is research-only and is not intended for clinical diagnosis or patient management.
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What are you trying to do?
+    validations:
+      required: true
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic
+      options:
+        - Input matrix preparation
+        - QC interpretation
+        - Threshold calibration
+        - Release ZIP / install
+        - Validation boundary
+        - Citation / metadata
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Include sanitized commands, file formats, and QC statuses when useful.
+      render: text

@@ -1,0 +1,60 @@
+name: Bug report
+description: Report a scoring, validation, packaging, or documentation problem.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Do not include protected health information, private sample identifiers, credentials, or unpublished data.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What failed, and what did you expect instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Scoring CLI
+        - Input QC
+        - Threshold calibration
+        - Release ZIP / checksums
+        - Documentation
+        - CI / packaging
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: v1.1.2-gdc-starcounts or commit SHA
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include commands and sanitized file shapes/column examples.
+      render: bash
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Paste sanitized traceback, QC JSON snippets, or command output.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submit checks
+      options:
+        - label: I removed credentials, PHI, private sample IDs, and unpublished raw data.
+          required: true
+        - label: I checked whether the input is GDC STAR-Counts-style log2(TPM+1), if relevant.
+          required: false

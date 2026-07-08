@@ -21,6 +21,11 @@ TEXT_NAMES = {"LICENSE", "VERSION"}
 
 REQUIRED_FILES = {
     ".github/workflows/ci.yml",
+    ".github/dependabot.yml",
+    ".github/ISSUE_TEMPLATE/bug_report.yml",
+    ".github/ISSUE_TEMPLATE/config.yml",
+    ".github/ISSUE_TEMPLATE/question.yml",
+    ".github/PULL_REQUEST_TEMPLATE.md",
     ".gitattributes",
     ".gitignore",
     ".zenodo.json",
@@ -28,6 +33,7 @@ REQUIRED_FILES = {
     "CONTRIBUTING.md",
     "GITHUB_RELEASE_v1.1.2.md",
     "LICENSE",
+    "MAINTENANCE.md",
     "NOTICE.md",
     "PUBLICATION_CHECKLIST.md",
     "README.md",
