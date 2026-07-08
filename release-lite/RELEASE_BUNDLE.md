@@ -13,6 +13,8 @@ Release: `v1.1.1-gdc-starcounts` (`2026-07-08`)
 - `DATA_DICTIONARY.md`: stable input/output column and JSON contract reference.
 - `TROUBLESHOOTING.md`: install, input-QC, threshold, and release-integrity fixes.
 - `VERSION` and `RELEASE_METADATA.json`: versioned release metadata.
+- `LICENSE`, `NOTICE.md`, and `CITATION.cff`: license, third-party data notice,
+  and citation metadata.
 - `run_tumor_normal_workflow.py`: one-command QC, scoring, calibration, explanations, and report.
 - `check_environment.py`: runtime/package/file diagnostic and optional self-test.
 - `audit_lightweight_dependencies.py`: release import and minimal dependency audit.

@@ -1,7 +1,7 @@
 {
   "builder": "build_release_lite.py",
   "bundle_name": "tcga-tumor-normal-release-lite",
-  "file_count_excluding_manifest_and_checksums": 65,
+  "file_count_excluding_manifest_and_checksums": 68,
   "files": [
     {
       "bytes": 6166,
@@ -14,9 +14,9 @@
       "sha256": "17e6176025c0d8b6c692be40c9ed578cfa62445e5153139f8e975687ad5c42fd"
     },
     {
-      "bytes": 7699,
+      "bytes": 7751,
       "path": "audit_release_docs.py",
-      "sha256": "400d1eebf6188d5027a3f1c3cfa4d0f2f07bf2b47bf6045d90f1126a4c64c261"
+      "sha256": "c8addbf641f4833173e554e4f61e50339c3e3450708ae8b320afbf4db8f2d2b4"
     },
     {
       "bytes": 7739,
@@ -27,6 +27,11 @@
       "bytes": 6163,
       "path": "check_environment.py",
       "sha256": "615a6738e862d08612b39ac6c9422ab2a6db838d51614e66455876fcf48e88c8"
+    },
+    {
+      "bytes": 742,
+      "path": "CITATION.cff",
+      "sha256": "7d4a75351486ad8783ee5d65fe5cab36f057e53ce642233d3d2acd31f355c43d"
     },
     {
       "bytes": 5114,
@@ -164,6 +169,11 @@
       "sha256": "85ba815fc0810a6561466906af98ed4e99ae8224b484623d44bc3ca69e58634c"
     },
     {
+      "bytes": 1070,
+      "path": "LICENSE",
+      "sha256": "660590458426bf1a398c84a33b9a02c74449f17f84ee88e28753cf5246b7ffbe"
+    },
+    {
       "bytes": 5114,
       "path": "LITERATURE_CHECK.md",
       "sha256": "e6ec7ece96fcdfcb06e6ae3db6d3a45666f4be1d04173310fc934b8a15933547"
@@ -184,19 +194,24 @@
       "sha256": "e44c83e5fef51ddfd413586c34a47eac770a4835c65e2350754a04b87e57c9cd"
     },
     {
+      "bytes": 700,
+      "path": "NOTICE.md",
+      "sha256": "d741f8d45cf50f849fd7859302579e9652045a0282f7f51b157b070aa6776707"
+    },
+    {
       "bytes": 562,
       "path": "per_cancer_type_performance.csv",
       "sha256": "3ff81c32f6622fbe106ef0cd3d601c16726135656684c23200dc3b2f36441e3e"
     },
     {
-      "bytes": 10478,
+      "bytes": 10733,
       "path": "README.md",
-      "sha256": "44de5de752b844d8e6824c3554914d3abc564a9fce07b55b487dafbf79100a19"
+      "sha256": "3a86ca638579033c77a062fb77ca4c5e898e75f464bfe486338faae34e300872"
     },
     {
-      "bytes": 3711,
+      "bytes": 3816,
       "path": "RELEASE_BUNDLE.md",
-      "sha256": "39edb3b25413651fe31e4c15e12549393b595b31deb08d1f46a20baba63c41bb"
+      "sha256": "77333ac7a07add3d9e41c2049f721f6d811342cc0b51a1b8aa6b5de70ab10148"
     },
     {
       "bytes": 3290,

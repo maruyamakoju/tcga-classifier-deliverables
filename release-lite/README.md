@@ -143,3 +143,10 @@ pipeline-specific refitting or threshold calibration.
 - `tests/` — pytest suite for core units and numerical reproducibility
 - model checkpoints: `model_lr.pkl`, `model_rf.pkl`, `feature_selection.pkl`,
   `X_full_filtered.pkl`, `y_full.pkl`, `projects_full.pkl`, `train_idx.npy`, `test_idx.npy`
+
+## Citation and license
+
+Use `CITATION.cff` for software citation metadata. Repository code and
+project-authored documentation are MIT licensed; see `LICENSE`. Third-party
+source datasets remain subject to their original provider terms; see
+`NOTICE.md`.
