@@ -33,6 +33,8 @@ RELEASE_FILES = [
     "LICENSE",
     "NOTICE.md",
     "CITATION.cff",
+    ".zenodo.json",
+    "codemeta.json",
     "tcga_rnaseq/__init__.py",
     "tcga_rnaseq/io.py",
     "tcga_rnaseq/align.py",

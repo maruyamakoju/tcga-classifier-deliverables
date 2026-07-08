@@ -37,6 +37,8 @@ CORE_FILES = [
     "LICENSE",
     "NOTICE.md",
     "CITATION.cff",
+    ".zenodo.json",
+    "codemeta.json",
     "explain_scores.py",
     "inspect_expression_input.py",
     "model_gene_metadata.csv",

@@ -2,7 +2,7 @@
 
 Use this checklist before making the repository or a release public.
 
-Status for `v1.1.1-gdc-starcounts`: completed for the public GitHub release on
+Status for `v1.1.2-gdc-starcounts`: completed for the public GitHub release on
 2026-07-08. Re-run this checklist before any future public release.
 
 ## Repository
@@ -11,7 +11,8 @@ Status for `v1.1.1-gdc-starcounts`: completed for the public GitHub release on
 - [x] Confirm CI passes on the hosted repository.
 - [x] Confirm `.gitignore` excludes large training artifacts and caches.
 - [x] Confirm no private credentials, tokens, or unpublished data are present.
-- [x] Confirm `LICENSE`, `NOTICE.md`, and `CITATION.cff` are present.
+- [x] Confirm `LICENSE`, `NOTICE.md`, `CITATION.cff`, `.zenodo.json`, and
+      `codemeta.json` are present.
 - [x] Run `python audit_publication_readiness.py`.
 
 ## Release
@@ -21,7 +22,7 @@ Status for `v1.1.1-gdc-starcounts`: completed for the public GitHub release on
 - [x] Run `python run_release_acceptance.py --timeout-seconds 300`.
 - [x] Confirm `RELEASE_ARTIFACTS.json` records the release zip SHA256.
 - [x] Upload `tcga-tumor-normal-release-lite.zip` as the GitHub Release asset.
-- [x] Paste `GITHUB_RELEASE_v1.1.1.md` as the GitHub Release body.
+- [x] Paste `GITHUB_RELEASE_v1.1.2.md` as the GitHub Release body.
 
 ## Scientific Framing
 

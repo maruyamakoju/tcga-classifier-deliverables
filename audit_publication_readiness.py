@@ -23,9 +23,10 @@ REQUIRED_FILES = {
     ".github/workflows/ci.yml",
     ".gitattributes",
     ".gitignore",
+    ".zenodo.json",
     "CITATION.cff",
     "CONTRIBUTING.md",
-    "GITHUB_RELEASE_v1.1.1.md",
+    "GITHUB_RELEASE_v1.1.2.md",
     "LICENSE",
     "NOTICE.md",
     "PUBLICATION_CHECKLIST.md",
@@ -33,6 +34,7 @@ REQUIRED_FILES = {
     "RELEASE_ARTIFACTS.json",
     "SECURITY.md",
     "VERSION",
+    "codemeta.json",
     ZIP_NAME,
 }
 
@@ -192,7 +194,9 @@ def check_history_blob_sizes(messages, max_bytes):
 def check_release_artifacts(messages):
     artifacts_path = ROOT / "RELEASE_ARTIFACTS.json"
     zip_path = ROOT / ZIP_NAME
-    note_path = ROOT / "GITHUB_RELEASE_v1.1.1.md"
+    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    release_prefix = version.split("-", 1)[0]
+    note_path = ROOT / f"GITHUB_RELEASE_{release_prefix}.md"
     if not artifacts_path.exists() or not zip_path.exists():
         return
     try:
@@ -220,6 +224,47 @@ def check_release_artifacts(messages):
             add_message(messages, "ERROR", "github_release_note_stale",
                         "GitHub release notes do not contain current zip SHA and byte size.",
                         note_path)
+
+
+def check_json_metadata(messages):
+    checks = {
+        ".zenodo.json": {
+            "access_right",
+            "creators",
+            "description",
+            "license",
+            "title",
+            "upload_type",
+            "version",
+        },
+        "codemeta.json": {
+            "@context",
+            "@type",
+            "author",
+            "codeRepository",
+            "description",
+            "license",
+            "name",
+            "version",
+        },
+    }
+    for rel, required_keys in checks.items():
+        path = ROOT / rel
+        if not path.exists():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            add_message(messages, "ERROR", "metadata_json_invalid",
+                        f"{rel} is invalid JSON: {exc}", path)
+            continue
+        missing = sorted(key for key in required_keys if key not in data)
+        if missing:
+            add_message(messages, "ERROR", "metadata_key_missing",
+                        f"{rel} is missing required keys: {', '.join(missing)}", path)
+        if data.get("version") != (ROOT / "VERSION").read_text(encoding="utf-8").strip():
+            add_message(messages, "ERROR", "metadata_version_mismatch",
+                        f"{rel} version does not match VERSION.", path)
 
 
 def check_workflow(messages):
@@ -264,6 +309,7 @@ def main(argv=None):
     check_secret_patterns(files, messages)
     check_history_blob_sizes(messages, args.max_history_blob_mb * 1024 * 1024)
     check_release_artifacts(messages)
+    check_json_metadata(messages)
     check_workflow(messages)
 
     errors = [item for item in messages if item["level"] == "ERROR"]

@@ -19,6 +19,8 @@ REQUIRED_FALLBACK = {
     "DATA_DICTIONARY.md",
     "deployable_lr_weights.npz",
     "EXECUTIVE_SUMMARY.md",
+    ".zenodo.json",
+    "codemeta.json",
     "example_input.csv",
     "example_labels.csv",
     "example_output.csv",

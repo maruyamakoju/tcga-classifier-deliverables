@@ -1,0 +1,24 @@
+{
+  "access_right": "open",
+  "creators": [
+    {
+      "name": "Maruyama, Koju"
+    }
+  ],
+  "description": "Lightweight deployment release for a TCGA/GDC STAR-Counts-scale bulk RNA-seq tumor-vs-adjacent-normal classifier, with input QC, scoring, threshold calibration, explanations, release validation, and compact external-validation artifacts. This software is research-only and is not intended for clinical diagnosis or patient management.",
+  "keywords": [
+    "TCGA",
+    "GDC",
+    "RNA-seq",
+    "tumor-normal classification",
+    "bioinformatics",
+    "machine learning",
+    "cancer genomics"
+  ],
+  "license": "MIT",
+  "notes": "Validated input boundary: GDC STAR-Counts-style log2(TPM+1) bulk RNA-seq matrices for TCGA/CPTAC-like tumor-vs-adjacent-normal contrasts. Direct hard calls on Toil/RSEM, GTEx, GEO, raw counts, FPKM, microarray, single-cell, or spatial data are not validated without pipeline-specific recalibration or refitting.",
+  "publication_date": "2026-07-08",
+  "title": "TCGA/GDC tumor-vs-normal RNA-seq classifier",
+  "upload_type": "software",
+  "version": "v1.1.2-gdc-starcounts"
+}

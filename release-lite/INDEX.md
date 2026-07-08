@@ -1,6 +1,6 @@
 # INDEX — a guided reading path
 
-Release: `v1.1.1-gdc-starcounts`
+Release: `v1.1.2-gdc-starcounts`
 
 This deliverable grew in layers, from a base tumor-vs-normal model to external
 validation, cross-platform adaptation, and a separate cancer-type classifier.

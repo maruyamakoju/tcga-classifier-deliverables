@@ -1,6 +1,11 @@
 # TCGA tumor-vs-normal classifier — deliverables
 
-Release: `v1.1.1-gdc-starcounts` (`2026-07-08`). For a single guided path
+[![CI](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml/badge.svg)](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.2-gdc-starcounts)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Citation](https://img.shields.io/badge/citation-CITATION.cff-blue.svg)](CITATION.cff)
+
+Release: `v1.1.2-gdc-starcounts` (`2026-07-08`). For a single guided path
 through the whole deliverable (base model → generalization → external
 validation → cross-platform adaptation → cancer-type classifier), start with
 `INDEX.md`. Otherwise start with `EXECUTIVE_SUMMARY.md` if you need a short
@@ -33,7 +38,6 @@ python score_tumor_normal.py example_input.csv          # -> example_input.score
 python score_tumor_normal.py --self-test                # verify bundled example, no sklearn needed
 python inspect_expression_input.py example_input.csv     # QC gene coverage, scale, and shift
 python score_tumor_normal.py expr.csv -o calls.csv --threshold 0.5
-python score_tumor_normal.py expr.pkl --model rf         # random forest instead of LR
 python calibrate_threshold.py calls.csv labels.csv       # choose a threshold from labeled samples
 python explain_scores.py expr.csv --top-n 10             # per-sample LR gene contributions
 ```
@@ -53,8 +57,8 @@ python explain_scores.py expr.csv --top-n 10             # per-sample LR gene co
 - **Runnable example:** `example_input.csv` (5 real samples) → `example_output.csv`
   (first 3 tumor at p>0.99, last 2 normal at p<0.06 — matches their true labels).
 - **Default scorer:** pure NumPy logistic regression from `deployable_lr_weights.npz`
-  (small, no scikit-learn pickle warning). Use `--use-pickle-lr` only for legacy parity
-  checks, or `--model rf` for the random forest.
+  (small, no scikit-learn pickle warning). Legacy pickle/RF scoring requires full
+  local training artifacts that are intentionally excluded from the public Git history.
 
 ### Threshold calibration (important for a new tissue)
 Ranking (AUC) transfers across cancer types, but the fixed **0.5 threshold does not**
@@ -73,8 +77,8 @@ genes, coefficients, training means/scales, and the direction implied by high ex
 
 ### Running environment
 For default LR scoring, use `requirements-light.txt` (NumPy + pandas only, with pyarrow
-for parquet input). Use `requirements.txt` or `environment.yml` for legacy pickle/RF
-scoring or for regenerating `deployable_lr_weights.npz` from `deployable_pipeline.pkl`.
+for parquet input). Use `requirements.txt` or `environment.yml` only when working from a
+full local training-artifact checkout that includes the legacy pickle/RF files.
 The CLI never imports xgboost (it stubs the pickled xgboost model), so LR/RF scoring is
 unaffected.
 
@@ -105,6 +109,8 @@ pipeline-specific refitting or threshold calibration.
 - `audit_lightweight_dependencies.py` — release import and `requirements-light.txt` dependency audit
 - `audit_cli_entrypoints.py` — release CLI `--help` and shebang audit
 - `audit_release_docs.py` — documentation and release-bundle reference audit
+- `audit_publication_readiness.py` — public-release audit for secrets, large blobs,
+  line endings, and release metadata consistency
 - `validate_output_contracts.py` — bundled CSV/JSON output contract validator
 - `calibrate_threshold.py` — choose a cutoff from labeled scored samples
 - `explain_scores.py` — per-sample LR contribution explanations
@@ -123,7 +129,6 @@ pipeline-specific refitting or threshold calibration.
 - `example_input.csv` / `example_output.csv` / `example_labels.csv` — runnable demo + expected result + labels
 - `example_workflow_output/` — reference output from the one-command demo workflow
 - `templates/` — minimal input and label CSV format templates
-- `deployable_pipeline.pkl` — fitted selector + scaler + LR/RF models + 2,000-gene list
 - `REPORT.md` — full methods/results (now includes the leave-one-cancer-type-out section)
 - `model_performance.png`, `feature_importance.png` — original figures
 - `test_metrics.csv`, `per_cancer_type_performance.csv`, `top_genes_*.csv`, `selected_files.csv`
@@ -141,12 +146,16 @@ pipeline-specific refitting or threshold calibration.
 - `tcga_rnaseq/` — shared core library (I/O, gene alignment, scoring, metrics)
   used by the scoring entry points
 - `tests/` — pytest suite for core units and numerical reproducibility
-- model checkpoints: `model_lr.pkl`, `model_rf.pkl`, `feature_selection.pkl`,
-  `X_full_filtered.pkl`, `y_full.pkl`, `projects_full.pkl`, `train_idx.npy`, `test_idx.npy`
+- `.zenodo.json`, `codemeta.json`, `CITATION.cff` — machine-readable citation and
+  software metadata
+- full training/checkpoint artifacts such as `model_lr.pkl`, `model_rf.pkl`,
+  `feature_selection.pkl`, `X_full_filtered.pkl`, `y_full.pkl`, and
+  `deployable_pipeline.pkl` are intentionally excluded from the public Git history; the
+  lightweight release does not require them
 
 ## Citation and license
 
-Use `CITATION.cff` for software citation metadata. Repository code and
-project-authored documentation are MIT licensed; see `LICENSE`. Third-party
-source datasets remain subject to their original provider terms; see
-`NOTICE.md`.
+Use `CITATION.cff`, `.zenodo.json`, and `codemeta.json` for software citation
+metadata. Repository code and project-authored documentation are MIT licensed;
+see `LICENSE`. Third-party source datasets remain subject to their original
+provider terms; see `NOTICE.md`.

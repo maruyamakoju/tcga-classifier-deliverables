@@ -1,8 +1,14 @@
 {
   "release_date": "2026-07-08",
-  "release_name": "GDC STAR-Counts release-quality hardening release",
+  "release_name": "GDC STAR-Counts publication metadata release",
   "schema_version": "1.0",
-  "version": "v1.1.1-gdc-starcounts",
+  "version": "v1.1.2-gdc-starcounts",
+  "changes_since_v1_1_1": [
+    "Added Zenodo and CodeMeta machine-readable software metadata.",
+    "Added a hosted-publication readiness audit covering secrets, large Git blobs, line endings, and release metadata consistency.",
+    "Updated CI to run the publication readiness audit and current GitHub Actions releases.",
+    "Clarified that legacy pickle/RF training artifacts are intentionally excluded from the public Git history."
+  ],
   "changes_since_v1_1_0": [
     "Hardened binary scoring against non-finite input values and invalid model shapes.",
     "Added explicit rejection of multiclass weights in tumor-vs-normal scoring paths.",

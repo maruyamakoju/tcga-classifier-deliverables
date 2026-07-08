@@ -1,5 +1,27 @@
 # Release notes
 
+## v1.1.2-gdc-starcounts — 2026-07-08
+
+Publication metadata refresh. The fitted model weights, scoring behavior, and
+validated headline metrics are unchanged from v1.1.1; this release improves
+public repository metadata, citation readiness, and hosted CI coverage.
+
+### Added
+
+- `.zenodo.json` and `codemeta.json` for machine-readable software metadata.
+- `audit_publication_readiness.py`, a public-release audit for secret-like
+  strings, oversized tracked/history blobs, line endings, and release asset
+  metadata consistency.
+- CI coverage for the publication readiness audit.
+- README badges for CI, release, license, and citation metadata.
+
+### Changed
+
+- Updated hosted CI actions to current pinned releases.
+- Clarified that legacy pickle/RF training artifacts are intentionally excluded
+  from the public Git history and are not needed for the lightweight release.
+- Added Zenodo/CodeMeta metadata to the lightweight release bundle.
+
 ## v1.1.1-gdc-starcounts — 2026-07-08
 
 Release-quality hardening update. The fitted model weights and validated

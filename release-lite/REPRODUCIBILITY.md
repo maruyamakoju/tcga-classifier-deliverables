@@ -1,6 +1,6 @@
 # Reproducibility notes
 
-Release: `v1.1.1-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.2-gdc-starcounts` (`2026-07-08`)
 
 ## Recommended scoring environment
 
@@ -18,7 +18,8 @@ python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
 ```
 
 For legacy pickle/RF scoring or to regenerate the lightweight weights from
-`deployable_pipeline.pkl`, use one of:
+`deployable_pipeline.pkl`, use a full local training-artifact checkout and one
+of:
 
 ```bash
 pip install -r requirements.txt
@@ -31,7 +32,9 @@ conda env create -f environment.yml
 conda activate tcga-tumor-normal
 ```
 
-The deployable pickle contains scikit-learn estimators serialized with
+These full pickle artifacts are intentionally excluded from the public Git
+history and are not needed for the lightweight release. The deployable pickle
+contains scikit-learn estimators serialized with
 **scikit-learn 1.9.0**. The CLI intentionally does not require `xgboost`. The
 pickled XGBoost object is stubbed during unpickling because the production
 scoring path uses only logistic regression (`--model lr`, default) or random
