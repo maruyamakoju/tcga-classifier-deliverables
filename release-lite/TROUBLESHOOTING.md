@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Release: `v1.1.4-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.5-gdc-starcounts` (`2026-07-09`)
 
 Start with:
 
@@ -113,12 +113,12 @@ For invalid matched expression values, fix the matrix first. If reviewed mean
 imputation is intentional, use `--max-invalid-cell-fraction` to set an explicit
 tolerance or `--allow-invalid-values` to downgrade the scorer stop to warnings.
 
-### Scorer says `invalid matched values`
+### Scorer or explainer says `invalid matched values`
 
 The input has at least one matched model-gene cell that cannot be used as a
 finite number. Common causes are blank cells, `NA` strings, spreadsheet export
-markers, or infinite values from an upstream transform. The scorer reports
-example genes and samples before refusing to write scores.
+markers, or infinite values from an upstream transform. The scorer/explainer
+reports example genes and samples before refusing to write outputs.
 
 ### Many normal samples are called tumor
 

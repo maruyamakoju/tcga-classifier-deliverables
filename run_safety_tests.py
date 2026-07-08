@@ -110,6 +110,20 @@ def main():
                       "--allow-invalid-values"])
         require_ok(result, "invalid matched values explicit allow")
 
+        invalid_explanations = invalid_input.with_suffix(".explanations.csv")
+        result = run([sys.executable, "explain_scores.py", str(invalid_input)])
+        require_fail(result, "invalid matched values explanations")
+        require("invalid matched values" in result.stderr,
+                "invalid matched-value explanation summary missing")
+        require("Refusing to write explanations" in result.stderr,
+                "invalid matched-value explanation refusal missing")
+        require(not invalid_explanations.exists(),
+                "explain_scores.py wrote explanations after invalid matched values")
+
+        result = run([sys.executable, "explain_scores.py", str(invalid_input),
+                      "--allow-invalid-values"])
+        require_ok(result, "invalid matched values explanations explicit allow")
+
         result = run([sys.executable, "explain_scores.py", "example_input.csv",
                       "--top-n", "0"])
         require_fail(result, "invalid explanation top-n")

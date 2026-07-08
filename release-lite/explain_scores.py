@@ -7,8 +7,12 @@ import sys
 import numpy as np
 import pandas as pd
 
-from score_tumor_normal import load_lr_weights
-from tcga_rnaseq import align_to_genes, read_matrix, sigmoid
+from score_tumor_normal import (
+    load_lr_weights,
+    print_invalid_alignment_summary,
+    validate_alignment_report,
+)
+from tcga_rnaseq import align_to_genes_with_report, read_matrix, sigmoid
 
 
 EXPLANATION_COLUMNS = [
@@ -30,7 +34,7 @@ def load_gene_metadata(path):
     return out
 
 
-def explain_dataframe(df, weights, top_n, gene_names=None):
+def explain_dataframe(df, weights, top_n, gene_names=None, return_alignment_report=False):
     genes = weights["selected_genes"]
     mean = weights["scaler_mean"]
     scale = weights["scaler_scale"]
@@ -38,7 +42,9 @@ def explain_dataframe(df, weights, top_n, gene_names=None):
     intercept = weights["intercept"]
     gene_names = gene_names or {}
 
-    X, n_matched, missing = align_to_genes(df, genes, mean)
+    X, alignment_report = align_to_genes_with_report(df, genes, mean)
+    n_matched = alignment_report["n_matched_genes"]
+    missing = alignment_report["missing_genes"]
     X_scaled = (X - mean) / scale
     contributions = X_scaled * coef
     logits = contributions.sum(axis=1) + intercept
@@ -66,7 +72,10 @@ def explain_dataframe(df, weights, top_n, gene_names=None):
                     "scaled_value": float(X_scaled[i, j]),
                     "lr_coef": float(coef[j]),
                 })
-    return pd.DataFrame(rows, columns=EXPLANATION_COLUMNS), n_matched, missing
+    result = pd.DataFrame(rows, columns=EXPLANATION_COLUMNS)
+    if return_alignment_report:
+        return result, n_matched, missing, alignment_report
+    return result, n_matched, missing
 
 
 def main(argv=None):
@@ -78,21 +87,53 @@ def main(argv=None):
     parser.add_argument("--gene-metadata", default=os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "model_gene_metadata.csv"))
     parser.add_argument("--top-n", type=int, default=10)
+    parser.add_argument("--max-invalid-cell-fraction", type=float, default=0.0,
+                        help=("maximum allowed missing, non-numeric, NaN, or infinite cells "
+                              "among matched model genes before failing (default 0)"))
+    parser.add_argument("--allow-invalid-values", action="store_true",
+                        help=("warn instead of failing when matched model-gene cells are "
+                              "missing, non-numeric, NaN, or infinite"))
     parser.add_argument("--transpose", action="store_true")
     args = parser.parse_args(argv)
 
     if args.top_n < 1:
         parser.error("--top-n must be >= 1")
+    if not 0 <= args.max_invalid_cell_fraction <= 1:
+        parser.error("--max-invalid-cell-fraction must be between 0 and 1")
 
     weights = load_lr_weights(args.lr_weights)
     df = read_matrix(args.input, transpose=args.transpose)
     gene_names = load_gene_metadata(args.gene_metadata)
-    explanations, n_matched, missing = explain_dataframe(df, weights, args.top_n, gene_names)
+    explanations, n_matched, missing, alignment_report = explain_dataframe(
+        df,
+        weights,
+        args.top_n,
+        gene_names,
+        return_alignment_report=True,
+    )
+
+    print(f"[explain] {df.shape[0]} samples; matched {n_matched}/{len(weights['selected_genes'])} "
+          f"model genes ({len(missing)} filled with training mean)", file=sys.stderr)
+    print_invalid_alignment_summary(alignment_report, sys.stderr, prefix="[explain]")
+    alignment_issues = validate_alignment_report(
+        alignment_report,
+        max_invalid_cell_fraction=args.max_invalid_cell_fraction,
+    )
+    if alignment_issues and not args.allow_invalid_values:
+        for issue in alignment_issues:
+            print(f"[explain] ERROR: {issue}", file=sys.stderr)
+        print(
+            "[explain] Refusing to write explanations with invalid matched expression values; "
+            "fix the input or pass --allow-invalid-values after reviewing the imputation.",
+            file=sys.stderr,
+        )
+        return 1
+    if alignment_issues:
+        for issue in alignment_issues:
+            print(f"[explain] WARNING: {issue}", file=sys.stderr)
 
     out = args.output or (os.path.splitext(args.input)[0] + ".explanations.csv")
     explanations.to_csv(out, index=False)
-    print(f"[explain] {df.shape[0]} samples; matched {n_matched}/{len(weights['selected_genes'])} "
-          f"model genes ({len(missing)} filled with training mean)", file=sys.stderr)
     print(f"[explain] wrote {out}", file=sys.stderr)
     return 0
 

@@ -1,6 +1,6 @@
 # Pan-cancer tumor-vs-normal classifier from TCGA RNA-seq
 
-Release: `v1.1.4-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.5-gdc-starcounts` (`2026-07-09`)
 
 ## Data
 
@@ -181,8 +181,8 @@ single command. It writes QC, scores, optional labeled-threshold calibration,
 per-sample explanations, a machine-readable manifest, and a Markdown workflow
 report in one output directory.
 
-As of v1.1.4, matched model-gene cells that are missing, non-numeric, `NaN`, or
-infinite stop the scorer/workflow before output scores are written unless a
+Matched model-gene cells that are missing, non-numeric, `NaN`, or infinite stop
+the scorer, workflow, and explainer before output files are written unless a
 reviewed tolerance or explicit override is supplied. This prevents a malformed
 matched input column or sample from being silently neutral-imputed.
 

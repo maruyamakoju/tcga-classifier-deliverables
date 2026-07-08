@@ -8,8 +8,8 @@ default deployable model is logistic regression over 2,000 selected genes,
 exported to `deployable_lr_weights.npz` so ordinary scoring uses only NumPy and
 pandas rather than scikit-learn pickle loading.
 
-Release version: `v1.1.4-gdc-starcounts`
-Release date: `2026-07-08`
+Release version: `v1.1.5-gdc-starcounts`
+Release date: `2026-07-09`
 
 ## Validated use
 
@@ -79,8 +79,8 @@ The workflow writes:
 
 Review `workflow_report.md` first. Treat any QC `WARN` or `FAIL` as a reason
 to inspect normalization, gene IDs, and platform compatibility before using
-hard calls. Invalid matched expression values now stop the workflow before
-`scores.csv` is written unless explicitly allowed. Use `TROUBLESHOOTING.md`
+hard calls. Invalid matched expression values now stop scoring and explanation
+outputs before files are written unless explicitly allowed. Use `TROUBLESHOOTING.md`
 for common install, input-QC, threshold, and release-integrity failures.
 
 ## Release integrity
