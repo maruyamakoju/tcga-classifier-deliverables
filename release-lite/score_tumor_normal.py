@@ -116,14 +116,14 @@ def validate_alignment_report(report, max_invalid_cell_fraction=0.0):
     return issues
 
 
-def print_invalid_alignment_summary(report, stream):
+def print_invalid_alignment_summary(report, stream, prefix="[score]"):
     invalid_cells = int(report.get("invalid_matched_cells", 0))
     if invalid_cells <= 0:
         return
     matched_cells = int(report.get("matched_cells", 0))
     invalid_fraction = float(report.get("invalid_matched_fraction", 0.0))
     print(
-        "[score] invalid matched values: "
+        f"{prefix} invalid matched values: "
         f"{invalid_cells}/{matched_cells} ({invalid_fraction:.3%}); "
         f"{report.get('n_genes_with_invalid_values', 0)} genes, "
         f"{report.get('n_samples_with_invalid_values', 0)} samples",
@@ -135,14 +135,14 @@ def print_invalid_alignment_summary(report, stream):
             f"{item['gene']}:{item['invalid_cells']}/{item['total_cells']}"
             for item in gene_examples
         )
-        print(f"[score] invalid gene examples: {text}", file=stream)
+        print(f"{prefix} invalid gene examples: {text}", file=stream)
     sample_examples = report.get("first_samples_with_invalid_values", [])[:3]
     if sample_examples:
         text = ", ".join(
             f"{item['sample']}:{item['invalid_cells']}/{item['matched_genes']}"
             for item in sample_examples
         )
-        print(f"[score] invalid sample examples: {text}", file=stream)
+        print(f"{prefix} invalid sample examples: {text}", file=stream)
 
 
 def run_self_test(lr_weights_path):

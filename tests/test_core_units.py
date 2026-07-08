@@ -315,3 +315,23 @@ def test_explain_empty_input_preserves_output_columns():
     assert list(explanations.columns) == EXPLANATION_COLUMNS
     assert explanations.empty
     assert n_matched == 1 and missing == []
+
+
+def test_explain_dataframe_can_return_alignment_report():
+    weights = {
+        "selected_genes": np.array(["g1"]),
+        "scaler_mean": np.array([0.0]),
+        "scaler_scale": np.array([1.0]),
+        "coef": np.array([1.0]),
+        "intercept": 0.0,
+    }
+    df = pd.DataFrame({"g1": ["bad"]}, index=["s1"])
+    explanations, n_matched, missing, report = explain_dataframe(
+        df,
+        weights,
+        top_n=1,
+        return_alignment_report=True,
+    )
+    assert list(explanations.columns) == EXPLANATION_COLUMNS
+    assert n_matched == 1 and missing == []
+    assert report["invalid_matched_cells"] == 1

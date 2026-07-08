@@ -1,6 +1,6 @@
 # Reproducibility notes
 
-Release: `v1.1.4-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.5-gdc-starcounts` (`2026-07-09`)
 
 ## Recommended scoring environment
 
@@ -76,9 +76,9 @@ python run_safety_tests.py
 
 This verifies that invalid thresholds/top-N values fail, unsupported legacy
 pickle/RF scorer options fail clearly, invalid matched expression values stop
-before scores are written unless explicitly allowed, QC rejects inputs with no
-model genes or raw-count-like values, and the workflow stops before scoring
-when QC status is FAIL.
+score and explanation outputs before files are written unless explicitly
+allowed, QC rejects inputs with no model genes or raw-count-like values, and
+the workflow stops before scoring when QC status is FAIL.
 
 For the development regression suite, run pytest through the active Python
 interpreter:

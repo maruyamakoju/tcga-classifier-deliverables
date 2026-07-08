@@ -1,6 +1,6 @@
 # Data dictionary
 
-Release: `v1.1.4-gdc-starcounts` (`2026-07-08`)
+Release: `v1.1.5-gdc-starcounts` (`2026-07-09`)
 
 This file defines the stable input and output fields used by the lightweight
 release. Run `python validate_output_contracts.py` to verify the bundled

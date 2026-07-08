@@ -1,5 +1,30 @@
 # Release notes
 
+## v1.1.5-gdc-starcounts — 2026-07-09
+
+Explanation guardrail update. The fitted model weights and headline validation
+metrics are unchanged from v1.1.4; this release applies the invalid matched
+expression value policy consistently to explanation generation as well as
+scoring.
+
+### Added
+
+- `--max-invalid-cell-fraction` and `--allow-invalid-values` on
+  `explain_scores.py`.
+- Unit coverage for explanation alignment reports.
+- Safety coverage showing `explain_scores.py` refuses to write
+  `explanations.csv` when invalid matched expression values are present unless
+  explicitly allowed.
+- Hosted GitHub repository audit checks for administrator-enforced branch
+  protection, linear history, conversation resolution, protected `v*` release
+  tag rulesets, and Dependabot vulnerability alerts.
+
+### Changed
+
+- `explain_scores.py` now stops by default before writing explanations if any
+  matched model-gene values are invalid. Users must fix the input or explicitly
+  opt into reviewed mean imputation, matching the scorer/workflow behavior.
+
 ## v1.1.4-gdc-starcounts — 2026-07-08
 
 Invalid-input guardrail update. The fitted model weights and headline
