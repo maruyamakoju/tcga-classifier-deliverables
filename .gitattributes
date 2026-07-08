@@ -1,6 +1,7 @@
-* text=auto
+* text=auto eol=lf
 
 *.csv text eol=lf
+*.cff text eol=lf
 *.json text eol=lf
 *.md text eol=lf
 *.py text eol=lf
@@ -10,7 +11,9 @@
 *.ini text eol=lf
 .gitattributes text eol=lf
 .gitignore text eol=lf
+LICENSE text eol=lf
 VERSION text eol=lf
+release-lite/LICENSE text eol=lf
 release-lite/VERSION text eol=lf
 
 *.npz binary

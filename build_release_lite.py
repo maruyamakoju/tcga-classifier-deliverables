@@ -90,6 +90,9 @@ RELEASE_FILES = [
     "external-validation/tcga_toil_xena/tcga_toil_threshold_sweep.csv",
 ]
 
+BINARY_SUFFIXES = {".npy", ".npz", ".pkl", ".png", ".zip"}
+TEXT_NAMES = {"LICENSE", "VERSION"}
+
 
 def assert_inside_root(path):
     resolved = path.resolve()
@@ -116,6 +119,21 @@ def clean_release_dir():
     target.mkdir(parents=True)
 
 
+def is_text_release_file(rel):
+    path = Path(rel)
+    if path.name in TEXT_NAMES:
+        return True
+    return path.suffix.lower() not in BINARY_SUFFIXES
+
+
+def write_release_file(src, dst, rel):
+    if is_text_release_file(rel):
+        data = src.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+        dst.write_bytes(data)
+    else:
+        shutil.copy2(src, dst)
+
+
 def copy_release_files():
     missing = []
     for rel in RELEASE_FILES:
@@ -125,7 +143,7 @@ def copy_release_files():
             continue
         dst = RELEASE_DIR / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, dst)
+        write_release_file(src, dst, rel)
     if missing:
         raise FileNotFoundError("Missing release source files:\n" + "\n".join(missing))
 
