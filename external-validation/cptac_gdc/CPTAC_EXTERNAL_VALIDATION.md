@@ -7,7 +7,7 @@
 - Project scored: CPTAC-3
 - Sampled files: 200 (100 primary tumor, 100 solid tissue normal)
 - Workflow: GDC STAR-Counts, `tpm_unstranded` converted to log2(TPM+1)
-- Model: bundled logistic regression from `deployable_pipeline.pkl`
+- Model: bundled logistic regression from `deployable_lr_weights.npz`
 
 ## Result at threshold 0.5
 

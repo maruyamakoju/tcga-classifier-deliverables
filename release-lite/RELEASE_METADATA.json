@@ -1,8 +1,17 @@
 {
   "release_date": "2026-07-09",
-  "release_name": "GDC STAR-Counts remaining CLI guardrail release",
+  "release_name": "GDC STAR-Counts core guardrail release",
   "schema_version": "1.0",
-  "version": "v1.1.6-gdc-starcounts",
+  "version": "v1.1.7-gdc-starcounts",
+  "changes_since_v1_1_6": [
+    "Made tcga_rnaseq.predict_proba() and score_binary_dataframe() reject invalid matched model-gene values by default unless explicitly allowed.",
+    "Made the low-level align_to_genes() helper strict by default because its legacy return shape cannot carry invalid-value reports.",
+    "Added shape and finiteness validation to predict_proba_from_aligned() for already-aligned matrices.",
+    "Moved invalid alignment reporting helpers into the shared tcga_rnaseq core and simplified CLI imports.",
+    "Updated external validation and cross-platform benchmark scripts to use the current deployable .npz model and explicit invalid-value handling.",
+    "Expanded unit and reproducibility tests for strict core scoring, aligned-matrix validation, and historical mean-imputed external benchmarks.",
+    "Hardened release documentation audits for INDEX.md version drift, broken local Markdown links, and strict release artifact validation commands."
+  ],
   "changes_since_v1_1_5": [
     "Made cohort_adapt_score.py stop before writing adapted scores when matched values are missing, non-numeric, NaN, or infinite unless explicitly allowed.",
     "Made cancer-type-classifier/predict_cancer_type.py reject invalid matched values before writing predictions unless explicitly allowed.",

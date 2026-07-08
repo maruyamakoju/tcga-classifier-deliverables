@@ -189,7 +189,8 @@ def write_manifest():
         "builder": "build_release_lite.py",
         "validation_command": (
             "python validate_release_lite.py --release-dir release-lite "
-            "--zip tcga-tumor-normal-release-lite.zip"
+            "--zip tcga-tumor-normal-release-lite.zip --source-root . "
+            "--artifacts RELEASE_ARTIFACTS.json"
         ),
         "file_count_excluding_manifest_and_checksums": len(records),
         "forbidden_artifact_names": sorted(FORBIDDEN_NAMES),
@@ -268,7 +269,8 @@ def write_artifact_metadata(zip_entries):
         "zip_sha256": sha256(ZIP_PATH),
         "validation_command": (
             "python validate_release_lite.py --release-dir release-lite "
-            "--zip tcga-tumor-normal-release-lite.zip"
+            "--zip tcga-tumor-normal-release-lite.zip --source-root . "
+            "--artifacts RELEASE_ARTIFACTS.json"
         ),
         "zip_acceptance_command": (
             "python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip"

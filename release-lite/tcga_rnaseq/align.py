@@ -165,11 +165,110 @@ def align_to_genes_with_report(X, genes, impute_mean=None):
     return out, report
 
 
-def align_to_genes(X, genes, impute_mean=None):
+def validate_alignment_report(report, max_invalid_cell_fraction=0.0):
+    """Return blocking issues for invalid values in matched model-gene cells."""
+    max_invalid_cell_fraction = float(max_invalid_cell_fraction)
+    issues = []
+    invalid_cells = int(report.get("invalid_matched_cells", 0))
+    if invalid_cells <= 0:
+        return issues
+
+    all_invalid_genes = int(report.get("n_genes_with_all_invalid_values", 0))
+    all_invalid_samples = int(report.get("n_samples_with_all_invalid_values", 0))
+    invalid_fraction = float(report.get("invalid_matched_fraction", 0.0))
+    max_sample_fraction = float(
+        report.get("max_invalid_matched_cell_fraction_per_sample", 0.0)
+    )
+    if all_invalid_genes:
+        examples = ", ".join(report.get("first_genes_with_all_invalid_values", [])[:5])
+        suffix = f" Examples: {examples}." if examples else ""
+        issues.append(
+            f"{all_invalid_genes} matched model genes have no finite values.{suffix}"
+        )
+    if all_invalid_samples:
+        examples = ", ".join(report.get("first_samples_with_all_invalid_values", [])[:5])
+        suffix = f" Examples: {examples}." if examples else ""
+        issues.append(
+            f"{all_invalid_samples} samples have no finite matched model-gene values.{suffix}"
+        )
+    if invalid_fraction > max_invalid_cell_fraction:
+        issues.append(
+            "Invalid matched-value fraction "
+            f"{invalid_fraction:.3%} exceeds --max-invalid-cell-fraction "
+            f"{max_invalid_cell_fraction:.3%}."
+        )
+    if max_sample_fraction > max_invalid_cell_fraction:
+        issues.append(
+            "Worst-sample invalid matched-value fraction "
+            f"{max_sample_fraction:.3%} exceeds --max-invalid-cell-fraction "
+            f"{max_invalid_cell_fraction:.3%}."
+        )
+    return issues
+
+
+def format_alignment_issues(report, max_invalid_cell_fraction=0.0):
+    """Return a single ValueError-ready message for invalid matched values."""
+    issues = validate_alignment_report(
+        report,
+        max_invalid_cell_fraction=max_invalid_cell_fraction,
+    )
+    if not issues:
+        return ""
+    return "invalid matched values: " + " ".join(issues)
+
+
+def print_invalid_alignment_summary(report, stream, prefix="[score]"):
+    """Print a concise invalid matched-value summary to ``stream``."""
+    invalid_cells = int(report.get("invalid_matched_cells", 0))
+    if invalid_cells <= 0:
+        return
+    matched_cells = int(report.get("matched_cells", 0))
+    invalid_fraction = float(report.get("invalid_matched_fraction", 0.0))
+    print(
+        f"{prefix} invalid matched values: "
+        f"{invalid_cells}/{matched_cells} ({invalid_fraction:.3%}); "
+        f"{report.get('n_genes_with_invalid_values', 0)} genes, "
+        f"{report.get('n_samples_with_invalid_values', 0)} samples",
+        file=stream,
+    )
+    gene_examples = report.get("first_genes_with_invalid_values", [])[:3]
+    if gene_examples:
+        text = ", ".join(
+            f"{item['gene']}:{item['invalid_cells']}/{item['total_cells']}"
+            for item in gene_examples
+        )
+        print(f"{prefix} invalid gene examples: {text}", file=stream)
+    sample_examples = report.get("first_samples_with_invalid_values", [])[:3]
+    if sample_examples:
+        text = ", ".join(
+            f"{item['sample']}:{item['invalid_cells']}/{item['matched_genes']}"
+            for item in sample_examples
+        )
+        print(f"{prefix} invalid sample examples: {text}", file=stream)
+
+
+def align_to_genes(
+    X,
+    genes,
+    impute_mean=None,
+    max_invalid_cell_fraction=0.0,
+    allow_invalid_values=False,
+):
     """Reindex an expression DataFrame to the model's gene order.
 
-    Returns (values ndarray (n_samples, g), n_matched int, missing list).
+    Returns ``(values ndarray (n_samples, g), n_matched int, missing list)``.
+    Missing model genes are imputed at ``impute_mean``. Invalid values in
+    matched model-gene cells raise ``ValueError`` by default because this
+    legacy return shape cannot carry the invalid-value report; pass
+    ``allow_invalid_values=True`` only after reviewing mean imputation.
     """
     out, report = align_to_genes_with_report(X, genes, impute_mean=impute_mean)
+    if not allow_invalid_values:
+        message = format_alignment_issues(
+            report,
+            max_invalid_cell_fraction=max_invalid_cell_fraction,
+        )
+        if message:
+            raise ValueError(message)
     missing = report["missing_genes"]
     return out, report["n_matched_genes"], missing

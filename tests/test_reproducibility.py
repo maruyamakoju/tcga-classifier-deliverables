@@ -70,13 +70,17 @@ def test_toil_baseline_and_adaptation(binary_model, golden):
     g = golden["external_validation"]["toil_rsem"]
     tol = golden["tolerance"]
     X, y = load_external("toil")
-    p0 = predict_proba(binary_model, X, adapt="none")
+    # The cached Toil/RSEM matrix has four selected genes absent from the
+    # source extract. These regression tests reproduce the historical
+    # mean-imputed benchmark explicitly; public scoring APIs reject this by
+    # default.
+    p0 = predict_proba(binary_model, X, adapt="none", allow_invalid_values=True)
     assert M.roc_auc(y, p0) == pytest.approx(g["baseline_auc"], abs=tol)
     assert _acc(p0, y) == pytest.approx(g["baseline_acc_at_0p5"], abs=tol)
     assert int(((p0 >= 0.5).astype(int) == y).sum()) == round(
         g["baseline_acc_at_0p5"] * len(y)
     )
-    pa = predict_proba(binary_model, X, adapt="cohort_zscore")
+    pa = predict_proba(binary_model, X, adapt="cohort_zscore", allow_invalid_values=True)
     assert _acc(pa, y) == pytest.approx(g["cohort_zscore_acc_at_0p5"], abs=tol)
     assert M.roc_auc(y, pa) == pytest.approx(g["cohort_zscore_auc"], abs=tol)
     assert int(((pa >= 0.5).astype(int) == y).sum()) == round(
@@ -100,10 +104,12 @@ def test_gtex_normals_fpr(binary_model, golden):
     g = golden["external_validation"]["gtex_normals"]
     tol = golden["tolerance"]
     X, _ = load_external("gtex")
-    p0 = predict_proba(binary_model, X, adapt="none")
+    # The cached GTEx/Toil matrix has the same four absent selected genes as the
+    # TCGA-Toil extract; keep the historical benchmark explicit.
+    p0 = predict_proba(binary_model, X, adapt="none", allow_invalid_values=True)
     assert float(np.mean(p0 >= 0.5)) == pytest.approx(g["baseline_fpr_at_0p5"], abs=tol)
     assert int((p0 >= 0.5).sum()) == round(g["baseline_fpr_at_0p5"] * len(X))
-    pa = predict_proba(binary_model, X, adapt="cohort_zscore")
+    pa = predict_proba(binary_model, X, adapt="cohort_zscore", allow_invalid_values=True)
     assert float(np.mean(pa >= 0.5)) == pytest.approx(g["cohort_zscore_fpr_at_0p5"], abs=0.02)
     assert int((pa >= 0.5).sum()) == round(g["cohort_zscore_fpr_at_0p5"] * len(X))
 

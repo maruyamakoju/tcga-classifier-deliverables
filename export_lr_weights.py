@@ -6,7 +6,7 @@ import sys
 
 import numpy as np
 
-from score_tumor_normal import load_pipeline
+from tcga_rnaseq import load_pipeline
 
 
 def main(argv=None):

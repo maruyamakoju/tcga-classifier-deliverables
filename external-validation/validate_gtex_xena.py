@@ -24,7 +24,7 @@ import requests
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from score_tumor_normal import load_pipeline, score_dataframe  # noqa: E402
+from tcga_rnaseq import load_lr_model, score_binary_dataframe  # noqa: E402
 
 PHENOTYPE_URL = "https://toil.xenahubs.net/download/TcgaTargetGTEX_phenotype.txt.gz"
 GTEX_TPM_URL = "https://toil.xenahubs.net/download/gtex_RSEM_gene_tpm.gz"
@@ -174,7 +174,7 @@ def write_report(path: Path, summary: dict, predictions: pd.DataFrame,
 - Phenotype table: `TcgaTargetGTEX_phenotype`
 - Samples scored: {summary['n']} GTEx normal samples, stratified by primary site
 - Input transform: Xena log2(TPM+0.001) -> TPM -> log2(TPM+1)
-- Model: bundled logistic regression from `deployable_pipeline.pkl`
+- Model: bundled logistic regression from `deployable_lr_weights.npz`
 
 ## Result at threshold {summary['threshold']}
 
@@ -229,8 +229,16 @@ def main() -> int:
     parser.add_argument("--threshold", type=float, default=0.5)
     parser.add_argument("--refresh", action="store_true")
     parser.add_argument("--out-dir", default=str(ROOT / "external-validation" / "gtex_xena"))
-    parser.add_argument("--pipeline", default=str(ROOT / "deployable_pipeline.pkl"))
+    parser.add_argument("--weights", default=str(ROOT / "deployable_lr_weights.npz"))
+    parser.add_argument("--max-invalid-cell-fraction", type=float, default=0.0,
+                        help=("maximum allowed missing, non-numeric, NaN, or infinite cells "
+                              "among matched model genes before failing (default 0)"))
+    parser.add_argument("--allow-invalid-values", action="store_true",
+                        help=("warn instead of failing when matched model-gene cells are "
+                              "missing, non-numeric, NaN, or infinite"))
     args = parser.parse_args()
+    if not 0 <= args.max_invalid_cell_fraction <= 1:
+        parser.error("--max-invalid-cell-fraction must be between 0 and 1")
 
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -244,16 +252,29 @@ def main() -> int:
     print(f"[gtex] sampled {len(sampled)} GTEx normals across "
           f"{sampled['_primary_site'].nunique()} primary sites", file=sys.stderr)
 
-    pipe = load_pipeline(args.pipeline)
-    matrix = extract_matrix_from_xena(sampled["sample"].tolist(), pipe["selected_genes"],
+    model = load_lr_model(args.weights)
+    selected_genes = model["genes"].astype(str).tolist()
+    matrix = extract_matrix_from_xena(sampled["sample"].tolist(), selected_genes,
                                       matrix_path, args.refresh)
     n_matched = int(matrix.notna().any(axis=0).sum())
-    if n_matched < len(pipe["selected_genes"]):
-        print(f"[gtex] WARNING: matched {n_matched}/{len(pipe['selected_genes'])} genes",
+    if n_matched < len(selected_genes):
+        print(f"[gtex] WARNING: matched {n_matched}/{len(selected_genes)} genes",
               file=sys.stderr)
-    matrix = matrix.fillna(pd.Series(pipe["scaler"].mean_, index=pipe["selected_genes"]))
 
-    scored, _, _ = score_dataframe(matrix, pipe, "lr", args.threshold)
+    scored, _, _, alignment_report = score_binary_dataframe(
+        model,
+        matrix,
+        threshold=args.threshold,
+        max_invalid_cell_fraction=args.max_invalid_cell_fraction,
+        allow_invalid_values=args.allow_invalid_values,
+        return_alignment_report=True,
+    )
+    if alignment_report["invalid_matched_cells"]:
+        print(
+            f"[gtex] WARNING: imputed {alignment_report['invalid_matched_cells']} "
+            "invalid matched cells",
+            file=sys.stderr,
+        )
     predictions = sampled.merge(scored, left_on="sample", right_on="sample", how="left")
     predictions_path = out_dir / "gtex_predictions.csv"
     predictions.to_csv(predictions_path, index=False)
