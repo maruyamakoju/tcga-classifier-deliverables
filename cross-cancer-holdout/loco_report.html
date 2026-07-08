@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cross-cancer-type generalization (Leave-One-Cancer-type-Out)</title>
+<style>
+  :root, .viz-root {
+    --page:#f9f9f7; --surface-1:#fcfcfb;
+    --text-primary:#0b0b0b; --text-secondary:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --baseline:#c3c2b7;
+    --loco:#2a78d6;      /* categorical slot 1 - LOCO (unseen type) */
+    --within:#1baf7a;    /* categorical slot 2 - within-distribution */
+    --connector:#c3c2b7;
+    --border:rgba(11,11,11,0.10);
+    --good:#006300; --warn:#b26b00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root, .viz-root {
+      --page:#0d0d0d; --surface-1:#1a1a19;
+      --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+      --grid:#2c2c2a; --baseline:#383835;
+      --loco:#3987e5; --within:#199e70; --connector:#383835;
+      --border:rgba(255,255,255,0.10);
+      --good:#0ca30c; --warn:#fab219;
+    }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--page); color:var(--text-primary);
+         font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.5; }
+  .wrap { max-width:860px; margin:0 auto; padding:32px 20px 64px; }
+  h1 { font-size:22px; margin:0 0 4px; letter-spacing:-0.01em; }
+  .sub { color:var(--text-secondary); font-size:14px; margin:0 0 24px; }
+  .card { background:var(--surface-1); border:1px solid var(--border);
+          border-radius:12px; padding:20px 22px; margin-bottom:20px; }
+  .tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .tile { background:var(--surface-1); border:1px solid var(--border);
+          border-radius:12px; padding:14px 16px; }
+  .tile .v { font-size:26px; font-weight:650; letter-spacing:-0.02em; }
+  .tile .l { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+  .tile .d { font-size:11px; color:var(--muted); margin-top:4px; }
+  .legend { display:flex; gap:20px; align-items:center; flex-wrap:wrap; font-size:13px;
+            color:var(--text-secondary); margin:2px 0 14px; }
+  .legend span { display:inline-flex; align-items:center; gap:7px; }
+  .dot { width:11px; height:11px; border-radius:50%; display:inline-block; }
+  h2 { font-size:15px; margin:0 0 2px; }
+  .note { font-size:13px; color:var(--text-secondary); }
+  svg { width:100%; height:auto; display:block; }
+  .tick { fill:var(--muted); font-size:11px; font-variant-numeric:tabular-nums; }
+  .rowlab { fill:var(--text-primary); font-size:12px; }
+  .vallab { fill:var(--text-primary); font-size:11px; font-variant-numeric:tabular-nums; }
+  .axtitle { fill:var(--muted); font-size:11px; }
+  table { border-collapse:collapse; width:100%; font-size:12.5px;
+          font-variant-numeric:tabular-nums; }
+  th,td { text-align:right; padding:6px 8px; border-bottom:1px solid var(--border); }
+  th:first-child,td:first-child { text-align:left; font-variant-numeric:normal; }
+  th { color:var(--text-secondary); font-weight:600; font-size:11.5px; }
+  td.flag { color:var(--warn); font-weight:600; }
+  .tooltip { position:fixed; pointer-events:none; background:var(--surface-1);
+             border:1px solid var(--border); border-radius:8px; padding:8px 10px;
+             font-size:12px; box-shadow:0 4px 16px rgba(0,0,0,0.18);
+             opacity:0; transition:opacity .08s; z-index:10; max-width:250px; }
+  .tooltip b { font-weight:650; }
+  .cap { font-size:12px; color:var(--muted); margin-top:10px; }
+</style>
+</head>
+<body>
+<div class="wrap viz-root">
+  <h1>Does the tumor-vs-normal classifier generalize to an <em>unseen</em> cancer type?</h1>
+  <p class="sub">Leave-One-Cancer-type-Out test &mdash; train on 16 TCGA cancer types, test on the 17th, for each. Logistic regression (the report's best model). 2,160 samples.</p>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="card">
+    <h2>Per-cancer-type AUC &mdash; within-distribution vs held-out</h2>
+    <p class="note">Each cancer type withheld entirely from training. Axis zoomed to 0.945&ndash;1.0; sorted worst-generalizing first.</p>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--loco)"></i> LOCO &mdash; cancer type never seen in training</span>
+      <span><i class="dot" style="background:var(--within)"></i> Within-distribution (original report)</span>
+    </div>
+    <svg id="chart" viewBox="0 0 720 560" role="img"
+         aria-label="Dumbbell chart of within-distribution versus leave-one-cancer-out AUC per cancer type"></svg>
+  </div>
+
+  <div class="card">
+    <h2>All metrics per held-out cancer type</h2>
+    <p class="note">AUC generalizes almost perfectly; the 0.5 decision threshold does not always transfer &mdash; watch the accuracy/recall columns where AUC is high but accuracy is not (flagged).</p>
+    <table id="tbl"></table>
+    <p class="cap">Pooled LOCO: AUC 0.988, avg-precision 0.994, accuracy 0.947, F1 0.960. Macro-mean AUC 0.994, worst 0.950 (PRAD).</p>
+  </div>
+</div>
+<div class="tooltip" id="tt"></div>
+
+<script>
+// held-out cancer type results, sorted by LOCO AUC ascending (ASCII only)
+var DATA = [
+ {c:"PRAD", name:"Prostate adenocarcinoma", n:156, loco:0.9499, lacc:0.750, lrec:0.654, win:0.9654, wacc:0.9375},
+ {c:"THCA", name:"Thyroid carcinoma",        n:177, loco:0.9825, lacc:0.9605, lrec:0.9831, win:0.9723, wacc:0.9118},
+ {c:"ESCA", name:"Esophageal carcinoma",     n:39,  loco:0.9882, lacc:0.9231, lrec:1.000, win:1.000, wacc:0.875},
+ {c:"KIRC", name:"Kidney renal clear cell",  n:216, loco:0.9920, lacc:0.9907, lrec:0.9931, win:1.000, wacc:1.000},
+ {c:"HNSC", name:"Head and neck squamous",   n:132, loco:0.9969, lacc:0.9545, lrec:0.9659, win:1.000, wacc:1.000},
+ {c:"KICH", name:"Kidney chromophobe",       n:75,  loco:0.9976, lacc:0.960, lrec:0.940, win:1.000, wacc:1.000},
+ {c:"UCEC", name:"Uterine endometrial",      n:105, loco:0.9980, lacc:0.8857, lrec:1.000, win:1.000, wacc:1.000},
+ {c:"BRCA", name:"Breast invasive carcinoma",n:339, loco:0.9985, lacc:0.9970, lrec:0.9956, win:1.000, wacc:1.000},
+ {c:"LIHC", name:"Liver hepatocellular",     n:150, loco:0.9986, lacc:0.8467, lrec:0.770, win:1.000, wacc:1.000},
+ {c:"CHOL", name:"Cholangiocarcinoma",       n:27,  loco:1.000, lacc:1.000, lrec:1.000, win:1.000, wacc:1.000},
+ {c:"COAD", name:"Colon adenocarcinoma",     n:123, loco:1.000, lacc:1.000, lrec:1.000, win:1.000, wacc:1.000},
+ {c:"BLCA", name:"Bladder urothelial",       n:57,  loco:1.000, lacc:0.9825, lrec:1.000, win:1.000, wacc:0.9167},
+ {c:"LUSC", name:"Lung squamous cell",       n:153, loco:1.000, lacc:0.9935, lrec:1.000, win:1.000, wacc:1.000},
+ {c:"LUAD", name:"Lung adenocarcinoma",      n:177, loco:1.000, lacc:0.9661, lrec:0.9492, win:1.000, wacc:0.9444},
+ {c:"READ", name:"Rectum adenocarcinoma",    n:30,  loco:1.000, lacc:1.000, lrec:1.000, win:1.000, wacc:1.000},
+ {c:"KIRP", name:"Kidney papillary",         n:96,  loco:1.000, lacc:1.000, lrec:1.000, win:1.000, wacc:1.000},
+ {c:"STAD", name:"Stomach adenocarcinoma",   n:108, loco:1.000, lacc:0.9074, lrec:0.8611, win:1.000, wacc:1.000}
+];
+
+var tiles = [
+  {v:"0.988", l:"Pooled AUC (unseen types)", d:"vs 0.997 within-distribution"},
+  {v:"0.994", l:"Macro-mean AUC over 17 types", d:"per-type average"},
+  {v:"0.950", l:"Worst-type AUC (PRAD)", d:"still >= 0.95"},
+  {v:"12 / 17", l:"Types with AUC >= 0.998", d:"held out entirely"}
+];
+document.getElementById("tiles").innerHTML = tiles.map(function(t){
+  return '<div class="tile"><div class="v">'+t.v+'</div><div class="l">'+t.l+'</div><div class="d">'+t.d+'</div></div>';
+}).join("");
+
+var W=720, rowH=28, padT=30, left=132, right=70;
+var x0=left, x1=W-right, dmin=0.945, dmax=1.0;
+var H = padT + DATA.length*rowH + 40;
+function sx(v){ return x0 + (Math.min(Math.max(v,dmin),dmax)-dmin)/(dmax-dmin)*(x1-x0); }
+var svg = document.getElementById("chart");
+svg.setAttribute("viewBox", "0 0 "+W+" "+H);
+var NS="http://www.w3.org/2000/svg";
+function mk(t,a){ var e=document.createElementNS(NS,t); for(var k in a){ e.setAttribute(k,a[k]); } return e; }
+
+[0.95,0.96,0.97,0.98,0.99,1.0].forEach(function(g){
+  var x=sx(g);
+  svg.appendChild(mk("line",{x1:x,y1:padT-6,x2:x,y2:padT+DATA.length*rowH,stroke:"var(--grid)","stroke-width":1}));
+  var tk=mk("text",{x:x,y:padT+DATA.length*rowH+16,"text-anchor":"middle","class":"tick"});
+  tk.textContent=g.toFixed(2); svg.appendChild(tk);
+});
+var axt=mk("text",{x:(x0+x1)/2,y:H-6,"text-anchor":"middle","class":"axtitle"});
+axt.textContent="AUC (area under ROC curve)"; svg.appendChild(axt);
+
+var tt=document.getElementById("tt");
+function showTT(ev,html){ tt.innerHTML=html; tt.style.opacity=1;
+  tt.style.left=Math.min(ev.clientX+14,window.innerWidth-256)+"px";
+  tt.style.top=(ev.clientY+14)+"px"; }
+function hideTT(){ tt.style.opacity=0; }
+
+DATA.forEach(function(d,i){
+  var y=padT+i*rowH+rowH/2;
+  var lab=mk("text",{x:left-12,y:y+4,"text-anchor":"end","class":"rowlab"});
+  lab.textContent=d.c; svg.appendChild(lab);
+  svg.appendChild(mk("line",{x1:sx(d.win),y1:y,x2:sx(d.loco),y2:y,
+    stroke:"var(--connector)","stroke-width":2,"stroke-linecap":"round"}));
+  var wd=mk("circle",{cx:sx(d.win),cy:y,r:5.5,fill:"var(--within)",stroke:"var(--surface-1)","stroke-width":2});
+  svg.appendChild(wd);
+  var ld=mk("circle",{cx:sx(d.loco),cy:y,r:5.5,fill:"var(--loco)",stroke:"var(--surface-1)","stroke-width":2});
+  svg.appendChild(ld);
+  var vl=mk("text",{x:x1+10,y:y+4,"class":"vallab"});
+  vl.textContent=d.loco.toFixed(3); svg.appendChild(vl);
+  var info="<b>"+d.c+"</b> - "+d.name+"<br>held-out n="+d.n+"<br>"+
+    "LOCO AUC <b>"+d.loco.toFixed(3)+"</b>, acc "+d.lacc.toFixed(3)+", recall "+d.lrec.toFixed(3)+"<br>"+
+    "within-dist AUC "+d.win.toFixed(3);
+  [wd,ld].forEach(function(el){ el.style.cursor="pointer";
+    el.addEventListener("mousemove",function(e){ showTT(e,info); });
+    el.addEventListener("mouseleave",hideTT); });
+});
+
+function flagged(d){ return d.loco>=0.98 && d.lacc<0.92; }
+var tbl=document.getElementById("tbl");
+tbl.innerHTML='<thead><tr><th>Cancer type</th><th>n</th><th>LOCO AUC</th>'+
+  '<th>LOCO acc</th><th>LOCO recall</th><th>Within AUC</th><th>AUC drop</th></tr></thead>'+
+  "<tbody>"+DATA.map(function(d){
+    var drop=(d.win-d.loco);
+    var fl=flagged(d)?' class="flag"':'';
+    return '<tr><td>'+d.c+' - '+d.name+'</td><td>'+d.n+'</td>'+
+      '<td>'+d.loco.toFixed(3)+'</td><td'+fl+'>'+d.lacc.toFixed(3)+'</td>'+
+      '<td'+fl+'>'+d.lrec.toFixed(3)+'</td><td>'+d.win.toFixed(3)+'</td>'+
+      '<td>'+(drop>0?'+':'')+drop.toFixed(3)+'</td></tr>';
+  }).join("")+"</tbody>";
+</script>
+</body>
+</html>

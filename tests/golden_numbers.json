@@ -1,0 +1,24 @@
+{
+  "_comment": "Canonical, verified metrics for the TCGA RNA-seq deliverables. Regression tests assert current code reproduces these within tolerance. Verified 2026-07-08 against the frozen models and shipped external-validation cohorts.",
+  "tolerance": 0.01,
+  "binary_tumor_normal": {
+    "reproduce_example_output_max_abs_delta": 1e-05,
+    "heldout_test_auc": 0.9969,
+    "heldout_test_accuracy": 0.9792,
+    "grouped_cv_auc_clean": 0.9963,
+    "loco_macro_mean_auc": 0.994
+  },
+  "external_validation": {
+    "toil_rsem": {"baseline_auc": 0.9923, "baseline_acc_at_0p5": 0.515,
+                  "cohort_zscore_acc_at_0p5": 0.935, "cohort_zscore_auc": 0.9941},
+    "cptac_gdc": {"baseline_auc": 0.9886, "baseline_acc_at_0p5": 0.955},
+    "gtex_normals": {"baseline_fpr_at_0p5": 0.9963, "cohort_zscore_fpr_at_0p5": 0.9148}
+  },
+  "cancer_type": {
+    "n_tumors": 1440, "n_classes": 17,
+    "patient_heldout_accuracy": 0.9299,
+    "patient_heldout_balanced_accuracy": 0.8776,
+    "patient_heldout_macro_f1": 0.8768,
+    "npz_reproduces_sklearn_max_abs_delta": 1e-06
+  }
+}

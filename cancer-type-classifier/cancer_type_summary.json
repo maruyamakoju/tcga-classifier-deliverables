@@ -1,0 +1,13 @@
+{
+  "n_tumors": 1440,
+  "n_classes": 17,
+  "n_patients": 1438,
+  "n_input_genes": 14850,
+  "selected_genes": 1000,
+  "model": "StandardScaler+SelectKBest(f_classif,k=1000)+LogisticRegression(C=2.0)",
+  "evaluation": "5-fold StratifiedGroupKFold by case_id (patient-held-out)",
+  "accuracy": 0.9299,
+  "balanced_accuracy": 0.8776,
+  "macro_f1": 0.8768,
+  "weighted_f1": 0.9281
+}

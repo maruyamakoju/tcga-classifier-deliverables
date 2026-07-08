@@ -1,0 +1,55 @@
+{
+  "release_date": "2026-07-08",
+  "release_name": "GDC STAR-Counts release-quality hardening release",
+  "schema_version": "1.0",
+  "version": "v1.1.1-gdc-starcounts",
+  "changes_since_v1_1_0": [
+    "Hardened binary scoring against non-finite input values and invalid model shapes.",
+    "Added explicit rejection of multiclass weights in tumor-vs-normal scoring paths.",
+    "Validated calibration inputs for duplicate samples, non-finite probabilities, and out-of-range thresholds.",
+    "Unified calibration metric behavior with the shared metrics core, including Youden-J tie-breaking.",
+    "Expanded always-on pytest coverage for shipped headline metrics, patient-disjoint split metadata, calibration validation, and release edge cases.",
+    "Added release source-parity and artifact sidecar validation so stale release-lite bundles are caught by acceptance checks.",
+    "Made release zip generation byte-reproducible across rebuilds."
+  ],
+  "changes_since_v1_0_0": [
+    "Added shared core library tcga_rnaseq/ (io, align, score, metrics); all scoring CLIs now share one hardened, unit-tested implementation.",
+    "Fixed a silent gene-alignment bug: Ensembl IDs now match with or without the .version suffix in every scorer.",
+    "Bundled cross-platform domain-adaptation scorer cohort_adapt_score.py.",
+    "Added a top-level INDEX.md guided reading path.",
+    "Added a pytest regression suite (dev tree) locking in the verified metrics."
+  ],
+  "model": {
+    "default_scorer": "logistic_regression_numpy",
+    "features": 2000,
+    "input_scale": "GDC STAR-Counts-style log2(TPM+1)",
+    "task": "bulk RNA-seq tumor-vs-adjacent-normal classification"
+  },
+  "validated_boundary": {
+    "intended": "TCGA/CPTAC-like GDC STAR-Counts tumor-vs-solid-tissue-normal RNA-seq matrices",
+    "not_intended": [
+      "clinical diagnosis or patient management",
+      "direct hard calls on Toil/RSEM, GTEx, GEO, raw counts, FPKM, microarray, single-cell, or spatial data",
+      "healthy-population cancer screening without additional validation"
+    ]
+  },
+  "producer_commands": {
+    "build_release": "python build_release_lite.py --smoke --timeout-seconds 300",
+    "validate_release": "python validate_release_lite.py --release-dir release-lite --zip tcga-tumor-normal-release-lite.zip --source-root . --artifacts RELEASE_ARTIFACTS.json",
+    "zip_acceptance": "python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip"
+  },
+  "bundle_commands": {
+    "check_environment": "python check_environment.py --self-test",
+    "score_workflow": "python run_tumor_normal_workflow.py input.csv --labels labels.csv",
+    "smoke_test": "python run_smoke_tests.py",
+    "safety_test": "python run_safety_tests.py",
+    "validate_in_place": "python validate_release_lite.py --release-dir . --no-zip"
+  },
+  "primary_commands": {
+    "build_release": "python build_release_lite.py --smoke --timeout-seconds 300",
+    "score_workflow": "python run_tumor_normal_workflow.py input.csv --labels labels.csv",
+    "smoke_test": "python run_smoke_tests.py",
+    "safety_test": "python run_safety_tests.py",
+    "validate_release": "python validate_release_lite.py --release-dir release-lite --zip tcga-tumor-normal-release-lite.zip --source-root . --artifacts RELEASE_ARTIFACTS.json"
+  }
+}

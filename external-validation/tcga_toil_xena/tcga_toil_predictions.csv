@@ -1,0 +1,201 @@
+sample,detailed_category,primary disease or tissue,_primary_site,_sample_type,_gender,_study,label,tumor_probability,call
+TCGA-CZ-5469-11,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Solid Tissue Normal,Male,TCGA,0,0.959211,tumor
+TCGA-DD-A1EC-11,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Solid Tissue Normal,Female,TCGA,0,0.956755,tumor
+TCGA-Y8-A8RY-11,Kidney Papillary Cell Carcinoma,Kidney Papillary Cell Carcinoma,Kidney,Solid Tissue Normal,Male,TCGA,0,0.997357,tumor
+TCGA-BJ-A4O9-01,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-BJ-A0ZG-01,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Primary Tumor,Male,TCGA,1,0.999981,tumor
+TCGA-SX-A7SP-01,Kidney Papillary Cell Carcinoma,Kidney Papillary Cell Carcinoma,Kidney,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-22-5482-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.991017,tumor
+TCGA-FP-7998-01,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-B8-A54J-01,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-33-4587-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Female,TCGA,0,0.955901,tumor
+TCGA-KN-8429-11,Kidney Chromophobe,Kidney Chromophobe,Kidney,Solid Tissue Normal,Female,TCGA,0,0.98067,tumor
+TCGA-CD-5803-01,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-DK-A2I4-01,Bladder Urothelial Carcinoma,Bladder Urothelial Carcinoma,Bladder,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-06-AABW-11,Glioblastoma Multiforme,Glioblastoma Multiforme,Brain,Solid Tissue Normal,,TCGA,0,0.999956,tumor
+TCGA-YL-A9WJ-01,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-P5-A5ET-01,Brain Lower Grade Glioma,Brain Lower Grade Glioma,Brain,Primary Tumor,Male,TCGA,1,0.999979,tumor
+TCGA-49-4512-11,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Solid Tissue Normal,Female,TCGA,0,0.986714,tumor
+TCGA-AZ-6600-01,Colon Adenocarcinoma,Colon Adenocarcinoma,Colon,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-BH-A0HK-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.981577,tumor
+TCGA-CW-5580-11,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Solid Tissue Normal,Female,TCGA,0,0.985436,tumor
+TCGA-F7-A50I-01,Head & Neck Squamous Cell Carcinoma,Head & Neck Squamous Cell Carcinoma,Head and Neck region,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-43-6143-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.992606,tumor
+TCGA-EK-A2PG-01,Cervical & Endocervical Cancer,Cervical & Endocervical Cancer,Cervix,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-DO-A1JZ-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Female,TCGA,0,0.999034,tumor
+TCGA-HU-A4GN-11,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Solid Tissue Normal,Male,TCGA,0,0.670014,tumor
+TCGA-43-6773-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.999096,tumor
+TCGA-CV-6938-11,Head & Neck Squamous Cell Carcinoma,Head & Neck Squamous Cell Carcinoma,Head and Neck region,Solid Tissue Normal,Male,TCGA,0,0.996147,tumor
+TCGA-56-7731-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Female,TCGA,0,0.962531,tumor
+TCGA-DD-AACU-01,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-E2-A158-01,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-B2-5636-11,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Solid Tissue Normal,Male,TCGA,0,0.996716,tumor
+TCGA-CJ-5677-11,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Solid Tissue Normal,Female,TCGA,0,0.983357,tumor
+TCGA-CW-6090-11,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Solid Tissue Normal,Male,TCGA,0,0.99661,tumor
+TCGA-CG-5730-11,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Solid Tissue Normal,Female,TCGA,0,0.969588,tumor
+TCGA-CR-7379-01,Head & Neck Squamous Cell Carcinoma,Head & Neck Squamous Cell Carcinoma,Head and Neck region,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-DX-A3M1-01,Sarcoma,Sarcoma,"Soft tissue,Bone",Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-CR-7395-01,Head & Neck Squamous Cell Carcinoma,Head & Neck Squamous Cell Carcinoma,Head and Neck region,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-TM-A84R-01,Brain Lower Grade Glioma,Brain Lower Grade Glioma,Brain,Primary Tumor,Male,TCGA,1,0.997729,tumor
+TCGA-KS-A41F-01,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-BL-A13J-11,Bladder Urothelial Carcinoma,Bladder Urothelial Carcinoma,Bladder,Solid Tissue Normal,Male,TCGA,0,0.974267,tumor
+TCGA-DD-A1EB-11,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Solid Tissue Normal,Female,TCGA,0,0.982889,tumor
+TCGA-B0-4833-01,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-38-4626-11,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Solid Tissue Normal,Female,TCGA,0,0.992499,tumor
+TCGA-E8-A2JQ-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Female,TCGA,0,0.999842,tumor
+TCGA-J8-A3YF-01,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-AU-3779-01,Colon Adenocarcinoma,Colon Adenocarcinoma,Colon,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-AX-A0J0-11,Uterine Corpus Endometrioid Carcinoma,Uterine Corpus Endometrioid Carcinoma,Endometrium,Solid Tissue Normal,Female,TCGA,0,0.986472,tumor
+TCGA-EL-A3N2-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Female,TCGA,0,0.993387,tumor
+TCGA-EI-6882-01,Rectum Adenocarcinoma,Rectum Adenocarcinoma,Rectum,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-CZ-5451-11,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Solid Tissue Normal,Male,TCGA,0,0.988188,tumor
+TCGA-DU-7011-01,Brain Lower Grade Glioma,Brain Lower Grade Glioma,Brain,Primary Tumor,Male,TCGA,1,0.999396,tumor
+TCGA-TN-A7HI-01,Head & Neck Squamous Cell Carcinoma,Head & Neck Squamous Cell Carcinoma,Head and Neck region,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-KN-8419-11,Kidney Chromophobe,Kidney Chromophobe,Kidney,Solid Tissue Normal,Male,TCGA,0,0.902812,tumor
+TCGA-A8-A07Z-01,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-30-1861-01,Ovarian Serous Cystadenocarcinoma,Ovarian Serous Cystadenocarcinoma,Ovary,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-77-8007-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.999889,tumor
+TCGA-24-1431-01,Ovarian Serous Cystadenocarcinoma,Ovarian Serous Cystadenocarcinoma,Ovary,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-BJ-A3PU-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Male,TCGA,0,0.999036,tumor
+TCGA-78-7155-01,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-A3-3358-11,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Solid Tissue Normal,Female,TCGA,0,0.978416,tumor
+TCGA-FY-A3WA-01,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-EJ-7793-11,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Solid Tissue Normal,Male,TCGA,0,0.999593,tumor
+TCGA-ES-A2HT-11,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Solid Tissue Normal,Male,TCGA,0,0.999874,tumor
+TCGA-KL-8324-11,Kidney Chromophobe,Kidney Chromophobe,Kidney,Solid Tissue Normal,Female,TCGA,0,0.985124,tumor
+TCGA-BQ-5877-11,Kidney Papillary Cell Carcinoma,Kidney Papillary Cell Carcinoma,Kidney,Solid Tissue Normal,Male,TCGA,0,0.992411,tumor
+TCGA-24-1469-01,Ovarian Serous Cystadenocarcinoma,Ovarian Serous Cystadenocarcinoma,Ovary,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-FP-7735-11,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Solid Tissue Normal,Male,TCGA,0,0.955737,tumor
+TCGA-RY-A845-01,Brain Lower Grade Glioma,Brain Lower Grade Glioma,Brain,Primary Tumor,Female,TCGA,1,0.999958,tumor
+TCGA-CH-5768-11,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Solid Tissue Normal,Male,TCGA,0,0.999939,tumor
+TCGA-D5-7000-01,Colon Adenocarcinoma,Colon Adenocarcinoma,Colon,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-AZ-6598-11,Colon Adenocarcinoma,Colon Adenocarcinoma,Colon,Solid Tissue Normal,Female,TCGA,0,0.98522,tumor
+TCGA-J7-A8I2-01,Kidney Papillary Cell Carcinoma,Kidney Papillary Cell Carcinoma,Kidney,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-BR-8485-01,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-B0-5694-11,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Solid Tissue Normal,Male,TCGA,0,0.999442,tumor
+TCGA-IA-A83T-01,Kidney Papillary Cell Carcinoma,Kidney Papillary Cell Carcinoma,Kidney,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-BR-A4J8-01,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-E9-A1R7-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.418938,normal
+TCGA-66-2758-01,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-CN-4740-01,Head & Neck Squamous Cell Carcinoma,Head & Neck Squamous Cell Carcinoma,Head and Neck region,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-XF-A8HC-01,Bladder Urothelial Carcinoma,Bladder Urothelial Carcinoma,Bladder,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-BQ-5875-11,Kidney Papillary Cell Carcinoma,Kidney Papillary Cell Carcinoma,Kidney,Solid Tissue Normal,Female,TCGA,0,0.99702,tumor
+TCGA-DD-A1EH-11,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Solid Tissue Normal,Male,TCGA,0,0.983992,tumor
+TCGA-GL-A59R-11,Kidney Papillary Cell Carcinoma,Kidney Papillary Cell Carcinoma,Kidney,Solid Tissue Normal,Male,TCGA,0,0.997938,tumor
+TCGA-DJ-A4UQ-01,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-E7-A519-01,Bladder Urothelial Carcinoma,Bladder Urothelial Carcinoma,Bladder,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-AA-3522-11,Colon Adenocarcinoma,Colon Adenocarcinoma,Colon,Solid Tissue Normal,Male,TCGA,0,0.982261,tumor
+TCGA-EL-A3TB-01,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-EJ-7327-11,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Solid Tissue Normal,Male,TCGA,0,0.999987,tumor
+TCGA-BA-5152-01,Head & Neck Squamous Cell Carcinoma,Head & Neck Squamous Cell Carcinoma,Head and Neck region,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-BH-A0HA-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.999657,tumor
+TCGA-BR-6802-11,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Solid Tissue Normal,Male,TCGA,0,0.757781,tumor
+TCGA-HU-A4H2-01,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-24-1550-01,Ovarian Serous Cystadenocarcinoma,Ovarian Serous Cystadenocarcinoma,Ovary,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-BH-A0C3-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.997913,tumor
+TCGA-EL-A3T1-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Female,TCGA,0,0.998617,tumor
+TCGA-DX-A6YZ-01,Sarcoma,Sarcoma,"Soft tissue,Bone",Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-EK-A2PM-01,Cervical & Endocervical Cancer,Cervical & Endocervical Cancer,Cervix,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-BC-A10X-11,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Solid Tissue Normal,Female,TCGA,0,0.953666,tumor
+TCGA-B0-5705-11,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Solid Tissue Normal,Female,TCGA,0,0.95079,tumor
+TCGA-AJ-A3NE-01,Uterine Corpus Endometrioid Carcinoma,Uterine Corpus Endometrioid Carcinoma,Endometrium,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-KS-A41L-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Female,TCGA,0,0.999654,tumor
+TCGA-E2-A1LS-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.376354,normal
+TCGA-QH-A6X5-01,Brain Lower Grade Glioma,Brain Lower Grade Glioma,Brain,Primary Tumor,Female,TCGA,1,0.999975,tumor
+TCGA-DD-A73F-01,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-A8-A09Z-01,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-44-5644-01,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-EJ-7797-11,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Solid Tissue Normal,Male,TCGA,0,0.999889,tumor
+TCGA-EJ-7786-11,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Solid Tissue Normal,Male,TCGA,0,0.99983,tumor
+TCGA-IB-8127-01,Pancreatic Adenocarcinoma,Pancreatic Adenocarcinoma,Pancreas,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-L5-A4OU-01,Esophageal Carcinoma,Esophageal Carcinoma,Esophagus,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-RW-A7D0-01,Pheochromocytoma & Paraganglioma,Pheochromocytoma & Paraganglioma,Paraganglia,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-CV-7425-11,Head & Neck Squamous Cell Carcinoma,Head & Neck Squamous Cell Carcinoma,Head and Neck region,Solid Tissue Normal,Female,TCGA,0,0.999967,tumor
+TCGA-XK-AAJ3-01,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-EW-A1PD-01,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-EL-A3MY-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Male,TCGA,0,0.999522,tumor
+TCGA-04-1362-01,Ovarian Serous Cystadenocarcinoma,Ovarian Serous Cystadenocarcinoma,Ovary,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-DD-A3A2-11,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Solid Tissue Normal,Female,TCGA,0,0.982965,tumor
+TCGA-BH-A1F8-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.962843,tumor
+TCGA-BT-A20O-01,Bladder Urothelial Carcinoma,Bladder Urothelial Carcinoma,Bladder,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-CV-6955-11,Head & Neck Squamous Cell Carcinoma,Head & Neck Squamous Cell Carcinoma,Head and Neck region,Solid Tissue Normal,Female,TCGA,0,0.999434,tumor
+TCGA-BT-A2LB-11,Bladder Urothelial Carcinoma,Bladder Urothelial Carcinoma,Bladder,Solid Tissue Normal,Female,TCGA,0,0.988252,tumor
+TCGA-A2-A0SY-01,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-06-0156-01,Glioblastoma Multiforme,Glioblastoma Multiforme,Brain,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-55-7728-01,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-AZ-6600-11,Colon Adenocarcinoma,Colon Adenocarcinoma,Colon,Solid Tissue Normal,Male,TCGA,0,0.986812,tumor
+TCGA-60-2709-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.861258,tumor
+TCGA-CD-5804-01,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-13-1409-01,Ovarian Serous Cystadenocarcinoma,Ovarian Serous Cystadenocarcinoma,Ovary,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-EL-A3H2-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Male,TCGA,0,0.999319,tumor
+TCGA-A6-2683-11,Colon Adenocarcinoma,Colon Adenocarcinoma,Colon,Solid Tissue Normal,Female,TCGA,0,0.986126,tumor
+TCGA-R8-A6MO-01,Brain Lower Grade Glioma,Brain Lower Grade Glioma,Brain,Primary Tumor,Female,TCGA,1,0.999997,tumor
+TCGA-AA-3518-11,Colon Adenocarcinoma,Colon Adenocarcinoma,Colon,Solid Tissue Normal,Female,TCGA,0,0.942329,tumor
+TCGA-77-8008-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.999776,tumor
+TCGA-XJ-A83G-01,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-FV-A3I1-11,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Solid Tissue Normal,Female,TCGA,0,0.989266,tumor
+TCGA-DD-A3A8-01,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-EL-A3T8-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Male,TCGA,0,0.999032,tumor
+TCGA-RT-A6YC-01,Pheochromocytoma & Paraganglioma,Pheochromocytoma & Paraganglioma,Paraganglia,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-39-5040-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.94594,tumor
+TCGA-L3-A524-01,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-OL-A66K-01,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-55-8507-01,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-B0-5705-01,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-E2-A15I-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.321415,normal
+TCGA-43-5670-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.993995,tumor
+TCGA-22-5481-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Female,TCGA,0,0.985693,tumor
+TCGA-CV-7177-11,Head & Neck Squamous Cell Carcinoma,Head & Neck Squamous Cell Carcinoma,Head and Neck region,Solid Tissue Normal,Female,TCGA,0,0.999627,tumor
+TCGA-CG-4469-01,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-E9-A1RI-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.788893,tumor
+TCGA-BH-A1FH-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.709055,tumor
+TCGA-55-A494-01,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-EY-A548-01,Uterine Corpus Endometrioid Carcinoma,Uterine Corpus Endometrioid Carcinoma,Endometrium,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-BH-A0DO-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.989981,tumor
+TCGA-EJ-7115-11,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Solid Tissue Normal,Male,TCGA,0,0.999915,tumor
+TCGA-A3-3387-11,Kidney Clear Cell Carcinoma,Kidney Clear Cell Carcinoma,Kidney,Solid Tissue Normal,Male,TCGA,0,0.994709,tumor
+TCGA-BH-A1FD-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.934541,tumor
+TCGA-ED-A7XP-01,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-09-1670-01,Ovarian Serous Cystadenocarcinoma,Ovarian Serous Cystadenocarcinoma,Ovary,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-BJ-A28X-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Female,TCGA,0,0.999628,tumor
+TCGA-KS-A41J-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Female,TCGA,0,0.998856,tumor
+TCGA-YZ-A982-01,Uveal Melanoma,Uveal Melanoma,Eye,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-EJ-7788-01,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-EJ-7328-01,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-LL-A6FP-01,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-EL-A3T2-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Female,TCGA,0,0.975375,tumor
+TCGA-IC-A6RF-11,Esophageal Carcinoma,Esophageal Carcinoma,Esophagus,Solid Tissue Normal,Female,TCGA,0,0.999994,tumor
+TCGA-ET-A3BP-01,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-HC-7738-11,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Solid Tissue Normal,Male,TCGA,0,0.955788,tumor
+TCGA-DX-A8BT-01,Sarcoma,Sarcoma,"Soft tissue,Bone",Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-CU-A0YN-11,Bladder Urothelial Carcinoma,Bladder Urothelial Carcinoma,Bladder,Solid Tissue Normal,Male,TCGA,0,0.991898,tumor
+TCGA-91-6836-11,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Solid Tissue Normal,Female,TCGA,0,0.988909,tumor
+TCGA-BR-6458-11,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Solid Tissue Normal,Female,TCGA,0,0.982507,tumor
+TCGA-EL-A3ZG-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Male,TCGA,0,0.99949,tumor
+TCGA-43-3394-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.931602,tumor
+TCGA-E7-A85H-01,Bladder Urothelial Carcinoma,Bladder Urothelial Carcinoma,Bladder,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-FD-A3SL-01,Bladder Urothelial Carcinoma,Bladder Urothelial Carcinoma,Bladder,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-25-1318-01,Ovarian Serous Cystadenocarcinoma,Ovarian Serous Cystadenocarcinoma,Ovary,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-KN-8427-11,Kidney Chromophobe,Kidney Chromophobe,Kidney,Solid Tissue Normal,Male,TCGA,0,0.99697,tumor
+TCGA-UY-A78L-01,Bladder Urothelial Carcinoma,Bladder Urothelial Carcinoma,Bladder,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-55-8505-01,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-E2-A1LB-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.999078,tumor
+TCGA-HC-7740-11,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Solid Tissue Normal,Male,TCGA,0,0.999197,tumor
+TCGA-EW-A2FW-01,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-DB-5277-01,Brain Lower Grade Glioma,Brain Lower Grade Glioma,Brain,Primary Tumor,Male,TCGA,1,0.999814,tumor
+TCGA-BF-A5EP-01,Skin Cutaneous Melanoma,Skin Cutaneous Melanoma,Skin,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-LN-A4A9-01,Esophageal Carcinoma,Esophageal Carcinoma,Esophagus,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-44-6146-11,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.758959,tumor
+TCGA-WZ-A7V4-01,Testicular Germ Cell Tumor,Testicular Germ Cell Tumor,Testis,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-AZ-6605-11,Colon Adenocarcinoma,Colon Adenocarcinoma,Colon,Solid Tissue Normal,Male,TCGA,0,0.950916,tumor
+TCGA-22-4593-11,Lung Squamous Cell Carcinoma,Lung Squamous Cell Carcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.997454,tumor
+TCGA-S9-A7QY-01,Brain Lower Grade Glioma,Brain Lower Grade Glioma,Brain,Primary Tumor,Female,TCGA,1,0.999997,tumor
+TCGA-C5-A2M1-01,Cervical & Endocervical Cancer,Cervical & Endocervical Cancer,Cervix,Primary Tumor,Female,TCGA,1,1.0,tumor
+TCGA-KS-A41I-11,Thyroid Carcinoma,Thyroid Carcinoma,Thyroid Gland,Solid Tissue Normal,Female,TCGA,0,0.999715,tumor
+TCGA-HB-A3YV-01,Sarcoma,Sarcoma,"Soft tissue,Bone",Primary Tumor,Male,TCGA,1,0.999996,tumor
+TCGA-38-4632-11,Lung Adenocarcinoma,Lung Adenocarcinoma,Lung,Solid Tissue Normal,Male,TCGA,0,0.999439,tumor
+TCGA-IG-A8O2-01,Esophageal Carcinoma,Esophageal Carcinoma,Esophagus,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-BH-A0DG-11,Breast Invasive Carcinoma,Breast Invasive Carcinoma,Breast,Solid Tissue Normal,Female,TCGA,0,0.98727,tumor
+TCGA-BR-7703-11,Stomach Adenocarcinoma,Stomach Adenocarcinoma,Stomach,Solid Tissue Normal,Male,TCGA,0,0.993407,tumor
+TCGA-HC-7817-01,Prostate Adenocarcinoma,Prostate Adenocarcinoma,Prostate,Primary Tumor,Male,TCGA,1,1.0,tumor
+TCGA-XR-A8TF-01,Liver Hepatocellular Carcinoma,Liver Hepatocellular Carcinoma,Liver,Primary Tumor,Male,TCGA,1,1.0,tumor

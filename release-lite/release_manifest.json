@@ -1,0 +1,355 @@
+{
+  "builder": "build_release_lite.py",
+  "bundle_name": "tcga-tumor-normal-release-lite",
+  "file_count_excluding_manifest_and_checksums": 65,
+  "files": [
+    {
+      "bytes": 6166,
+      "path": "audit_cli_entrypoints.py",
+      "sha256": "fd083c27302ba26e6e67b49f24ddc087bf71ee2bb84878f3c9650b2b77950f9e"
+    },
+    {
+      "bytes": 8068,
+      "path": "audit_lightweight_dependencies.py",
+      "sha256": "17e6176025c0d8b6c692be40c9ed578cfa62445e5153139f8e975687ad5c42fd"
+    },
+    {
+      "bytes": 7699,
+      "path": "audit_release_docs.py",
+      "sha256": "400d1eebf6188d5027a3f1c3cfa4d0f2f07bf2b47bf6045d90f1126a4c64c261"
+    },
+    {
+      "bytes": 7739,
+      "path": "calibrate_threshold.py",
+      "sha256": "dee3d758d93af299e00d9e293476b5673b137f4095a9ddab9dd8900b01fa59cd"
+    },
+    {
+      "bytes": 6163,
+      "path": "check_environment.py",
+      "sha256": "615a6738e862d08612b39ac6c9422ab2a6db838d51614e66455876fcf48e88c8"
+    },
+    {
+      "bytes": 5114,
+      "path": "cohort_adapt_score.py",
+      "sha256": "b88382f15e1d0ea9915a795dfacc899684937a639c7e8be74b6a571be6033055"
+    },
+    {
+      "bytes": 4037,
+      "path": "DATA_DICTIONARY.md",
+      "sha256": "266fa74666332e9f63f6996c7657aa616d8f3bfcb3d7fecbfdf1e1c2dcb75b13"
+    },
+    {
+      "bytes": 58716,
+      "path": "deployable_lr_weights.npz",
+      "sha256": "942c7af718b7f531048fc6cfa562dc3aca5395633787baaa1f1f7c5f6d731c6c"
+    },
+    {
+      "bytes": 106489,
+      "path": "example_input.csv",
+      "sha256": "351960b4ae45e687b4d8b0b379b2861bc9cdb297ef7e17435f27b6286b8e1f4f"
+    },
+    {
+      "bytes": 230,
+      "path": "example_labels.csv",
+      "sha256": "b25c1e96d20d46088465abb4787ab5ece76e25c26daa88298250d109b9bff453"
+    },
+    {
+      "bytes": 292,
+      "path": "example_output.csv",
+      "sha256": "1b7a2ad7307b3055a92f8a000f66e84c635821ee3cb28e1c51c7eb279891894c"
+    },
+    {
+      "bytes": 238,
+      "path": "example_workflow_output/calibration.json",
+      "sha256": "8a41b970078280d258714e24316fddde6a6057d38511f1b34762b0cd2d715507"
+    },
+    {
+      "bytes": 5550,
+      "path": "example_workflow_output/explanations.csv",
+      "sha256": "5661f16abd1411b4b7f8ac37796885ee391c5097a36297e9b3ac2c570599f220"
+    },
+    {
+      "bytes": 855,
+      "path": "example_workflow_output/manifest.json",
+      "sha256": "ec420555d1d1214aaa6dfa43652c50c58f501b28b8e3716159b6044133afd1db"
+    },
+    {
+      "bytes": 2051,
+      "path": "example_workflow_output/qc.json",
+      "sha256": "1dbcfb9bdbb079a78a05ce8b55a0c6d76e3394109a4222409c97d509863e18ac"
+    },
+    {
+      "bytes": 370,
+      "path": "example_workflow_output/README.md",
+      "sha256": "fa9426452eb46c6a1e586e168a0ee0f5781584546e31ebc95328220b1d2849df"
+    },
+    {
+      "bytes": 298,
+      "path": "example_workflow_output/scores.csv",
+      "sha256": "91193e41b72105fff909ff91817c83c51bfc823668fb75ac8733f3dfe2593311"
+    },
+    {
+      "bytes": 181,
+      "path": "example_workflow_output/thresholds.csv",
+      "sha256": "e6a86c32c6d7764daa981e2657fef93a3e859a1a8c3eaa6d39e3912680a7b004"
+    },
+    {
+      "bytes": 1049,
+      "path": "example_workflow_output/workflow_report.md",
+      "sha256": "560e9a3a733cb6d8a3b2640e58298e08681ce65d33ab83ea01aef8b5b394e07c"
+    },
+    {
+      "bytes": 4714,
+      "path": "EXECUTIVE_SUMMARY.md",
+      "sha256": "d98b263e05b2056297753bdd2d6c71283b62a70abca53eae1345b69dfc320287"
+    },
+    {
+      "bytes": 3931,
+      "path": "explain_scores.py",
+      "sha256": "f8cee4840f0e5bdbda8ad03ad3d5264f61ed59288a6fa284116fed19b3fb6ff6"
+    },
+    {
+      "bytes": 2096,
+      "path": "external-validation/cptac_gdc/CPTAC_EXTERNAL_VALIDATION.md",
+      "sha256": "a005ae4f8eccbce64724f9e5406ade6566c59d3a45fe8a5ee46d9f288fa8d432"
+    },
+    {
+      "bytes": 195,
+      "path": "external-validation/cptac_gdc/cptac_summary.csv",
+      "sha256": "b9c3f4bad2cd8a046ad8c6be6ca94b0940d46821a5daed21ade49b9775ab56eb"
+    },
+    {
+      "bytes": 558,
+      "path": "external-validation/cptac_gdc/cptac_threshold_sweep.csv",
+      "sha256": "c15dda15865fad05482fda02e563102f7cfb6c531a8957cb93c9d6422d86e6b3"
+    },
+    {
+      "bytes": 4884,
+      "path": "external-validation/gtex_xena/GTEX_NORMAL_VALIDATION.md",
+      "sha256": "0b27725f61c10d14c239530e6fec41ee71d99575a5d30158d74096e26215df3f"
+    },
+    {
+      "bytes": 205,
+      "path": "external-validation/gtex_xena/gtex_summary.csv",
+      "sha256": "d5e36f72e780cc7c69d815ca35c508522a0265aabdbe0922cf78068cf7202e61"
+    },
+    {
+      "bytes": 375,
+      "path": "external-validation/gtex_xena/gtex_threshold_sweep.csv",
+      "sha256": "099ea298efdc1574f64ed828e77c316f258b4f3c12ab6710de49ea68e6e4f9ac"
+    },
+    {
+      "bytes": 1876,
+      "path": "external-validation/tcga_toil_xena/TCGA_TOIL_PIPELINE_CHECK.md",
+      "sha256": "41df8b035a7669cef8c6c99ea499f5d0b95818941fcef3828d4f1c52310882ec"
+    },
+    {
+      "bytes": 195,
+      "path": "external-validation/tcga_toil_xena/tcga_toil_summary.csv",
+      "sha256": "9029be54baeb7c7b9f4c8514687c5e4a73110d6dfcdf550ce6f1bc287e60299a"
+    },
+    {
+      "bytes": 516,
+      "path": "external-validation/tcga_toil_xena/tcga_toil_threshold_sweep.csv",
+      "sha256": "7070becde847984b39c91e53b5b490819fadc1eaf6171802584f8a96cbacad49"
+    },
+    {
+      "bytes": 2713,
+      "path": "INDEX.md",
+      "sha256": "0b34badd354bef51486cd08cc4d5f2607b5e4c840aab8d27aaf17e63bce9b037"
+    },
+    {
+      "bytes": 14001,
+      "path": "inspect_expression_input.py",
+      "sha256": "85ba815fc0810a6561466906af98ed4e99ae8224b484623d44bc3ca69e58634c"
+    },
+    {
+      "bytes": 5114,
+      "path": "LITERATURE_CHECK.md",
+      "sha256": "e6ec7ece96fcdfcb06e6ae3db6d3a45666f4be1d04173310fc934b8a15933547"
+    },
+    {
+      "bytes": 4247,
+      "path": "MODEL_CARD.md",
+      "sha256": "33eca01f552abbc2de86b5a82a945b395ce4f7e3890e42c21354229edb64d1d9"
+    },
+    {
+      "bytes": 253626,
+      "path": "model_gene_metadata.csv",
+      "sha256": "9b67a86fc3cdda050730761bb6a782f81262a3f97c6cea0db71bc1998fb9ea59"
+    },
+    {
+      "bytes": 13303,
+      "path": "model_qc_reference.json",
+      "sha256": "e44c83e5fef51ddfd413586c34a47eac770a4835c65e2350754a04b87e57c9cd"
+    },
+    {
+      "bytes": 562,
+      "path": "per_cancer_type_performance.csv",
+      "sha256": "3ff81c32f6622fbe106ef0cd3d601c16726135656684c23200dc3b2f36441e3e"
+    },
+    {
+      "bytes": 10478,
+      "path": "README.md",
+      "sha256": "44de5de752b844d8e6824c3554914d3abc564a9fce07b55b487dafbf79100a19"
+    },
+    {
+      "bytes": 3711,
+      "path": "RELEASE_BUNDLE.md",
+      "sha256": "39edb3b25413651fe31e4c15e12549393b595b31deb08d1f46a20baba63c41bb"
+    },
+    {
+      "bytes": 3290,
+      "path": "RELEASE_METADATA.json",
+      "sha256": "72f2d51a41b25cb8fcc895b17fc9da47906c7d9c216a8a727ad545c1fec2d061"
+    },
+    {
+      "bytes": 6810,
+      "path": "RELEASE_NOTES.md",
+      "sha256": "fe94938dd0c2cc728a3a0a937fa2cbc56a279b5e63e86aff1dc7152d729a14d1"
+    },
+    {
+      "bytes": 15575,
+      "path": "REPORT.md",
+      "sha256": "48697c5613f0f5da489780fb1a8080dc97dd5b8a9a807fdc8f3601a2b3349d52"
+    },
+    {
+      "bytes": 7952,
+      "path": "REPRODUCIBILITY.md",
+      "sha256": "f151c4a65943b60f0d9e23ab91295df59889b0f7f8aa4bdf6271b90b78c5e81f"
+    },
+    {
+      "bytes": 101,
+      "path": "requirements-light.txt",
+      "sha256": "9dbd12915a59ec01440c59a4c64a10dccf0d5d8b553ea6fc768bcf78cf6573c4"
+    },
+    {
+      "bytes": 7110,
+      "path": "run_release_acceptance.py",
+      "sha256": "bd7fcbc7249fb0a4873d0a070f544bb0bea6896f96c30eb0f99751709675c5e1"
+    },
+    {
+      "bytes": 5410,
+      "path": "run_safety_tests.py",
+      "sha256": "c79d2c21342626cfa67b9bb05dacfd2e851c848cfc2510728acfbbe61a640a64"
+    },
+    {
+      "bytes": 4636,
+      "path": "run_smoke_tests.py",
+      "sha256": "2077c95c7a934c875d364a344269c3eb066e919dc5ba7f04f94294084c36f2dd"
+    },
+    {
+      "bytes": 12310,
+      "path": "run_tumor_normal_workflow.py",
+      "sha256": "67d44fcd116a04a5a31cc0b7fc9b0d276c2d69c37dce9a94ee0ea614bb32b349"
+    },
+    {
+      "bytes": 9514,
+      "path": "score_tumor_normal.py",
+      "sha256": "c7eb15c3974c73e8e553cc2da9a52a6f2b4df0e9703050664ec4caff93f891d4"
+    },
+    {
+      "bytes": 1201,
+      "path": "tcga_rnaseq/__init__.py",
+      "sha256": "c879320a2ebd2de79dba0fca8803f49f3f7556064e0123858c27d12093c08662"
+    },
+    {
+      "bytes": 1969,
+      "path": "tcga_rnaseq/align.py",
+      "sha256": "b6c825e9fe91d637a8a65aaf872583c4894150dc8b8e176d0ade2a9806b486f6"
+    },
+    {
+      "bytes": 4827,
+      "path": "tcga_rnaseq/io.py",
+      "sha256": "e724f67f12806a1dfc5da509bd85f4332fab40da7a662a32f23f2bd7d3ce20ae"
+    },
+    {
+      "bytes": 4539,
+      "path": "tcga_rnaseq/metrics.py",
+      "sha256": "edb9f90dbc7033d18d1567bf65fd95ad83a71ef20eb6258f93944fc313c0f059"
+    },
+    {
+      "bytes": 3991,
+      "path": "tcga_rnaseq/score.py",
+      "sha256": "e453a53dd005b405579a014cc45d089ad9c404d510312008d1ec63ab983d6027"
+    },
+    {
+      "bytes": 109,
+      "path": "templates/input_matrix_template.csv",
+      "sha256": "d56e1cedf7a41bdcf8446f9db7d1f9cf699bf9f575b503cdcbbccc132126cce6"
+    },
+    {
+      "bytes": 48,
+      "path": "templates/labels_template.csv",
+      "sha256": "1596da0a6eed993f64d69298c8ae8313242939fb8236793c1a0fecc91208bb14"
+    },
+    {
+      "bytes": 439,
+      "path": "test_metrics.csv",
+      "sha256": "134e8141c4bff001a3c6001cd789e48e8be54b40a93de0ea029165700132eb8e"
+    },
+    {
+      "bytes": 1366,
+      "path": "top_genes_logreg.csv",
+      "sha256": "45ff0ad0529fd5136d850e34d1d26d09c3b22bd0af56f20d104e82e55685d93e"
+    },
+    {
+      "bytes": 1131,
+      "path": "top_genes_xgboost.csv",
+      "sha256": "f35cc0ac6956749e3dd4d6da50addd650bb29d16e081d8184ddfef9841dd7d57"
+    },
+    {
+      "bytes": 3697,
+      "path": "TROUBLESHOOTING.md",
+      "sha256": "02eaf7bf4569f4cbf67c4482f0f8e960ae49f25f67a052363139e99ca8ee9bae"
+    },
+    {
+      "bytes": 4890,
+      "path": "USER_GUIDE.md",
+      "sha256": "e65eb37bbd5dc58300a58b85b1694e5bffc77bdc5d160bd778b7a74df7f9ab3a"
+    },
+    {
+      "bytes": 15048,
+      "path": "validate_output_contracts.py",
+      "sha256": "2fe2f3228ffcf6f492ef95bd985aec4fa3efb6d67c0a0c090697c6aad9164b16"
+    },
+    {
+      "bytes": 15325,
+      "path": "validate_release_lite.py",
+      "sha256": "791fba5c8f35b3da1a37f3ff29531f9b97fb2902e15cafc1571c8d0965b76c52"
+    },
+    {
+      "bytes": 7901,
+      "path": "validate_zip_bundle.py",
+      "sha256": "1bf5577750381435eb6d7bc979418df767ffa07964a4273ce38a1dd88fe07a91"
+    },
+    {
+      "bytes": 22,
+      "path": "VERSION",
+      "sha256": "d1a255d900f21234e57cd7dbb3d09acbacb79b0b815190885060b278908d4a4b"
+    }
+  ],
+  "forbidden_artifact_names": [
+    "X_full_filtered.pkl",
+    "deployable_pipeline.pkl",
+    "feature_selection.pkl",
+    "final_model_results.pkl",
+    "gene_id_to_name.pkl",
+    "groups_full.pkl",
+    "model_lr.pkl",
+    "model_rf.pkl",
+    "model_xgb.pkl",
+    "projects_full.pkl",
+    "sample_metadata.pkl",
+    "selected_files.csv",
+    "test_idx.npy",
+    "train_classifier.py",
+    "train_idx.npy",
+    "y_full.pkl"
+  ],
+  "intended_input": "GDC STAR-Counts-style log2(TPM+1), rows=samples, columns=Ensembl genes.",
+  "release_date": "2026-07-08",
+  "schema_version": "1.0",
+  "validation_command": "python validate_release_lite.py --release-dir release-lite --zip tcga-tumor-normal-release-lite.zip",
+  "version": "v1.1.1-gdc-starcounts"
+}

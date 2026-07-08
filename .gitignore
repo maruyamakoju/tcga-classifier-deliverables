@@ -1,0 +1,43 @@
+# Python caches and test output
+__pycache__/
+*.py[cod]
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Local smoke/safety/acceptance scratch artifacts
+_smoke_*
+_acceptance_*
+tcga_safety_*/
+*_tumor_normal_workflow/
+*.scored.csv
+*.qc.json
+*.adapted_scores.csv
+*.explanations.csv
+*.thresholds.csv
+
+# Large research/training artifacts kept outside normal Git history.
+# The lightweight release uses deployable_lr_weights.npz instead.
+*.pkl
+X_full_filtered.pkl
+feature_selection.pkl
+final_model_results.pkl
+model_lr.pkl
+model_rf.pkl
+model_xgb.pkl
+deployable_pipeline.pkl
+
+# Optional exported full feature matrices.
+cancer-type-classifier/X_full.npy
+cancer-type-classifier/X_genes.npy
+cancer-type-classifier/X_samples.npy
+
+# Large external-validation caches.
+external-validation/**/gene_cache/
+
+# Local logs and OS/editor noise
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

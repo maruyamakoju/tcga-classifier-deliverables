@@ -1,0 +1,33 @@
+{
+  "calibration": {
+    "auc": 1.0,
+    "n": 5,
+    "n_normal": 2,
+    "n_tumor": 3,
+    "recommended_accuracy": 1.0,
+    "recommended_metric": "youden_j",
+    "recommended_recall": 1.0,
+    "recommended_specificity": 1.0,
+    "recommended_threshold": 0.989957
+  },
+  "input": "example_input.csv",
+  "input_genes": 2000,
+  "labels": "example_labels.csv",
+  "matched_model_genes": 2000,
+  "missing_model_genes": 0,
+  "normal_calls": 2,
+  "outputs": {
+    "calibration_json": "calibration.json",
+    "explanations_csv": "explanations.csv",
+    "manifest_json": "manifest.json",
+    "qc_json": "qc.json",
+    "report_md": "workflow_report.md",
+    "scores_csv": "scores.csv",
+    "thresholds_csv": "thresholds.csv"
+  },
+  "qc_status": "PASS",
+  "samples": 5,
+  "status": "complete",
+  "threshold": 0.5,
+  "tumor_calls": 3
+}

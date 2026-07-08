@@ -1,0 +1,399 @@
+{
+  "intended_input": "GDC STAR-Counts-style log2(TPM+1), rows=samples, columns=Ensembl genes.",
+  "reference_reports": {
+    "compatible_gdc_combined": {
+      "distribution_summary": {
+        "abs_z_gt_10_fraction": 4.146341463414634e-05,
+        "abs_z_gt_6_fraction": 0.0015048780487804878,
+        "cohort_gene_mean_abs_z": {
+          "max": 5.669753623232187,
+          "p50": 0.5391940415318147,
+          "p90": 1.4601106204440082,
+          "p95": 1.7535004630763558,
+          "p99": 2.4323616349770276
+        },
+        "sample_median_abs_z": {
+          "max": 1.84537075049042,
+          "p50": 0.8254942781761253,
+          "p90": 1.0019055578298173,
+          "p95": 1.1611122216510514,
+          "p99": 1.4626813060971842
+        },
+        "sample_p95_abs_z": {
+          "max": 7.32084622632359,
+          "p50": 2.2836082415706977,
+          "p90": 3.0549875829835864,
+          "p95": 3.6763810764543656,
+          "p99": 4.315130775137832
+        }
+      },
+      "gene_match": {
+        "match_rate": 1.0,
+        "matched_model_genes": 2000
+      },
+      "messages_under_current_rules": [],
+      "score_summary": {
+        "normal_calls": 95,
+        "probability_ge_0_99_fraction": 0.43414634146341463,
+        "probability_le_0_01_fraction": 0.3024390243902439,
+        "tumor_call_fraction": 0.5365853658536586,
+        "tumor_calls": 110,
+        "tumor_probability": {
+          "max": 0.9999999220575736,
+          "min": 0.0001319727998571036,
+          "p10": 0.0007111371628740012,
+          "p25": 0.005757119451877193,
+          "p50": 0.9110693631510636,
+          "p75": 0.9998792602011842,
+          "p90": 0.9999870632873618,
+          "p95": 0.9999979645055699
+        }
+      },
+      "shape": {
+        "input_genes": 2000,
+        "model_genes": 2000,
+        "samples": 205
+      },
+      "status_under_current_rules": "PASS",
+      "value_summary": {
+        "finite_model_gene_values": 410000,
+        "max": 13.914166160403237,
+        "min": 0.0,
+        "negative_fraction": 0.0,
+        "nonfinite_or_missing_fraction": 0.0,
+        "p01": 0.03759307554023308,
+        "p50": 3.621676816478784,
+        "p99": 8.492222042434193
+      }
+    },
+    "cptac3_gdc_star_counts": {
+      "distribution_summary": {
+        "abs_z_gt_10_fraction": 4.25e-05,
+        "abs_z_gt_6_fraction": 0.001515,
+        "cohort_gene_mean_abs_z": {
+          "max": 5.800118451060197,
+          "p50": 0.5424290587323948,
+          "p90": 1.4704228838836209,
+          "p95": 1.760322768193065,
+          "p99": 2.4621602543520833
+        },
+        "sample_median_abs_z": {
+          "max": 1.84537075049042,
+          "p50": 0.8240734816767314,
+          "p90": 0.9969691807874996,
+          "p95": 1.134675029856373,
+          "p99": 1.466924877102047
+        },
+        "sample_p95_abs_z": {
+          "max": 7.32084622632359,
+          "p50": 2.2835113644824974,
+          "p90": 3.021098435318506,
+          "p95": 3.5822376392512862,
+          "p99": 4.320690266097587
+        }
+      },
+      "gene_match": {
+        "match_rate": 1.0,
+        "matched_model_genes": 2000
+      },
+      "messages_under_current_rules": [],
+      "score_summary": {
+        "normal_calls": 93,
+        "probability_ge_0_99_fraction": 0.435,
+        "probability_le_0_01_fraction": 0.31,
+        "tumor_call_fraction": 0.535,
+        "tumor_calls": 107,
+        "tumor_probability": {
+          "max": 0.9999999220575736,
+          "min": 0.0001319727998571036,
+          "p10": 0.0006654524038186765,
+          "p25": 0.004416351855575514,
+          "p50": 0.9078116569490111,
+          "p75": 0.9998674848577891,
+          "p90": 0.9999875114169096,
+          "p95": 0.999998099139831
+        }
+      },
+      "shape": {
+        "input_genes": 2000,
+        "model_genes": 2000,
+        "samples": 200
+      },
+      "status_under_current_rules": "PASS",
+      "value_summary": {
+        "finite_model_gene_values": 400000,
+        "max": 13.914166160403237,
+        "min": 0.0,
+        "negative_fraction": 0.0,
+        "nonfinite_or_missing_fraction": 0.0,
+        "p01": 0.03731193064196659,
+        "p50": 3.622010808241125,
+        "p99": 8.47848044892827
+      }
+    },
+    "example_tcga_gdc": {
+      "distribution_summary": {
+        "abs_z_gt_10_fraction": 0.0,
+        "abs_z_gt_6_fraction": 0.0011,
+        "cohort_gene_mean_abs_z": {
+          "max": 2.704558902454308,
+          "p50": 0.471162068396082,
+          "p90": 1.2119520875725498,
+          "p95": 1.4881834990389913,
+          "p99": 1.9612750257156788
+        },
+        "sample_median_abs_z": {
+          "max": 1.2756241901338419,
+          "p50": 0.8656339582831241,
+          "p90": 1.213879999997451,
+          "p95": 1.2447520950656463,
+          "p99": 1.2694497711202029
+        },
+        "sample_p95_abs_z": {
+          "max": 4.221272682985959,
+          "p50": 2.3036272456619646,
+          "p90": 3.912993891575212,
+          "p95": 4.067133287280585,
+          "p99": 4.190444803844884
+        }
+      },
+      "gene_match": {
+        "match_rate": 1.0,
+        "matched_model_genes": 2000
+      },
+      "messages_under_current_rules": [],
+      "score_summary": {
+        "normal_calls": 2,
+        "probability_ge_0_99_fraction": 0.4,
+        "probability_le_0_01_fraction": 0.0,
+        "tumor_call_fraction": 0.6,
+        "tumor_calls": 3,
+        "tumor_probability": {
+          "max": 0.9999460578479304,
+          "min": 0.03225895780775417,
+          "p10": 0.04004486130216795,
+          "p25": 0.05172371654378862,
+          "p50": 0.9899565622025662,
+          "p75": 0.999921676434858,
+          "p90": 0.9999363052827015,
+          "p95": 0.999941181565316
+        }
+      },
+      "shape": {
+        "input_genes": 2000,
+        "model_genes": 2000,
+        "samples": 5
+      },
+      "status_under_current_rules": "PASS",
+      "value_summary": {
+        "finite_model_gene_values": 10000,
+        "max": 13.8937,
+        "min": 0.0,
+        "negative_fraction": 0.0,
+        "nonfinite_or_missing_fraction": 0.0,
+        "p01": 0.047995,
+        "p50": 3.60675,
+        "p99": 9.079822000000002
+      }
+    },
+    "gtex_toil_normals_check": {
+      "distribution_summary": {
+        "abs_z_gt_10_fraction": 0.0017037037037037038,
+        "abs_z_gt_6_fraction": 0.008578703703703703,
+        "cohort_gene_mean_abs_z": {
+          "max": 13.524925558548397,
+          "p50": 0.7035661064575951,
+          "p90": 1.8757157681522196,
+          "p95": 2.399073099999302,
+          "p99": 4.074926136810412
+        },
+        "sample_median_abs_z": {
+          "max": 3.150307128438578,
+          "p50": 0.9693273784231063,
+          "p90": 1.2251630974134344,
+          "p95": 1.3393562817693656,
+          "p99": 1.7690419118719136
+        },
+        "sample_p95_abs_z": {
+          "max": 9.07820379679701,
+          "p50": 2.9860639658007044,
+          "p90": 3.5882991369317683,
+          "p95": 4.012824335803859,
+          "p99": 4.914151835512916
+        }
+      },
+      "gene_match": {
+        "match_rate": 1.0,
+        "matched_model_genes": 2000
+      },
+      "messages_under_current_rules": [
+        {
+          "code": "nonfinite_or_missing_values",
+          "level": "WARNING",
+          "message": "0.200% of model-gene cells are missing, non-numeric, or non-finite."
+        },
+        {
+          "code": "many_extreme_standardized_values",
+          "level": "WARNING",
+          "message": "0.858% of standardized model-gene values have |z| > 6."
+        },
+        {
+          "code": "very_extreme_standardized_values",
+          "level": "WARNING",
+          "message": "0.170% of standardized model-gene values have |z| > 10."
+        },
+        {
+          "code": "cohort_distribution_shift",
+          "level": "WARNING",
+          "message": "Cohort gene-mean |z| p99=4.07; this can indicate platform or tissue shift."
+        },
+        {
+          "code": "large_cohort_gene_shift",
+          "level": "WARNING",
+          "message": "Maximum cohort gene-mean |z|=13.5; check normalization and gene annotation."
+        }
+      ],
+      "score_summary": {
+        "normal_calls": 2,
+        "probability_ge_0_99_fraction": 0.9648148148148148,
+        "probability_le_0_01_fraction": 0.003703703703703704,
+        "tumor_call_fraction": 0.9962962962962963,
+        "tumor_calls": 538,
+        "tumor_probability": {
+          "max": 0.9999999986362069,
+          "min": 0.005483624894961657,
+          "p10": 0.9981176930081915,
+          "p25": 0.999520723012948,
+          "p50": 0.9999374835980394,
+          "p75": 0.9999949274300441,
+          "p90": 0.9999996506120415,
+          "p95": 0.9999999065423311
+        }
+      },
+      "shape": {
+        "input_genes": 2000,
+        "model_genes": 2000,
+        "samples": 540
+      },
+      "status_under_current_rules": "WARN",
+      "value_summary": {
+        "finite_model_gene_values": 1077840,
+        "max": 18.661803475185014,
+        "min": 0.0,
+        "negative_fraction": 0.0,
+        "nonfinite_or_missing_fraction": 0.0020000000000000018,
+        "p01": 0.0,
+        "p50": 3.516026108818704,
+        "p99": 9.212692135834232
+      }
+    },
+    "tcga_toil_rsem_pipeline_check": {
+      "distribution_summary": {
+        "abs_z_gt_10_fraction": 0.0023375,
+        "abs_z_gt_6_fraction": 0.006985,
+        "cohort_gene_mean_abs_z": {
+          "max": 14.605604531236436,
+          "p50": 0.4416105655123912,
+          "p90": 1.4226671562385227,
+          "p95": 2.056247917568664,
+          "p99": 4.390443701476818
+        },
+        "sample_median_abs_z": {
+          "max": 1.539300879008409,
+          "p50": 0.8424210873884372,
+          "p90": 1.0696981636586176,
+          "p95": 1.1616602197371362,
+          "p99": 1.3723408840976676
+        },
+        "sample_p95_abs_z": {
+          "max": 3.9000121970476362,
+          "p50": 2.666753483670489,
+          "p90": 3.3110536639866646,
+          "p95": 3.469178941350034,
+          "p99": 3.5771725042795386
+        }
+      },
+      "gene_match": {
+        "match_rate": 1.0,
+        "matched_model_genes": 2000
+      },
+      "messages_under_current_rules": [
+        {
+          "code": "nonfinite_or_missing_values",
+          "level": "WARNING",
+          "message": "0.200% of model-gene cells are missing, non-numeric, or non-finite."
+        },
+        {
+          "code": "many_extreme_standardized_values",
+          "level": "WARNING",
+          "message": "0.699% of standardized model-gene values have |z| > 6."
+        },
+        {
+          "code": "very_extreme_standardized_values",
+          "level": "WARNING",
+          "message": "0.234% of standardized model-gene values have |z| > 10."
+        },
+        {
+          "code": "cohort_distribution_shift",
+          "level": "WARNING",
+          "message": "Cohort gene-mean |z| p99=4.39; this can indicate platform or tissue shift."
+        },
+        {
+          "code": "large_cohort_gene_shift",
+          "level": "WARNING",
+          "message": "Maximum cohort gene-mean |z|=14.6; check normalization and gene annotation."
+        }
+      ],
+      "score_summary": {
+        "normal_calls": 3,
+        "probability_ge_0_99_fraction": 0.75,
+        "probability_le_0_01_fraction": 0.0,
+        "tumor_call_fraction": 0.985,
+        "tumor_calls": 197,
+        "tumor_probability": {
+          "max": 0.9999999999999061,
+          "min": 0.3214147589952522,
+          "p10": 0.9566691944237242,
+          "p25": 0.9907578539583335,
+          "p50": 0.9999572270014998,
+          "p75": 0.9999999966525569,
+          "p90": 0.9999999998250677,
+          "p95": 0.9999999999885604
+        }
+      },
+      "shape": {
+        "input_genes": 2000,
+        "model_genes": 2000,
+        "samples": 200
+      },
+      "status_under_current_rules": "WARN",
+      "value_summary": {
+        "finite_model_gene_values": 399200,
+        "max": 15.800725249429757,
+        "min": 0.0,
+        "negative_fraction": 0.0,
+        "nonfinite_or_missing_fraction": 0.0020000000000000018,
+        "p01": 0.014354777466892966,
+        "p50": 3.5838049014714626,
+        "p99": 9.478626591254073
+      }
+    }
+  },
+  "reference_source": "Rules use the model training scaler plus empirical summaries from the bundled TCGA example and CPTAC-3/GDC STAR-Counts smoke validation. Toil/RSEM/GTEx summaries are included as known cross-platform boundary checks.",
+  "rules": {
+    "abs_z_gt_10_fraction_warn": 0.001,
+    "abs_z_gt_6_fraction_warn": 0.005,
+    "expected_class_warn_fraction": 0.2,
+    "gene_mean_abs_z_max_warn": 8.0,
+    "gene_mean_abs_z_p99_warn": 3.0,
+    "min_match_rate_fail": 0.5,
+    "min_match_rate_warn": 0.95,
+    "negative_fraction_warn": 0.001,
+    "nonfinite_fraction_warn": 0.0,
+    "value_max_fail_above": 100.0,
+    "value_max_warn_above": 30.0,
+    "value_p99_fail_above": 20.0,
+    "value_p99_warn_above": 12.0
+  },
+  "schema_version": "1.0"
+}

@@ -1,0 +1,2 @@
+model,pooled_auc,pooled_avg_precision,pooled_accuracy,pooled_f1,macro_mean_auc,macro_min_auc
+logistic_regression,0.9881086033950617,0.9937099219716663,0.9472222222222222,0.9596317280453258,0.9942387356761313,0.9498890532544378

@@ -1,0 +1,70 @@
+{
+  "distribution_summary": {
+    "abs_z_gt_10_fraction": 0.0,
+    "abs_z_gt_6_fraction": 0.0011,
+    "cohort_gene_mean_abs_z": {
+      "max": 2.704558902454308,
+      "p50": 0.471162068396082,
+      "p90": 1.2119520875725498,
+      "p95": 1.4881834990389913,
+      "p99": 1.9612750257156788
+    },
+    "sample_median_abs_z": {
+      "max": 1.2756241901338419,
+      "p50": 0.8656339582831241,
+      "p90": 1.213879999997451,
+      "p95": 1.2447520950656463,
+      "p99": 1.2694497711202029
+    },
+    "sample_p95_abs_z": {
+      "max": 4.221272682985959,
+      "p50": 2.3036272456619646,
+      "p90": 3.912993891575212,
+      "p95": 4.067133287280585,
+      "p99": 4.190444803844884
+    }
+  },
+  "expected_class": "unknown",
+  "gene_match": {
+    "first_missing_model_genes": [],
+    "match_rate": 1.0,
+    "matched_model_genes": 2000,
+    "missing_model_genes": 0
+  },
+  "messages": [],
+  "reference_source": "Rules use the model training scaler plus empirical summaries from the bundled TCGA example and CPTAC-3/GDC STAR-Counts smoke validation. Toil/RSEM/GTEx summaries are included as known cross-platform boundary checks.",
+  "score_summary": {
+    "normal_calls": 2,
+    "probability_ge_0_99_fraction": 0.4,
+    "probability_le_0_01_fraction": 0.0,
+    "tumor_call_fraction": 0.6,
+    "tumor_calls": 3,
+    "tumor_probability": {
+      "max": 0.9999460578479304,
+      "min": 0.03225895780775417,
+      "p10": 0.04004486130216795,
+      "p25": 0.05172371654378862,
+      "p50": 0.9899565622025662,
+      "p75": 0.999921676434858,
+      "p90": 0.9999363052827015,
+      "p95": 0.999941181565316
+    }
+  },
+  "shape": {
+    "input_genes": 2000,
+    "model_genes": 2000,
+    "samples": 5
+  },
+  "status": "PASS",
+  "threshold": 0.5,
+  "value_summary": {
+    "finite_model_gene_values": 10000,
+    "max": 13.8937,
+    "min": 0.0,
+    "negative_fraction": 0.0,
+    "nonfinite_or_missing_fraction": 0.0,
+    "p01": 0.047995,
+    "p50": 3.60675,
+    "p99": 9.079822000000002
+  }
+}

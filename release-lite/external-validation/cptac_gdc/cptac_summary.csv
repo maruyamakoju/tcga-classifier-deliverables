@@ -1,0 +1,2 @@
+n,n_tumor,n_normal,auc,average_precision,accuracy,f1,precision,recall,tn,fp,fn,tp,threshold
+200,100,100,0.9886,0.9850584863635692,0.955,0.9565217391304348,0.9252336448598131,0.99,92,8,1,99,0.5

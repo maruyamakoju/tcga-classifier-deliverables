@@ -1,0 +1,10 @@
+cohort,n,mode,AUC,acc_at_0p5,balanced_acc,FPR_at_0p5
+TCGA-Toil/RSEM (foreign pipeline),200,deployed (no adaptation),0.9923,0.515,0.515,0.97
+TCGA-Toil/RSEM (foreign pipeline),200,cohort mean-centering,0.9923,0.93,0.93,0.12
+TCGA-Toil/RSEM (foreign pipeline),200,cohort standardization (z-score),0.9941,0.935,0.935,0.11
+CPTAC-3/GDC STAR-Counts (native pipeline),200,deployed (no adaptation),0.9886,0.955,0.955,0.08
+CPTAC-3/GDC STAR-Counts (native pipeline),200,cohort mean-centering,0.9886,0.92,0.92,0.16
+CPTAC-3/GDC STAR-Counts (native pipeline),200,cohort standardization (z-score),0.9901,0.93,0.93,0.14
+"GTEx/Toil normals (foreign, all-normal)",540,deployed (no adaptation),,0.0037,,0.9963
+"GTEx/Toil normals (foreign, all-normal)",540,cohort mean-centering,,0.0926,,0.9074
+"GTEx/Toil normals (foreign, all-normal)",540,cohort standardization (z-score),,0.0852,,0.9148

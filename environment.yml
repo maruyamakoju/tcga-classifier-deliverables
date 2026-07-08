@@ -1,0 +1,11 @@
+name: tcga-tumor-normal
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - numpy>=1.26
+  - pandas>=2.3,<4
+  - scipy>=1.15
+  - scikit-learn=1.9
+  - pyarrow
+  - pip

@@ -1,0 +1,541 @@
+sample,detailed_category,primary disease or tissue,_primary_site,_sample_type,_gender,_study,tumor_probability,call
+GTEX-TMMY-0926-SM-4TT1Z,Lung,Lung,Lung,Normal Tissue,Female,GTEX,0.988426,tumor
+GTEX-VUSG-0626-SM-4KL1Z,Artery - Coronary,Artery - Coronary,Blood Vessel,Normal Tissue,Male,GTEX,0.999997,tumor
+GTEX-ZE7O-2426-SM-57WD7,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999301,tumor
+GTEX-13OVL-0011-R10a-SM-5L3GS,Brain - Frontal Cortex (Ba9),Brain - Frontal Cortex (Ba9),Brain,Normal Tissue,Male,GTEX,0.998616,tumor
+GTEX-S4Q7-1226-SM-4AD5I,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999922,tumor
+GTEX-13U4I-0926-SM-5LU5A,Artery - Coronary,Artery - Coronary,Blood Vessel,Normal Tissue,Female,GTEX,0.999992,tumor
+GTEX-S341-0726-SM-4AD5R,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999941,tumor
+GTEX-WH7G-1626-SM-4LVMY,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.999994,tumor
+GTEX-13111-1326-SM-5GCNO,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999936,tumor
+GTEX-PLZ4-0126-SM-5SI8O,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Female,GTEX,0.999335,tumor
+GTEX-SSA3-0226-SM-32QPN,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Male,GTEX,0.993801,tumor
+GTEX-XYKS-1326-SM-4BRUN,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Female,GTEX,0.999198,tumor
+GTEX-13CF3-1226-SM-5LZXN,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Female,GTEX,0.999979,tumor
+GTEX-13FHP-0426-SM-5J1O5,Artery - Tibial,Artery - Tibial,Blood Vessel,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-XUW1-0626-SM-4BOP4,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.999904,tumor
+GTEX-N7MS-1626-SM-3LK5F,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.997002,tumor
+GTEX-11TTK-0826-SM-5N9EG,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,0.999982,tumor
+GTEX-WYJK-1326-SM-3NB2T,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.998742,tumor
+GTEX-131YS-2426-SM-5J2OD,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.99981,tumor
+GTEX-12WSK-0006-SM-5NQA1,Whole Blood,Whole Blood,Blood,Normal Tissue,Female,GTEX,0.982759,tumor
+GTEX-ZT9W-2126-SM-51MSF,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999221,tumor
+GTEX-11OF3-1326-SM-5N9FJ,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999869,tumor
+GTEX-ZLWG-0926-SM-4WWC3,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.997825,tumor
+GTEX-X5EB-0826-SM-46MVS,Heart - Left Ventricle,Heart - Left Ventricle,Heart,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-T6MN-2026-SM-4DM7L,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.9999,tumor
+GTEX-TSE9-0226-SM-3DB84,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Female,GTEX,0.999373,tumor
+GTEX-13OW6-1826-SM-5N9F9,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999376,tumor
+GTEX-13G51-2326-SM-5LZXV,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-13NZ8-0926-SM-5MR3U,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Female,GTEX,0.999681,tumor
+GTEX-QESD-0226-SM-447BH,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999669,tumor
+GTEX-13111-2326-SM-5LZUQ,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999941,tumor
+GTEX-WHWD-0326-SM-3LK6L,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Male,GTEX,0.999807,tumor
+GTEX-113JC-2726-SM-5EGIS,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Female,GTEX,0.999971,tumor
+GTEX-145MH-2326-SM-5O9AW,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999992,tumor
+GTEX-V955-1826-SM-4JBIL,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999997,tumor
+GTEX-ZVT3-2726-SM-5GU5X,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999929,tumor
+GTEX-13111-1426-SM-5DUW3,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.999678,tumor
+GTEX-Q2AI-1726-SM-2S1PZ,Artery - Tibial,Artery - Tibial,Blood Vessel,Normal Tissue,Male,GTEX,0.999508,tumor
+GTEX-1399S-0526-SM-5IJG8,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Female,GTEX,0.999986,tumor
+GTEX-P4QT-1726-SM-2S1NQ,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.999064,tumor
+GTEX-1477Z-2826-SM-5SI9J,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-OXRP-0326-SM-5SI7J,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-ZYFG-1226-SM-5GIC7,Esophagus - Gastroesophageal Junction,Esophagus - Gastroesophageal Junction,Esophagus,Normal Tissue,Female,GTEX,0.999831,tumor
+GTEX-131XF-1226-SM-5HL8V,Stomach,Stomach,Stomach,Normal Tissue,Male,GTEX,0.999062,tumor
+GTEX-145MN-0626-SM-5QGRH,Heart - Left Ventricle,Heart - Left Ventricle,Heart,Normal Tissue,Male,GTEX,0.999985,tumor
+GTEX-OXRO-1926-SM-2S1O3,Artery - Tibial,Artery - Tibial,Blood Vessel,Normal Tissue,Female,GTEX,0.999983,tumor
+GTEX-ZAB5-2326-SM-5IJFR,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-X4XX-0126-SM-3NMC2,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Male,GTEX,0.999976,tumor
+GTEX-132AR-1626-SM-5EGHP,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999983,tumor
+GTEX-1211K-0126-SM-59HJE,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-UJHI-0726-SM-3DB92,Lung,Lung,Lung,Normal Tissue,Female,GTEX,0.99948,tumor
+GTEX-11DXX-1526-SM-5H115,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999034,tumor
+GTEX-11EQ9-0626-SM-5A5K1,Thyroid,Thyroid,Thyroid,Normal Tissue,Male,GTEX,0.999899,tumor
+GTEX-Y8E4-0726-SM-4WWFN,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Male,GTEX,0.993523,tumor
+GTEX-13QIC-1826-SM-5J1MY,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999827,tumor
+GTEX-T6MN-2726-SM-4DM77,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-YB5E-1726-SM-5IFJ3,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.97383,tumor
+GTEX-WYJK-2526-SM-4ONDF,Stomach,Stomach,Stomach,Normal Tissue,Male,GTEX,0.999674,tumor
+GTEX-Y5LM-1826-SM-4VDT9,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Female,GTEX,0.999179,tumor
+GTEX-11EQ9-0926-SM-5HL6I,Esophagus - Gastroesophageal Junction,Esophagus - Gastroesophageal Junction,Esophagus,Normal Tissue,Male,GTEX,0.998827,tumor
+GTEX-ZZPT-0626-SM-5GZXT,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-13CF3-1026-SM-5LZWY,Pancreas,Pancreas,Pancreas,Normal Tissue,Female,GTEX,0.99999,tumor
+GTEX-P4PQ-0426-SM-3NMCI,Artery - Aorta,Artery - Aorta,Blood Vessel,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-14A5I-2726-SM-5SIB3,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999914,tumor
+GTEX-QXCU-0926-SM-48FEP,Artery - Aorta,Artery - Aorta,Blood Vessel,Normal Tissue,Male,GTEX,0.999979,tumor
+GTEX-1192X-1126-SM-5EGGU,Thyroid,Thyroid,Thyroid,Normal Tissue,Male,GTEX,0.999934,tumor
+GTEX-ZA64-1626-SM-5CVME,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999969,tumor
+GTEX-X15G-2126-SM-4PQZR,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Female,GTEX,0.999989,tumor
+GTEX-ZF29-2626-SM-4WWBA,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.998519,tumor
+GTEX-13CF3-1326-SM-5LZXZ,Colon - Sigmoid,Colon - Sigmoid,Colon,Normal Tissue,Female,GTEX,0.999907,tumor
+GTEX-145MH-1026-SM-5Q5CI,Artery - Aorta,Artery - Aorta,Blood Vessel,Normal Tissue,Male,GTEX,0.999992,tumor
+GTEX-ZA64-0626-SM-5HL9O,Esophagus - Mucosa,Esophagus - Mucosa,Esophagus,Normal Tissue,Male,GTEX,0.999694,tumor
+GTEX-X4EP-3226-SM-3P5YR,Pituitary,Pituitary,Pituitary,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-13O3O-1826-SM-5IFGW,Liver,Liver,Liver,Normal Tissue,Female,GTEX,0.999458,tumor
+GTEX-ZDYS-1626-SM-4WKGB,Artery - Tibial,Artery - Tibial,Blood Vessel,Normal Tissue,Male,GTEX,0.999926,tumor
+GTEX-ZDTS-0526-SM-4WKH9,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,0.999904,tumor
+GTEX-R55E-1126-SM-48FDZ,Artery - Aorta,Artery - Aorta,Blood Vessel,Normal Tissue,Male,GTEX,0.999989,tumor
+GTEX-13FHO-1026-SM-5KM1Q,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.99996,tumor
+GTEX-11NV4-1326-SM-5HL6V,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999766,tumor
+GTEX-NPJ7-0011-R11A-SM-2I3E8,Brain - Cerebellar Hemisphere,Brain - Cerebellar Hemisphere,Brain,Normal Tissue,Female,GTEX,0.999997,tumor
+GTEX-13NYB-1726-SM-5N9G2,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999847,tumor
+GTEX-ZLFU-0826-SM-4WWBP,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-145MH-0011-R3b-SM-5P9JQ,Brain - Anterior Cingulate Cortex (Ba24),Brain - Anterior Cingulate Cortex (Ba24),Brain,Normal Tissue,Male,GTEX,0.99935,tumor
+GTEX-QEL4-0926-SM-3GAD1,Heart - Left Ventricle,Heart - Left Ventricle,Heart,Normal Tissue,Male,GTEX,0.999992,tumor
+GTEX-R55D-0326-SM-48FES,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Male,GTEX,0.983972,tumor
+GTEX-XQ8I-0526-SM-4BOPS,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Male,GTEX,0.997839,tumor
+GTEX-13G51-0826-SM-5K7VB,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999942,tumor
+GTEX-WQUQ-0126-SM-4OOSS,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-NFK9-2226-SM-3MJGP,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-14BIN-0011-R10a-SM-5S2UA,Brain - Frontal Cortex (Ba9),Brain - Frontal Cortex (Ba9),Brain,Normal Tissue,Female,GTEX,0.998946,tumor
+GTEX-13112-0011-R6b-SM-5DUVK,Brain - Nucleus Accumbens (Basal Ganglia),Brain - Nucleus Accumbens (Basal Ganglia),Brain,Normal Tissue,Male,GTEX,0.996819,tumor
+GTEX-11P82-0426-SM-5HL5D,Esophagus - Gastroesophageal Junction,Esophagus - Gastroesophageal Junction,Esophagus,Normal Tissue,Male,GTEX,0.997993,tumor
+GTEX-13O3Q-2626-SM-5KM3S,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Male,GTEX,0.99993,tumor
+GTEX-UJHI-1126-SM-4IHLN,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Female,GTEX,0.999959,tumor
+GTEX-Y5V6-2226-SM-4VDTC,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999991,tumor
+GTEX-PWN1-1426-SM-48TDF,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Female,GTEX,0.999468,tumor
+GTEX-ZPU1-1026-SM-4YCEQ,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-145ME-0726-SM-5O9A3,Adipose - Visceral (Omentum),Adipose - Visceral (Omentum),Adipose Tissue,Normal Tissue,Female,GTEX,0.997577,tumor
+GTEX-13PVR-1226-SM-5RQJ2,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999841,tumor
+GTEX-ZZPU-1426-SM-5GZZ6,Stomach,Stomach,Stomach,Normal Tissue,Female,GTEX,0.998365,tumor
+GTEX-14C39-2526-SM-5S2UH,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Male,GTEX,0.995321,tumor
+GTEX-T8EM-0826-SM-4DM76,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999982,tumor
+GTEX-146FR-1526-SM-5SIB8,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Female,GTEX,0.999998,tumor
+GTEX-12WSB-0726-SM-5N9GD,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-ZPIC-1926-SM-57WFQ,Esophagus - Gastroesophageal Junction,Esophagus - Gastroesophageal Junction,Esophagus,Normal Tissue,Female,GTEX,0.992454,tumor
+GTEX-P44G-0006-SM-2TC6A,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.997064,tumor
+GTEX-T6MN-0011-R7A-SM-5CHSP,Brain - Putamen (Basal Ganglia),Brain - Putamen (Basal Ganglia),Brain,Normal Tissue,Male,GTEX,0.007909,normal
+GTEX-ZAB5-1526-SM-5HL9P,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.99952,tumor
+GTEX-ZYT6-2226-SM-5GIC9,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999972,tumor
+GTEX-OXRK-1826-SM-2HMJE,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Female,GTEX,0.999995,tumor
+GTEX-ZZPU-2226-SM-5EGIV,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999214,tumor
+GTEX-111VG-1626-SM-5EGIO,Skin - Not Sun Exposed (Suprapubic),Skin - Not Sun Exposed (Suprapubic),Skin,Normal Tissue,Male,GTEX,0.999983,tumor
+GTEX-WH7G-1526-SM-4LVMX,Stomach,Stomach,Stomach,Normal Tissue,Male,GTEX,0.996626,tumor
+GTEX-14C5O-2826-SM-5RQI6,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999851,tumor
+GTEX-XUZC-2126-SM-4BRW8,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Female,GTEX,0.999998,tumor
+GTEX-ZAB4-1726-SM-5HL8C,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.99999,tumor
+GTEX-RU72-2626-SM-4TT75,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999985,tumor
+GTEX-1399R-2026-SM-5K7WN,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.999908,tumor
+GTEX-TMMY-1326-SM-4DXU9,Pancreas,Pancreas,Pancreas,Normal Tissue,Female,GTEX,0.999975,tumor
+GTEX-11P81-0226-SM-5HL5M,Lung,Lung,Lung,Normal Tissue,Female,GTEX,0.999968,tumor
+GTEX-S341-1226-SM-4AD5S,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999939,tumor
+GTEX-13RTK-0326-SM-5RQHS,Thyroid,Thyroid,Thyroid,Normal Tissue,Male,GTEX,0.99999,tumor
+GTEX-YJ89-0126-SM-4TT3X,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Male,GTEX,0.999979,tumor
+GTEX-WH7G-0626-SM-4LVMO,Artery - Aorta,Artery - Aorta,Blood Vessel,Normal Tissue,Male,GTEX,0.999988,tumor
+GTEX-132NY-0326-SM-5IJBL,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Male,GTEX,0.999943,tumor
+GTEX-WVLH-3126-SM-3MJGA,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-ZUA1-2826-SM-59HLE,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-139T6-1526-SM-5P9G6,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999997,tumor
+GTEX-ZVE2-1326-SM-5NQ94,Esophagus - Mucosa,Esophagus - Mucosa,Esophagus,Normal Tissue,Male,GTEX,0.999995,tumor
+GTEX-RTLS-0526-SM-2TF64,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Female,GTEX,0.999989,tumor
+GTEX-13OW5-2626-SM-5MR3M,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Male,GTEX,0.99991,tumor
+GTEX-Q2AI-1326-SM-2S1PL,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Male,GTEX,0.999267,tumor
+GTEX-12696-0826-SM-5EGGE,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999973,tumor
+GTEX-13OVG-0526-SM-5K7YD,Heart - Left Ventricle,Heart - Left Ventricle,Heart,Normal Tissue,Male,GTEX,0.999943,tumor
+GTEX-P78B-1326-SM-3P611,Liver,Liver,Liver,Normal Tissue,Female,GTEX,0.99999,tumor
+GTEX-N7MS-0225-SM-4E3HO,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Male,GTEX,0.999899,tumor
+GTEX-WEY5-0726-SM-4LMID,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.99476,tumor
+GTEX-145LT-0426-SM-5LUAP,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999883,tumor
+GTEX-Q2AG-1126-SM-48U1P,Liver,Liver,Liver,Normal Tissue,Female,GTEX,0.999817,tumor
+GTEX-TML8-0926-SM-4DXSJ,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999995,tumor
+GTEX-XMK1-0126-SM-4B65F,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-13CF3-1126-SM-5LZXB,Adipose - Visceral (Omentum),Adipose - Visceral (Omentum),Adipose Tissue,Normal Tissue,Female,GTEX,0.983535,tumor
+GTEX-12BJ1-2226-SM-5BC6G,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.998997,tumor
+GTEX-13OW6-0005-SM-5NQ9Z,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.999702,tumor
+GTEX-132AR-0426-SM-5IFH8,Liver,Liver,Liver,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-ZVT3-2126-SM-59HL2,Stomach,Stomach,Stomach,Normal Tissue,Female,GTEX,0.999341,tumor
+GTEX-ZLFU-0526-SM-4WWBN,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-11P81-2126-SM-5HL6N,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999649,tumor
+GTEX-1399S-2226-SM-5IFEW,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.998386,tumor
+GTEX-145LT-0126-SM-5S2QJ,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-12WSD-0326-SM-59HKP,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.999989,tumor
+GTEX-RM2N-0006-SM-2TF5H,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.999394,tumor
+GTEX-ZVP2-0526-SM-51MSC,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-ZV7C-2426-SM-5NQ7Q,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,0.99996,tumor
+GTEX-13VXT-1326-SM-5LU3Y,Spleen,Spleen,Spleen,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-13FTY-2826-SM-5J2ML,Pituitary,Pituitary,Pituitary,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-Y111-1726-SM-4SOIQ,Esophagus - Muscularis,Esophagus - Muscularis,Esophagus,Normal Tissue,Male,GTEX,0.999972,tumor
+GTEX-14DAR-1526-SM-5RQIX,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Male,GTEX,0.998763,tumor
+GTEX-QXCU-0126-SM-2TC5Q,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Male,GTEX,0.999836,tumor
+GTEX-131XF-2826-SM-5EGKH,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999896,tumor
+GTEX-XMK1-0226-SM-4B65D,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-ZYW4-0826-SM-5GIDG,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.998263,tumor
+GTEX-ZYT6-2326-SM-5GZY3,Skin - Not Sun Exposed (Suprapubic),Skin - Not Sun Exposed (Suprapubic),Skin,Normal Tissue,Male,GTEX,0.999982,tumor
+GTEX-1399T-1526-SM-5P9J6,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999981,tumor
+GTEX-YF7O-2226-SM-5CVN8,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999978,tumor
+GTEX-SNOS-0006-SM-32PLH,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.999946,tumor
+GTEX-117XS-2926-SM-5N9BX,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-1399S-0426-SM-5IFG5,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-11DXZ-1426-SM-5H12A,Adipose - Visceral (Omentum),Adipose - Visceral (Omentum),Adipose Tissue,Normal Tissue,Male,GTEX,0.993037,tumor
+GTEX-13OVI-2426-SM-5KM4J,Stomach,Stomach,Stomach,Normal Tissue,Female,GTEX,0.985302,tumor
+GTEX-YECK-1326-SM-4W1ZF,Artery - Aorta,Artery - Aorta,Blood Vessel,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-OHPM-0526-SM-2YUMJ,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.998582,tumor
+GTEX-13PL6-1026-SM-5L3E5,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,0.999996,tumor
+GTEX-11ZTT-1726-SM-5EQL4,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.997627,tumor
+GTEX-ZE7O-3026-SM-51MS4,Stomach,Stomach,Stomach,Normal Tissue,Female,GTEX,0.999851,tumor
+GTEX-11WQC-0011-R10a-SM-57WCT,Brain - Frontal Cortex (Ba9),Brain - Frontal Cortex (Ba9),Brain,Normal Tissue,Male,GTEX,0.998651,tumor
+GTEX-ZE9C-1426-SM-4WKGM,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-X4EO-2426-SM-4QASD,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.9999,tumor
+GTEX-13O21-0126-SM-5IJE8,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-Q2AG-0626-SM-2S1PV,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-WWYW-2726-SM-4MVOP,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999995,tumor
+GTEX-YEC3-0826-SM-4WWFP,Thyroid,Thyroid,Thyroid,Normal Tissue,Male,GTEX,0.999997,tumor
+GTEX-14BIN-1226-SM-5S2OM,Adipose - Visceral (Omentum),Adipose - Visceral (Omentum),Adipose Tissue,Normal Tissue,Female,GTEX,0.998659,tumor
+GTEX-ZC5H-2626-SM-5J2MG,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Female,GTEX,0.999956,tumor
+GTEX-131XF-0006-SM-5P9HK,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.986238,tumor
+GTEX-13O21-3026-SM-5J2NI,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.999796,tumor
+GTEX-ZYWO-1326-SM-5SI8X,Pancreas,Pancreas,Pancreas,Normal Tissue,Female,GTEX,0.999962,tumor
+GTEX-13FTW-0426-SM-5K7X2,Adipose - Visceral (Omentum),Adipose - Visceral (Omentum),Adipose Tissue,Normal Tissue,Male,GTEX,0.920524,tumor
+GTEX-11VI4-0006-SM-5N9D8,Whole Blood,Whole Blood,Blood,Normal Tissue,Female,GTEX,0.998857,tumor
+GTEX-WVJS-0126-SM-4MVOT,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Male,GTEX,0.999993,tumor
+GTEX-1211K-1226-SM-5EQ4N,Adipose - Visceral (Omentum),Adipose - Visceral (Omentum),Adipose Tissue,Normal Tissue,Female,GTEX,0.78029,tumor
+GTEX-13PL7-2626-SM-5IFH4,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Female,GTEX,0.999144,tumor
+GTEX-1399S-1726-SM-5L3DI,Lung,Lung,Lung,Normal Tissue,Female,GTEX,0.999489,tumor
+GTEX-PX3G-1826-SM-2S1PK,Artery - Tibial,Artery - Tibial,Blood Vessel,Normal Tissue,Female,GTEX,0.999875,tumor
+GTEX-XV7Q-1526-SM-4BRWB,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999997,tumor
+GTEX-144GM-0926-SM-5O994,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.976358,tumor
+GTEX-YF7O-1926-SM-4W1YQ,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999998,tumor
+GTEX-ZYWO-1926-SM-5E456,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999994,tumor
+GTEX-U4B1-0126-SM-4DXSN,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-TSE9-2526-SM-4DXUS,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999917,tumor
+GTEX-ZVZP-1726-SM-5GZWY,Stomach,Stomach,Stomach,Normal Tissue,Male,GTEX,0.997306,tumor
+GTEX-12WSL-0326-SM-5CVMK,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-POMQ-2326-SM-2S1O8,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Female,GTEX,0.999563,tumor
+GTEX-ZC5H-1726-SM-5HL7X,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Female,GTEX,0.999996,tumor
+GTEX-WYVS-1226-SM-4ONCL,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999738,tumor
+GTEX-11EQ9-1826-SM-5Q5AJ,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.994258,tumor
+GTEX-11GSP-0326-SM-5A5KW,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-11NUK-1426-SM-5HL68,Esophagus - Muscularis,Esophagus - Muscularis,Esophagus,Normal Tissue,Male,GTEX,0.999962,tumor
+GTEX-XYKS-1626-SM-4BRUQ,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999983,tumor
+GTEX-12KS4-0126-SM-5Q5A5,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.968203,tumor
+GTEX-144GL-2026-SM-5LU3O,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.981962,tumor
+GTEX-P4QT-2426-SM-3NMCL,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999941,tumor
+GTEX-ZF2S-3026-SM-4WWCH,Liver,Liver,Liver,Normal Tissue,Female,GTEX,0.998731,tumor
+GTEX-13D11-1526-SM-5J2NA,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Female,GTEX,0.99916,tumor
+GTEX-PVOW-1026-SM-5O9B9,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.999691,tumor
+GTEX-RN64-1226-SM-2TC6E,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.999252,tumor
+GTEX-TKQ2-1226-SM-4DXSV,Esophagus - Muscularis,Esophagus - Muscularis,Esophagus,Normal Tissue,Male,GTEX,0.999768,tumor
+GTEX-147F4-2626-SM-5Q5CS,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-11NSD-1726-SM-5N9C3,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-ZZPU-0126-SM-5E446,Spleen,Spleen,Spleen,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-UPIC-0826-SM-3GADQ,Lung,Lung,Lung,Normal Tissue,Female,GTEX,0.999975,tumor
+GTEX-S4UY-1026-SM-4AD53,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.998072,tumor
+GTEX-Y3IK-1726-SM-4YCCR,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Female,GTEX,0.998806,tumor
+GTEX-11XUK-1326-SM-5EQM4,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999672,tumor
+GTEX-13O1R-1326-SM-5IJF5,Esophagus - Mucosa,Esophagus - Mucosa,Esophagus,Normal Tissue,Male,GTEX,0.999994,tumor
+GTEX-UPK5-2026-SM-4JBIM,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-11ZTS-0826-SM-5EQ49,Artery - Aorta,Artery - Aorta,Blood Vessel,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-POMQ-1426-SM-3P61D,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-144GO-0226-SM-5LUB1,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.999904,tumor
+GTEX-VJWN-1026-SM-4M1ZN,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Female,GTEX,0.999667,tumor
+GTEX-ZDXO-0226-SM-4WKH7,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999853,tumor
+GTEX-Q734-1626-SM-48U1B,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999962,tumor
+GTEX-11P82-0826-SM-5P9GU,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.999965,tumor
+GTEX-VJYA-0926-SM-4KL1N,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.999982,tumor
+GTEX-13112-2126-SM-5GCO4,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999988,tumor
+GTEX-139UC-0011-R3b-SM-5K7VZ,Brain - Anterior Cingulate Cortex (Ba24),Brain - Anterior Cingulate Cortex (Ba24),Brain,Normal Tissue,Male,GTEX,0.984018,tumor
+GTEX-YJ8O-2226-SM-5IFHW,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Female,GTEX,0.961365,tumor
+GTEX-11ZVC-3226-SM-5FQV1,Pituitary,Pituitary,Pituitary,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-OHPJ-1326-SM-3MJHG,Esophagus - Muscularis,Esophagus - Muscularis,Esophagus,Normal Tissue,Male,GTEX,0.999867,tumor
+GTEX-13O3O-0011-R1b-SM-5KM2K,Brain - Hippocampus,Brain - Hippocampus,Brain,Normal Tissue,Female,GTEX,0.997527,tumor
+GTEX-11DYG-1426-SM-5A5JR,Esophagus - Muscularis,Esophagus - Muscularis,Esophagus,Normal Tissue,Male,GTEX,0.999818,tumor
+GTEX-11P82-1926-SM-5Q5AU,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Male,GTEX,0.999009,tumor
+GTEX-1399S-0226-SM-5IFFG,Spleen,Spleen,Spleen,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-R55D-1526-SM-48FEJ,Stomach,Stomach,Stomach,Normal Tissue,Male,GTEX,0.99972,tumor
+GTEX-139TT-2126-SM-5LZWC,Skin - Not Sun Exposed (Suprapubic),Skin - Not Sun Exposed (Suprapubic),Skin,Normal Tissue,Male,GTEX,0.999989,tumor
+GTEX-11NV4-0011-R7a-SM-57WDH,Brain - Putamen (Basal Ganglia),Brain - Putamen (Basal Ganglia),Brain,Normal Tissue,Male,GTEX,0.998224,tumor
+GTEX-13QIC-2326-SM-5LU5N,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Female,GTEX,0.999378,tumor
+GTEX-ZV7C-0326-SM-57WB1,Heart - Left Ventricle,Heart - Left Ventricle,Heart,Normal Tissue,Male,GTEX,0.999966,tumor
+GTEX-11EMC-0726-SM-5EGJO,Heart - Left Ventricle,Heart - Left Ventricle,Heart,Normal Tissue,Female,GTEX,0.999921,tumor
+GTEX-ZYFG-1626-SM-5GZYY,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Female,GTEX,0.999976,tumor
+GTEX-WZTO-3026-SM-3NMA2,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-WFG7-0926-SM-4LMK7,Artery - Aorta,Artery - Aorta,Blood Vessel,Normal Tissue,Male,GTEX,0.999717,tumor
+GTEX-S4Q7-1026-SM-4AD75,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-O5YV-2026-SM-26GMK,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Female,GTEX,0.999985,tumor
+GTEX-ZXES-0726-SM-5E451,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.98234,tumor
+GTEX-VJWN-0726-SM-3GIJ8,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Female,GTEX,0.997338,tumor
+GTEX-132QS-0926-SM-5P9GB,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999963,tumor
+GTEX-13OW8-0426-SM-5J2NR,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-145MG-1526-SM-5Q5EM,Skin - Not Sun Exposed (Suprapubic),Skin - Not Sun Exposed (Suprapubic),Skin,Normal Tissue,Male,GTEX,0.99996,tumor
+GTEX-OXRK-1626-SM-3NB17,Stomach,Stomach,Stomach,Normal Tissue,Female,GTEX,0.999156,tumor
+GTEX-ZP4G-0326-SM-4YCEF,Spleen,Spleen,Spleen,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-ZYFG-2526-SM-5GIEK,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.999729,tumor
+GTEX-WOFM-2126-SM-4OOSR,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999989,tumor
+GTEX-12WSN-0126-SM-5DUX5,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-ZDTT-1126-SM-4WKFW,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999909,tumor
+GTEX-111CU-0126-SM-5GZWZ,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-13OW6-2226-SM-5N9FL,Colon - Sigmoid,Colon - Sigmoid,Colon,Normal Tissue,Male,GTEX,0.999967,tumor
+GTEX-13OVG-2126-SM-5KM1K,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,0.999968,tumor
+GTEX-W5WG-1326-SM-4LMI9,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999659,tumor
+GTEX-14BMU-0006-SM-5MR3T,Whole Blood,Whole Blood,Blood,Normal Tissue,Female,GTEX,0.998201,tumor
+GTEX-ZYFC-0826-SM-5E44K,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.998673,tumor
+GTEX-XUZC-1026-SM-4BOPY,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999976,tumor
+GTEX-NPJ8-2426-SM-3MJHL,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999998,tumor
+GTEX-12ZZX-0426-SM-5DUVT,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.999802,tumor
+GTEX-ZC5H-1526-SM-5HL9Y,Skin - Not Sun Exposed (Suprapubic),Skin - Not Sun Exposed (Suprapubic),Skin,Normal Tissue,Female,GTEX,0.999787,tumor
+GTEX-X4LF-0826-SM-4QASC,Esophagus - Gastroesophageal Junction,Esophagus - Gastroesophageal Junction,Esophagus,Normal Tissue,Male,GTEX,0.999611,tumor
+GTEX-ZAB4-1826-SM-5HL8O,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Male,GTEX,0.999834,tumor
+GTEX-13S86-0126-SM-5S2PI,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-ZYWO-0126-SM-5GZWQ,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-QLQ7-1326-SM-4R1JY,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-12WSG-0826-SM-5EQ5A,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Female,GTEX,0.999997,tumor
+GTEX-13VXT-1526-SM-5LU3J,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999995,tumor
+GTEX-ZG7Y-1126-SM-4WWEZ,Esophagus - Mucosa,Esophagus - Mucosa,Esophagus,Normal Tissue,Male,GTEX,0.998937,tumor
+GTEX-XGQ4-0126-SM-4AT4H,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-139T6-0626-SM-5IFF9,Esophagus - Mucosa,Esophagus - Mucosa,Esophagus,Normal Tissue,Male,GTEX,0.999884,tumor
+GTEX-ZZ64-0426-SM-5E43F,Stomach,Stomach,Stomach,Normal Tissue,Male,GTEX,0.9984,tumor
+GTEX-WXYG-0226-SM-3NB2Y,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,0.999982,tumor
+GTEX-YB5E-1626-SM-5IFIQ,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Male,GTEX,0.998936,tumor
+GTEX-ZF2S-1726-SM-57WFT,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Female,GTEX,0.997548,tumor
+GTEX-12WS9-0011-R10a-SM-57WBV,Brain - Frontal Cortex (Ba9),Brain - Frontal Cortex (Ba9),Brain,Normal Tissue,Female,GTEX,0.999906,tumor
+GTEX-13G51-1026-SM-5K7YQ,Esophagus - Muscularis,Esophagus - Muscularis,Esophagus,Normal Tissue,Male,GTEX,0.99997,tumor
+GTEX-XPVG-1026-SM-4B64Y,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.999521,tumor
+GTEX-13D11-2226-SM-5IFEO,Pancreas,Pancreas,Pancreas,Normal Tissue,Female,GTEX,0.999905,tumor
+GTEX-RU72-0011-R7A-SM-2TF5U,Brain - Putamen (Basal Ganglia),Brain - Putamen (Basal Ganglia),Brain,Normal Tissue,Female,GTEX,0.990147,tumor
+GTEX-11DXX-0726-SM-5H12X,Spleen,Spleen,Spleen,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-PWOO-1726-SM-48TDC,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999989,tumor
+GTEX-11P81-2226-SM-5PNYI,Skin - Not Sun Exposed (Suprapubic),Skin - Not Sun Exposed (Suprapubic),Skin,Normal Tissue,Female,GTEX,0.999752,tumor
+GTEX-12C56-0626-SM-5EGGC,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Male,GTEX,0.999716,tumor
+GTEX-ZYFD-1526-SM-5NQ7T,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999884,tumor
+GTEX-1399T-0826-SM-5IFES,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999834,tumor
+GTEX-13FXS-0326-SM-5K7TV,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,0.999993,tumor
+GTEX-12WSM-2226-SM-5DUVS,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-13O3P-0726-SM-5J2OM,Thyroid,Thyroid,Thyroid,Normal Tissue,Male,GTEX,0.999998,tumor
+GTEX-QEG4-0126-SM-48TZE,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999942,tumor
+GTEX-12696-3126-SM-5FQUX,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-Q734-0226-SM-48U1A,Spleen,Spleen,Spleen,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-PW2O-0826-SM-48TC5,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999997,tumor
+GTEX-ZTSS-1126-SM-5985O,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Male,GTEX,0.996006,tumor
+GTEX-11EI6-3126-SM-5H111,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-139TT-0726-SM-5K7XW,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.99994,tumor
+GTEX-YB5E-1926-SM-5IFIG,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999867,tumor
+GTEX-RN64-1826-SM-48FDV,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999852,tumor
+GTEX-ZV7C-1526-SM-5NQ72,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Male,GTEX,0.999723,tumor
+GTEX-14BIM-2226-SM-5SI8Y,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.99983,tumor
+GTEX-1128S-2626-SM-5H11Z,Pituitary,Pituitary,Pituitary,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-11ZTT-1026-SM-5EQKF,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,0.999992,tumor
+GTEX-WFJO-0926-SM-4LVM2,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-TSE9-0626-SM-3DB8B,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,0.999989,tumor
+GTEX-X8HC-0126-SM-4E3JW,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Female,GTEX,0.999833,tumor
+GTEX-13IVO-3026-SM-5J2M2,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-RU1J-0826-SM-46MUU,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999966,tumor
+GTEX-139YR-2226-SM-5IFFW,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.999883,tumor
+GTEX-ZXG5-2826-SM-5NQ8T,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-ZF28-3126-SM-4WKFC,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-WYBS-0926-SM-3NM94,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Female,GTEX,0.999438,tumor
+GTEX-117YX-1126-SM-5H128,Heart - Left Ventricle,Heart - Left Ventricle,Heart,Normal Tissue,Male,GTEX,0.999731,tumor
+GTEX-ZTX8-1026-SM-5EGHD,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999991,tumor
+GTEX-13NYC-2626-SM-5K7VN,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999994,tumor
+GTEX-ZQG8-2126-SM-4YCF1,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Female,GTEX,0.999871,tumor
+GTEX-12WSL-0426-SM-5GCNX,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999988,tumor
+GTEX-11WQK-2226-SM-5CVL7,Esophagus - Gastroesophageal Junction,Esophagus - Gastroesophageal Junction,Esophagus,Normal Tissue,Male,GTEX,0.999997,tumor
+GTEX-U8XE-0326-SM-3DB8P,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Male,GTEX,0.999978,tumor
+GTEX-13OVJ-0726-SM-5KM1W,Lung,Lung,Lung,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-132QS-0326-SM-5IJFN,Thyroid,Thyroid,Thyroid,Normal Tissue,Male,GTEX,0.999995,tumor
+GTEX-YFCO-0926-SM-5LUA5,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-1399R-1926-SM-5K7X8,Heart - Left Ventricle,Heart - Left Ventricle,Heart,Normal Tissue,Male,GTEX,0.999928,tumor
+GTEX-YEC4-1326-SM-5IFHG,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999811,tumor
+GTEX-147JS-2526-SM-5S2Q8,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Male,GTEX,0.999986,tumor
+GTEX-ZLFU-0926-SM-5P9F8,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-XBED-2626-SM-4E3J5,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,0.999873,tumor
+GTEX-QXCU-0626-SM-2TC69,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.995966,tumor
+GTEX-147F4-2826-SM-5NQBN,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.999752,tumor
+GTEX-13PVR-1726-SM-5Q5EC,Colon - Sigmoid,Colon - Sigmoid,Colon,Normal Tissue,Female,GTEX,0.996477,tumor
+GTEX-111YS-1526-SM-5GZYW,Skin - Not Sun Exposed (Suprapubic),Skin - Not Sun Exposed (Suprapubic),Skin,Normal Tissue,Male,GTEX,0.999362,tumor
+GTEX-11WQK-1226-SM-5GU5Z,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.999997,tumor
+GTEX-S341-0626-SM-4AD5T,Stomach,Stomach,Stomach,Normal Tissue,Female,GTEX,0.999796,tumor
+GTEX-PLZ4-2726-SM-3P61A,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999672,tumor
+GTEX-WHPG-1626-SM-4M1ZL,Colon - Sigmoid,Colon - Sigmoid,Colon,Normal Tissue,Male,GTEX,0.998304,tumor
+GTEX-UPIC-1426-SM-4IHLQ,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999961,tumor
+GTEX-X8HC-2726-SM-46MUA,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-WOFM-1126-SM-4OOSB,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999981,tumor
+GTEX-TMMY-2226-SM-4DXTN,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999589,tumor
+GTEX-ZTX8-1226-SM-4YCE9,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.999551,tumor
+GTEX-13PL7-2726-SM-5L3GB,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.998908,tumor
+GTEX-WFJO-2026-SM-4LVM3,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999914,tumor
+GTEX-XUW1-1826-SM-4BOQD,Colon - Sigmoid,Colon - Sigmoid,Colon,Normal Tissue,Female,GTEX,0.999932,tumor
+GTEX-YF7O-1826-SM-5IFIU,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.999602,tumor
+GTEX-VUSG-0006-SM-3GIK9,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.999852,tumor
+GTEX-POMQ-1226-SM-3P61F,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999935,tumor
+GTEX-11VI4-2026-SM-5CVLJ,Artery - Tibial,Artery - Tibial,Blood Vessel,Normal Tissue,Female,GTEX,0.999981,tumor
+GTEX-OHPK-2426-SM-3MJGH,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999986,tumor
+GTEX-WVLH-0011-R7A-SM-3MJFB,Brain - Putamen (Basal Ganglia),Brain - Putamen (Basal Ganglia),Brain,Normal Tissue,Male,GTEX,0.998707,tumor
+GTEX-SIU7-1826-SM-2XCE2,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,0.999989,tumor
+GTEX-145MN-0326-SM-5QGQI,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999984,tumor
+GTEX-14E6E-1226-SM-5S2R5,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-13OW6-1426-SM-5L3EU,Esophagus - Muscularis,Esophagus - Muscularis,Esophagus,Normal Tissue,Male,GTEX,0.999952,tumor
+GTEX-WFON-2226-SM-3TW8W,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Male,GTEX,0.997697,tumor
+GTEX-11EMC-0526-SM-5EGJN,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-ZLWG-0126-SM-4WWC5,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Female,GTEX,0.999998,tumor
+GTEX-132QS-0526-SM-5IJC7,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Male,GTEX,0.999922,tumor
+GTEX-1399R-0826-SM-5IJEL,Esophagus - Mucosa,Esophagus - Mucosa,Esophagus,Normal Tissue,Male,GTEX,0.998711,tumor
+GTEX-PWOO-1226-SM-48TCO,Stomach,Stomach,Stomach,Normal Tissue,Female,GTEX,0.999996,tumor
+GTEX-XMK1-2626-SM-4B65R,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-XBED-0826-SM-47JYC,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.999997,tumor
+GTEX-ZE9C-0011-R5a-SM-5EGLO,Brain - Caudate (Basal Ganglia),Brain - Caudate (Basal Ganglia),Brain,Normal Tissue,Male,GTEX,0.998676,tumor
+GTEX-PLZ4-0006-SM-2S1NY,Whole Blood,Whole Blood,Blood,Normal Tissue,Female,GTEX,0.99996,tumor
+GTEX-14A6H-2826-SM-5QGPM,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,0.999977,tumor
+GTEX-11TUW-1926-SM-5BC58,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-14BMV-2326-SM-5RQJ4,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-12C56-1426-SM-5FQSW,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999886,tumor
+GTEX-131YS-0826-SM-5PNYV,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Female,GTEX,0.999222,tumor
+GTEX-132QS-0226-SM-5IFFZ,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-XBEC-0006-SM-4AT5T,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.962293,tumor
+GTEX-111YS-0726-SM-5GZY8,Thyroid,Thyroid,Thyroid,Normal Tissue,Male,GTEX,0.999989,tumor
+GTEX-Y3I4-0126-SM-4TT26,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-XOTO-0826-SM-4B65O,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999636,tumor
+GTEX-WEY5-0626-SM-4LMIA,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.995136,tumor
+GTEX-1399R-0526-SM-5IJEF,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-S32W-2326-SM-2XCAW,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Female,GTEX,0.99996,tumor
+GTEX-Y3I4-1626-SM-4TT7W,Stomach,Stomach,Stomach,Normal Tissue,Male,GTEX,0.99993,tumor
+GTEX-146FH-0226-SM-5QGPQ,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Female,GTEX,0.999525,tumor
+GTEX-13111-2226-SM-5LZUE,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,0.999929,tumor
+GTEX-11TUW-0226-SM-5LU8X,Thyroid,Thyroid,Thyroid,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-Y5V6-2126-SM-4WWFX,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.996961,tumor
+GTEX-U3ZM-0426-SM-3DB73,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.999546,tumor
+GTEX-ZPU1-2126-SM-57WED,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999744,tumor
+GTEX-WYVS-1926-SM-4PQZ2,Liver,Liver,Liver,Normal Tissue,Female,GTEX,0.999752,tumor
+GTEX-QV31-1126-SM-4R1K4,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999959,tumor
+GTEX-145MN-0726-SM-5NQBH,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Male,GTEX,0.999981,tumor
+GTEX-139TT-0011-R7b-SM-5J2MN,Brain - Putamen (Basal Ganglia),Brain - Putamen (Basal Ganglia),Brain,Normal Tissue,Male,GTEX,0.998479,tumor
+GTEX-11ZTT-1826-SM-5CVLN,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999633,tumor
+GTEX-11TT1-1726-SM-5EQLJ,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-U3ZN-0426-SM-4DXSH,Artery - Coronary,Artery - Coronary,Blood Vessel,Normal Tissue,Female,GTEX,0.999995,tumor
+GTEX-11TT1-0005-SM-5NQ8Y,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.999917,tumor
+GTEX-QXCU-1326-SM-48FE2,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,0.999995,tumor
+GTEX-13W3W-2726-SM-5SIAE,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.999672,tumor
+GTEX-12ZZY-3126-SM-5DUX3,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-Y5V5-0926-SM-4VBPZ,Liver,Liver,Liver,Normal Tissue,Female,GTEX,0.999896,tumor
+GTEX-13NZ8-0226-SM-5J2OK,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,0.999998,tumor
+GTEX-13PVR-0226-SM-5RQJI,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-R55C-1426-SM-48FED,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999841,tumor
+GTEX-XMD2-1026-SM-4WWE8,Lung,Lung,Lung,Normal Tissue,Female,GTEX,0.999925,tumor
+GTEX-ZA64-2126-SM-5Q5A8,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Male,GTEX,0.996465,tumor
+GTEX-11P81-2026-SM-5P9GT,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-XYKS-1726-SM-4E3IO,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999997,tumor
+GTEX-XQ3S-0526-SM-4BOQA,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Male,GTEX,0.99999,tumor
+GTEX-P4QR-0326-SM-5SI8P,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Male,GTEX,0.999993,tumor
+GTEX-11P7K-1026-SM-5HL6Y,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999471,tumor
+GTEX-11DXX-1826-SM-5H126,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Female,GTEX,0.999615,tumor
+GTEX-UJMC-0626-SM-4IHJQ,Artery - Aorta,Artery - Aorta,Blood Vessel,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-12WSJ-1426-SM-5GCON,Colon - Sigmoid,Colon - Sigmoid,Colon,Normal Tissue,Female,GTEX,0.99985,tumor
+GTEX-WFG8-1726-SM-4LVM6,Colon - Sigmoid,Colon - Sigmoid,Colon,Normal Tissue,Male,GTEX,0.998945,tumor
+GTEX-14DAQ-2326-SM-5S2QX,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999945,tumor
+GTEX-XBEC-0326-SM-4AT4M,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Male,GTEX,0.999488,tumor
+GTEX-12584-3126-SM-5EGKR,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-11P82-1126-SM-5BC5K,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-XUW1-1126-SM-4BONZ,Artery - Aorta,Artery - Aorta,Blood Vessel,Normal Tissue,Female,GTEX,0.999997,tumor
+GTEX-R53T-0426-SM-48FEM,Pancreas,Pancreas,Pancreas,Normal Tissue,Female,GTEX,0.999955,tumor
+GTEX-145LU-1226-SM-5LU9B,Adipose - Visceral (Omentum),Adipose - Visceral (Omentum),Adipose Tissue,Normal Tissue,Male,GTEX,0.983142,tumor
+GTEX-XUZC-0526-SM-4BOPF,Esophagus - Gastroesophageal Junction,Esophagus - Gastroesophageal Junction,Esophagus,Normal Tissue,Female,GTEX,0.99955,tumor
+GTEX-WK11-0006-SM-3NB3J,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.99924,tumor
+GTEX-WHSB-2326-SM-4M1XK,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999963,tumor
+GTEX-OHPK-2026-SM-3MJH7,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999993,tumor
+GTEX-QDVJ-1426-SM-48U1Y,Stomach,Stomach,Stomach,Normal Tissue,Male,GTEX,0.999863,tumor
+GTEX-11UD2-1626-SM-5EQM3,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999793,tumor
+GTEX-ZTX8-0526-SM-59HLD,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.999347,tumor
+GTEX-ZV68-0326-SM-59HJG,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.999977,tumor
+GTEX-12WSC-0826-SM-5EQ5Q,Thyroid,Thyroid,Thyroid,Normal Tissue,Male,GTEX,0.999957,tumor
+GTEX-RM2N-1326-SM-48FCW,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999989,tumor
+GTEX-YFC4-3226-SM-5CVM2,Pituitary,Pituitary,Pituitary,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-13OVL-0626-SM-5KM13,Lung,Lung,Lung,Normal Tissue,Male,GTEX,0.999903,tumor
+GTEX-13PVQ-1526-SM-5IFEQ,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999811,tumor
+GTEX-1399R-1226-SM-5P9GF,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.998921,tumor
+GTEX-WI4N-2526-SM-4OOSE,Ovary,Ovary,Ovary,Normal Tissue,Female,GTEX,0.999997,tumor
+GTEX-131YS-2326-SM-5IJFJ,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999798,tumor
+GTEX-11DZ1-0926-SM-5EQ5R,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-13PVR-1426-SM-5S2PW,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.99948,tumor
+GTEX-WI4N-2426-SM-4OOSC,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999996,tumor
+GTEX-13FTW-0526-SM-5IFIP,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999956,tumor
+GTEX-XPVG-2026-SM-4B65E,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999998,tumor
+GTEX-111VG-2526-SM-5GZXP,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Male,GTEX,0.999805,tumor
+GTEX-P4PP-2026-SM-3P61N,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999749,tumor
+GTEX-13VXU-0926-SM-5IFFH,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.9989,tumor
+GTEX-13O3P-1426-SM-5L3DT,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Male,GTEX,0.999982,tumor
+GTEX-X4XY-0006-SM-46MV2,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.999342,tumor
+GTEX-144GM-1326-SM-5LU5E,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999977,tumor
+GTEX-Y3I4-1326-SM-4TT8Z,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Male,GTEX,0.998123,tumor
+GTEX-13O1R-2526-SM-5N9FW,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-OHPL-1026-SM-3MJGI,Pancreas,Pancreas,Pancreas,Normal Tissue,Female,GTEX,0.999955,tumor
+GTEX-ZLV1-2126-SM-4WWD2,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Female,GTEX,0.999996,tumor
+GTEX-13NZ9-1026-SM-5MR5K,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.999989,tumor
+GTEX-XPT6-0006-SM-4B66Q,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.998514,tumor
+GTEX-131YS-2826-SM-5EQ47,Skin - Not Sun Exposed (Suprapubic),Skin - Not Sun Exposed (Suprapubic),Skin,Normal Tissue,Female,GTEX,0.999674,tumor
+GTEX-12WS9-0226-SM-5EQ4X,Adipose - Subcutaneous,Adipose - Subcutaneous,Adipose Tissue,Normal Tissue,Female,GTEX,0.999792,tumor
+GTEX-RTLS-0626-SM-5SI7Z,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,0.999993,tumor
+GTEX-XOTO-2826-SM-4B65I,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-WWYW-0005-SM-3NB3K,Whole Blood,Whole Blood,Blood,Normal Tissue,Female,GTEX,0.99623,tumor
+GTEX-11VI4-1626-SM-5EQKO,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-1445S-0011-R8a-SM-5PNWX,Brain - Hypothalamus,Brain - Hypothalamus,Brain,Normal Tissue,Male,GTEX,0.996478,tumor
+GTEX-X261-1726-SM-4PQYT,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999947,tumor
+GTEX-WYVS-0226-SM-4ONDK,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-S4Z8-0226-SM-4AD5K,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-131XH-2526-SM-5GCND,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Male,GTEX,0.999959,tumor
+GTEX-Y5LM-0326-SM-4VBRN,Spleen,Spleen,Spleen,Normal Tissue,Female,GTEX,1.0,tumor
+GTEX-P4PQ-1526-SM-3NMCK,Stomach,Stomach,Stomach,Normal Tissue,Male,GTEX,0.999043,tumor
+GTEX-13S7M-1826-SM-5RQK6,Stomach,Stomach,Stomach,Normal Tissue,Female,GTEX,0.998498,tumor
+GTEX-145ME-1626-SM-5RQI3,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Female,GTEX,0.999982,tumor
+GTEX-N7MS-0011-R2a-SM-2HML6,Brain - Substantia Nigra,Brain - Substantia Nigra,Brain,Normal Tissue,Male,GTEX,0.999869,tumor
+GTEX-OXRN-2626-SM-48TBX,Pituitary,Pituitary,Pituitary,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-131XG-2126-SM-5DUXG,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999903,tumor
+GTEX-R55E-0006-SM-2TC5G,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.999795,tumor
+GTEX-11DYG-2526-SM-5N9BB,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-12WSK-2626-SM-5GCOT,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.999187,tumor
+GTEX-13QIC-1226-SM-5K7YR,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Female,GTEX,0.999974,tumor
+GTEX-12584-2126-SM-5FQUM,Adipose - Visceral (Omentum),Adipose - Visceral (Omentum),Adipose Tissue,Normal Tissue,Male,GTEX,0.99998,tumor
+GTEX-11ONC-0526-SM-5BC57,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999909,tumor
+GTEX-12WSM-0011-R6b-SM-5EQ6N,Brain - Nucleus Accumbens (Basal Ganglia),Brain - Nucleus Accumbens (Basal Ganglia),Brain,Normal Tissue,Male,GTEX,0.997085,tumor
+GTEX-ZY6K-1826-SM-5GZXK,Skin - Sun Exposed (Lower Leg),Skin - Sun Exposed (Lower Leg),Skin,Normal Tissue,Male,GTEX,0.999915,tumor
+GTEX-S3XE-1926-SM-3K2B3,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Male,GTEX,0.999243,tumor
+GTEX-13QBU-0226-SM-5LU48,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Female,GTEX,0.999435,tumor
+GTEX-13X6K-3026-SM-5QGPA,Pituitary,Pituitary,Pituitary,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-13QBU-1726-SM-5IJFQ,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.998929,tumor
+GTEX-13OVI-2126-SM-5KM3U,Colon - Sigmoid,Colon - Sigmoid,Colon,Normal Tissue,Female,GTEX,0.996005,tumor
+GTEX-13X6H-0626-SM-5LU53,Pancreas,Pancreas,Pancreas,Normal Tissue,Female,GTEX,0.999924,tumor
+GTEX-ZTPG-0826-SM-5DUVC,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-S4UY-1326-SM-4AD4X,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999386,tumor
+GTEX-145MO-2126-SM-5Q5CZ,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999982,tumor
+GTEX-XQ3S-0426-SM-4BOOA,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Male,GTEX,0.999988,tumor
+GTEX-14E6C-0005-SM-5O98N,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.999912,tumor
+GTEX-X5EB-1726-SM-4E3J7,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999946,tumor
+GTEX-ZVZP-0006-SM-51MSW,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.999557,tumor
+GTEX-13D11-1226-SM-5IFGA,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.99799,tumor
+GTEX-12WSK-0526-SM-5CVNA,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Female,GTEX,0.999433,tumor
+GTEX-R53T-1226-SM-48FCT,Stomach,Stomach,Stomach,Normal Tissue,Female,GTEX,0.999289,tumor
+GTEX-QLQW-1626-SM-4R1K1,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-PWOO-2026-SM-48TDE,Vagina,Vagina,Vagina,Normal Tissue,Female,GTEX,0.999995,tumor
+GTEX-OHPM-2126-SM-3LK75,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999951,tumor
+GTEX-T6MN-1826-SM-5CHQB,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,0.005484,normal
+GTEX-ZUA1-2726-SM-59HLJ,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999947,tumor
+GTEX-ZZPU-0926-SM-5GZYT,Heart - Left Ventricle,Heart - Left Ventricle,Heart,Normal Tissue,Female,GTEX,0.999773,tumor
+GTEX-WWYW-2826-SM-4MVOQ,Uterus,Uterus,Uterus,Normal Tissue,Female,GTEX,0.999996,tumor
+GTEX-Q2AI-0006-SM-2I3FG,Whole Blood,Whole Blood,Blood,Normal Tissue,Male,GTEX,0.999784,tumor
+GTEX-1192W-2326-SM-5N9BS,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999892,tumor
+GTEX-OHPL-1626-SM-2HMIR,Muscle - Skeletal,Muscle - Skeletal,Muscle,Normal Tissue,Female,GTEX,0.999974,tumor
+GTEX-Q2AH-0126-SM-48U2B,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-ZLFU-0726-SM-57WF6,Pancreas,Pancreas,Pancreas,Normal Tissue,Male,GTEX,0.999939,tumor
+GTEX-13CF3-1926-SM-5K7WF,Stomach,Stomach,Stomach,Normal Tissue,Female,GTEX,0.999725,tumor
+GTEX-11TUW-1126-SM-5EQKJ,Heart - Atrial Appendage,Heart - Atrial Appendage,Heart,Normal Tissue,Male,GTEX,0.999967,tumor
+GTEX-Y5V5-2626-SM-5IFJM,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Female,GTEX,0.999837,tumor
+GTEX-11PRG-2226-SM-5GU5R,Kidney - Cortex,Kidney - Cortex,Kidney,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-XOTO-0726-SM-4B659,Skin - Not Sun Exposed (Suprapubic),Skin - Not Sun Exposed (Suprapubic),Skin,Normal Tissue,Male,GTEX,0.999862,tumor
+GTEX-13QBU-1926-SM-5IJEW,Small Intestine - Terminal Ileum,Small Intestine - Terminal Ileum,Small Intestine,Normal Tissue,Female,GTEX,0.999946,tumor
+GTEX-12WSD-0926-SM-5GCNL,Thyroid,Thyroid,Thyroid,Normal Tissue,Female,GTEX,0.999944,tumor
+GTEX-QMRM-1426-SM-4R1K8,Prostate,Prostate,Prostate,Normal Tissue,Male,GTEX,0.999997,tumor
+GTEX-QCQG-0426-SM-48U29,Pancreas,Pancreas,Pancreas,Normal Tissue,Female,GTEX,0.999983,tumor
+GTEX-UJMC-1326-SM-4IHLS,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Male,GTEX,0.999587,tumor
+GTEX-WL46-0011-R5A-SM-3LK6V,Brain - Caudate (Basal Ganglia),Brain - Caudate (Basal Ganglia),Brain,Normal Tissue,Male,GTEX,0.999065,tumor
+GTEX-1192X-2926-SM-5N9BA,Minor Salivary Gland,Minor Salivary Gland,Salivary Gland,Normal Tissue,Male,GTEX,0.999627,tumor
+GTEX-13IVO-0011-R11b-SM-5LZXQ,Brain - Cerebellar Hemisphere,Brain - Cerebellar Hemisphere,Brain,Normal Tissue,Male,GTEX,0.999986,tumor
+GTEX-WHWD-1426-SM-4OORU,Stomach,Stomach,Stomach,Normal Tissue,Male,GTEX,0.99985,tumor
+GTEX-1313W-3226-SM-5LZUU,Pituitary,Pituitary,Pituitary,Normal Tissue,Female,GTEX,0.999999,tumor
+GTEX-13112-1426-SM-5EGH8,Liver,Liver,Liver,Normal Tissue,Male,GTEX,0.999154,tumor
+GTEX-11ONC-2226-SM-5HL6D,Testis,Testis,Testis,Normal Tissue,Male,GTEX,0.999991,tumor
+GTEX-ZAB4-2226-SM-5HL97,Colon - Transverse,Colon - Transverse,Colon,Normal Tissue,Male,GTEX,0.999946,tumor
+GTEX-ZA64-0226-SM-5HL9C,Adrenal Gland,Adrenal Gland,Adrenal Gland,Normal Tissue,Male,GTEX,0.999999,tumor
+GTEX-146FR-1626-SM-5Q5DS,Artery - Tibial,Artery - Tibial,Blood Vessel,Normal Tissue,Female,GTEX,0.999807,tumor
+GTEX-1269C-2426-SM-5FQSN,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Female,GTEX,0.999195,tumor
+GTEX-13PVQ-0426-SM-5J1OG,Nerve - Tibial,Nerve - Tibial,Nerve,Normal Tissue,Male,GTEX,0.999688,tumor
+GTEX-OOBJ-0926-SM-48TDO,Spleen,Spleen,Spleen,Normal Tissue,Male,GTEX,1.0,tumor
+GTEX-ZUA1-1526-SM-59HLS,Breast - Mammary Tissue,Breast - Mammary Tissue,Breast,Normal Tissue,Male,GTEX,0.991463,tumor

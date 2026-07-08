@@ -1,0 +1,11 @@
+{
+  "auc": 1.0,
+  "n": 5,
+  "n_normal": 2,
+  "n_tumor": 3,
+  "recommended_accuracy": 1.0,
+  "recommended_metric": "youden_j",
+  "recommended_recall": 1.0,
+  "recommended_specificity": 1.0,
+  "recommended_threshold": 0.989957
+}

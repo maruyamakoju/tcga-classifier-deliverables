@@ -1,0 +1,2 @@
+n,threshold,tumor_calls,normal_calls,false_positive_rate,median_tumor_probability,p90_tumor_probability,p95_tumor_probability,max_tumor_probability
+540,0.5,538,2,0.9962962962962963,0.9999375,1.0,1.0,1.0

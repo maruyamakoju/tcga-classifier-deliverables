@@ -1,0 +1,4 @@
+# Minimal runtime for default logistic-regression scoring.
+numpy>=1.26,<3
+pandas>=2.3,<4
+pyarrow>=16

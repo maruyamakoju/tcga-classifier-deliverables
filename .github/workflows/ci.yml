@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test-release:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install lightweight dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-light.txt
+          python -m pip install pytest
+
+      - name: Run regression tests
+        run: python -m pytest -q -rs
+
+      - name: Run release acceptance
+        run: python run_release_acceptance.py --timeout-seconds 300
+
+      - name: Validate release bundle parity
+        run: >
+          python validate_release_lite.py
+          --release-dir release-lite
+          --zip tcga-tumor-normal-release-lite.zip
+          --source-root .
+          --artifacts RELEASE_ARTIFACTS.json

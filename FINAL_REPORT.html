@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TCGA tumor-vs-normal classifier - final report</title>
+<style>
+  :root, .viz-root {
+    --page:#f9f9f7; --surface-1:#fcfcfb;
+    --text-primary:#0b0b0b; --text-secondary:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --baseline:#c3c2b7; --border:rgba(11,11,11,0.10);
+    --s1:#2a78d6; --s2:#1baf7a; --s-orange:#eb6834; --connector:#c3c2b7;
+    --good:#006300; --warn:#b26b00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root, .viz-root {
+      --page:#0d0d0d; --surface-1:#1a1a19;
+      --text-primary:#ffffff; --text-secondary:#c3c2b7; --muted:#898781;
+      --grid:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,0.10);
+      --s1:#3987e5; --s2:#199e70; --s-orange:#d95926; --connector:#383835;
+      --good:#0ca30c; --warn:#fab219;
+    }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--page); color:var(--text-primary);
+         font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.55; }
+  .wrap { max-width:880px; margin:0 auto; padding:36px 22px 80px; }
+  h1 { font-size:25px; margin:0 0 6px; letter-spacing:-0.015em; }
+  h2 { font-size:17px; margin:34px 0 8px; letter-spacing:-0.01em;
+       border-top:1px solid var(--border); padding-top:22px; }
+  h3 { font-size:14px; margin:18px 0 4px; }
+  .sub { color:var(--text-secondary); font-size:14.5px; margin:0 0 18px; }
+  p { font-size:14.5px; }
+  .lede { font-size:15.5px; }
+  .tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:22px 0; }
+  .tile { background:var(--surface-1); border:1px solid var(--border);
+          border-radius:12px; padding:14px 16px; }
+  .tile .v { font-size:25px; font-weight:650; letter-spacing:-0.02em; }
+  .tile .l { font-size:12px; color:var(--text-secondary); margin-top:3px; }
+  .card { background:var(--surface-1); border:1px solid var(--border);
+          border-radius:12px; padding:18px 20px; margin:14px 0; }
+  .legend { display:flex; gap:20px; align-items:center; flex-wrap:wrap; font-size:13px;
+            color:var(--text-secondary); margin:4px 0 12px; }
+  .legend span { display:inline-flex; align-items:center; gap:7px; }
+  .dot { width:11px; height:11px; border-radius:50%; display:inline-block; }
+  svg { width:100%; height:auto; display:block; }
+  .tick { fill:var(--muted); font-size:11px; font-variant-numeric:tabular-nums; }
+  .rowlab { fill:var(--text-primary); font-size:12px; }
+  .vallab { fill:var(--text-primary); font-size:11px; font-variant-numeric:tabular-nums; }
+  .axtitle { fill:var(--muted); font-size:11px; }
+  table { border-collapse:collapse; width:100%; font-size:13px;
+          font-variant-numeric:tabular-nums; margin:8px 0; }
+  th,td { text-align:right; padding:7px 9px; border-bottom:1px solid var(--border); }
+  th:first-child,td:first-child { text-align:left; font-variant-numeric:normal; }
+  th { color:var(--text-secondary); font-weight:600; font-size:12px; }
+  tr.best td { font-weight:650; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .cols .card h3 { margin-top:0; }
+  .gene { font-weight:600; }
+  code { background:rgba(127,127,127,0.14); padding:1px 5px; border-radius:5px;
+         font-size:13px; }
+  pre { background:var(--surface-1); border:1px solid var(--border); border-radius:10px;
+        padding:14px 16px; overflow:auto; font-size:12.5px; }
+  img.fig { width:100%; border:1px solid var(--border); border-radius:10px; margin:8px 0; }
+  .cap { font-size:12px; color:var(--muted); margin:4px 0 0; }
+  ul { font-size:14.5px; } li { margin:3px 0; }
+  .tooltip { position:fixed; pointer-events:none; background:var(--surface-1);
+             border:1px solid var(--border); border-radius:8px; padding:8px 10px;
+             font-size:12px; box-shadow:0 4px 16px rgba(0,0,0,0.18);
+             opacity:0; transition:opacity .08s; z-index:10; max-width:260px; }
+  .foot { color:var(--muted); font-size:12px; margin-top:30px; }
+  @media (max-width:640px){ .tiles{grid-template-columns:repeat(2,1fr)} .cols{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div style="background:#b00020;color:#ffffff;padding:16px 20px;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.5;font-weight:600;border-bottom:3px solid #7a0016;">
+SUPERSEDED (2026-07-06): This early report predates the external validation (CPTAC, TCGA-Toil, GTEx), cross-platform adaptation, and cancer-type classifier. Some statements here (e.g. &ldquo;GTEx untested&rdquo;) are out of date. See INDEX.md for the current, complete story.
+</div>
+<div class="wrap viz-root">
+
+  <h1>A pan-cancer tumor-vs-normal classifier from TCGA RNA-seq</h1>
+  <p class="sub">Final report &mdash; training, three-level validation, generalization to unseen cancer types, biological grounding, and a deployable scoring tool. 2,160 samples, 17 cancer types.</p>
+
+  <p class="lede">A logistic-regression classifier on 2,000 genes separates tumor from normal tissue at <b>AUC 0.997</b> on held-out patients, holds at <b>0.994</b> when tested on a cancer type it never trained on, and reads a biologically coherent, tissue-agnostic malignant-vs-normal signature. It ships as a runnable CLI.</p>
+
+  <div class="tiles" id="tiles"></div>
+
+  <h2>1. Data &amp; method</h2>
+  <p>RNA-seq (STAR gene counts, GENCODE v36) was pulled from the NCI Genomic Data Commons for the 17 TCGA cancer types with matched primary-tumor and solid-tissue-normal samples (BRCA, KIRC, LUAD, LUSC, THCA, HNSC, LIHC, COAD, STAD, PRAD, KIRP, BLCA, UCEC, KICH, READ, ESCA, CHOL): 720 normal + 1,440 tumor = <b>2,160 samples</b>, values log2(TPM+1), restricted to 14,850 expressed protein-coding genes.</p>
+  <p>Train/test was split with <code>StratifiedGroupKFold</code> <b>grouped by patient</b> so no patient's tumor and matched normal cross the boundary (the leakage failure mode for paired data), and stratified by cancer type. Features: top 2,000 genes by ANOVA F-test fit on the training set only. Models: logistic regression, random forest, XGBoost.</p>
+
+  <h2>2. Held-out performance (433 patients unseen in training)</h2>
+  <table>
+    <thead><tr><th>Model</th><th>AUC</th><th>Accuracy</th><th>F1</th><th>Precision</th><th>Recall</th></tr></thead>
+    <tbody>
+      <tr class="best"><td>Logistic regression</td><td>0.997</td><td>0.979</td><td>0.984</td><td>0.986</td><td>0.983</td></tr>
+      <tr><td>Random forest</td><td>0.992</td><td>0.975</td><td>0.981</td><td>0.983</td><td>0.979</td></tr>
+      <tr><td>XGBoost</td><td>0.994</td><td>0.982</td><td>0.986</td><td>0.990</td><td>0.983</td></tr>
+    </tbody>
+  </table>
+  <p>5-fold grouped cross-validation confirms it is not a lucky split (logistic regression 0.997 &plusmn; 0.003 AUC). Per-cancer-type AUC = 1.000 on 15 of 17 types; the exceptions are PRAD (0.965) and THCA (0.972).</p>
+  <img class="fig" src="model_performance.png" alt="ROC curves, confusion matrix, per-cancer AUC" onerror="this.style.display='none';document.getElementById('pngmiss').style.display='block'">
+  <p class="cap">ROC curves, confusion matrix, and per-cancer-type AUC (<code>model_performance.png</code>).</p>
+  <p id="pngmiss" class="cap" style="display:none">[<code>model_performance.png</code> is in this folder &mdash; open this HTML from the same directory to see it.]</p>
+
+  <h2>3. Generalization to an unseen cancer type (leave-one-cancer-type-out)</h2>
+  <p>The original result was measured only on cancer types also present in training. To test true generalization, the whole pipeline was retrained <b>17 times</b>, each time holding out one entire cancer type (feature selection, scaling and the model all refit on the other 16) and testing only on the excluded type.</p>
+
+  <div class="card">
+    <h3>Ranking transfers: AUC barely moves</h3>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--s1)"></i> Held-out cancer type (LOCO)</span>
+      <span><i class="dot" style="background:var(--s2)"></i> Within-distribution (seen in training)</span>
+    </div>
+    <svg id="chartAUC" role="img" aria-label="within-distribution versus leave-one-cancer-out AUC per cancer type"></svg>
+    <p class="cap">Macro-mean LOCO AUC <b>0.994</b>; every held-out type stays &ge; 0.95. Largest drop vs within-distribution is 0.015 (PRAD).</p>
+  </div>
+
+  <div class="card">
+    <h3>The one caveat: the 0.5 threshold needs recalibration per tissue &mdash; and recovers</h3>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--s-orange)"></i> Accuracy at default 0.5 threshold</span>
+      <span><i class="dot" style="background:var(--s1)"></i> Accuracy at tissue-optimal threshold</span>
+    </div>
+    <svg id="chartACC" role="img" aria-label="default-threshold versus optimal-threshold accuracy per held-out cancer type"></svg>
+    <p class="cap">Discrimination (AUC) is near-perfect, but the decision boundary learned on other cancer types does not always transfer: prostate (0.75) and liver (0.85) are under-called at 0.5. Re-thresholding each tissue at its own optimal cutoff recovers accuracy to the AUC ceiling (PRAD 0.75&rarr;0.94, LIHC 0.85&rarr;0.99, STAD 0.91&rarr;1.00). <b>Practical rule: for a genuinely new tissue, recalibrate the threshold on a few labeled samples.</b></p>
+  </div>
+
+  <h2>4. What the model reads (biology)</h2>
+  <p>The top genes match published pan-cancer signatures &mdash; and reveal a <b>bidirectional, tissue-agnostic</b> contrast, which is why it generalizes across cancer types. Full citations in <code>LITERATURE_CHECK.md</code>.</p>
+  <div class="cols">
+    <div class="card">
+      <h3 style="color:var(--s-orange)">Up in tumor &rarr; "tumor"</h3>
+      <p style="font-size:13px;margin:4px 0 8px;color:var(--text-secondary)">ECM remodeling / cancer-associated-fibroblast / desmoplasia</p>
+      <ul>
+        <li><span class="gene">COL10A1</span> &mdash; overexpressed in 13 cancer types (same set as here)</li>
+        <li><span class="gene">CTHRC1</span> &mdash; major pan-cancer matrisome regulator</li>
+        <li><span class="gene">COMP</span>, <span class="gene">SPP1</span> &mdash; validated 9-gene pan-cancer ECM signature</li>
+        <li><span class="gene">MMP11</span>, <span class="gene">MMP9</span> &mdash; CAF-derived proteases, invasion</li>
+        <li><span class="gene">PDGFRA</span> &mdash; classic CAF marker</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="color:var(--s1)">Down in tumor &rarr; "normal"</h3>
+      <p style="font-size:13px;margin:4px 0 8px;color:var(--text-secondary)">loss of normal architecture / microvasculature / tumor suppressors</p>
+      <ul>
+        <li><span class="gene">DCN</span> (decorin) &mdash; tumor suppressor, reduced in 18 solid tumors</li>
+        <li><span class="gene">LYVE1</span> &mdash; lymphatic-endothelial marker, lower in tumor</li>
+        <li><span class="gene">TGFBR3</span>, <span class="gene">FBLN5</span> &mdash; tumor suppressors, anti-angiogenic</li>
+        <li><span class="gene">MMRN1</span>, <span class="gene">ABCA8</span>, <span class="gene">DPT</span>, <span class="gene">TNXB</span> &mdash; normal stromal/vascular markers</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:10px"><b>tumor = (desmoplastic ECM / CAF program UP) + (normal tissue &amp; vascular markers DOWN)</b> &mdash; a shared malignant-vs-normal tissue state, not per-cancer memorization. This is the mechanistic reason the leave-one-cancer-type-out test holds.</p>
+  <img class="fig" src="feature_importance.png" alt="top gene importances and PDGFRA expression by group" onerror="this.style.display='none'">
+  <p class="cap">Top gene importances and PDGFRA expression by group (<code>feature_importance.png</code>).</p>
+
+  <h2>5. Use it &mdash; scoring CLI</h2>
+  <p>The fitted pipeline scores new samples. Verified to reproduce the reported performance (test AUC 0.997) on held-out data.</p>
+  <pre>python score_tumor_normal.py expr.csv -o calls.csv        # logistic regression (best)
+python score_tumor_normal.py expr.csv --threshold 0.4     # recalibrate for a new tissue
+python score_tumor_normal.py example_input.csv            # runnable demo (5 samples)</pre>
+  <p>Input: rows = samples, columns = genes (Ensembl IDs, log2(TPM+1)); output: <code>sample, tumor_probability, call</code>. The demo scores 3 tumors at p&gt;0.99 and 2 normals at p&lt;0.06, matching their true labels. See <code>README.md</code>.</p>
+
+  <h2>6. Caveats</h2>
+  <ul>
+    <li>This is a <b>pan-cancer tumor-vs-normal</b> classifier, not a cancer-type classifier.</li>
+    <li>TCGA "normal" is tumor-<b>adjacent</b> resected tissue, not healthy-donor tissue &mdash; the validated contrast is tumor-vs-adjacent-normal; generalization to healthy-population tissue (e.g. GTEx) is untested.</li>
+    <li>No cross-cohort batch-effect correction beyond TPM normalization; this exact contrast is near-saturated in the field.</li>
+    <li>Random forest / XGBoost were excluded from the LOCO re-runs and the CLI's default path due to a process-instability (segfaults) in the analysis conda env; logistic regression was the best model regardless.</li>
+  </ul>
+
+  <h2>7. Files</h2>
+  <ul>
+    <li><code>score_tumor_normal.py</code>, <code>example_input.csv</code>/<code>example_output.csv</code>, <code>README.md</code> &mdash; the scoring tool</li>
+    <li><code>deployable_pipeline.pkl</code> &mdash; fitted selector + scaler + models + 2,000-gene list</li>
+    <li><code>REPORT.md</code> &mdash; full methods/results; <code>LITERATURE_CHECK.md</code> &mdash; gene-by-gene citations</li>
+    <li><code>model_performance.png</code>, <code>feature_importance.png</code> &mdash; primary figures</li>
+    <li><code>cross-cancer-holdout/</code> &mdash; LOCO analysis (<code>LOCO_REPORT.md</code>, <code>loco_report.html</code>, per-cancer CSVs, pooled predictions)</li>
+    <li><code>from-workbench-loco/</code> &mdash; the Claude Science workbench's own LOCO run + optimal-threshold CSVs (agrees with the above)</li>
+    <li><code>test_metrics.csv</code>, <code>per_cancer_type_performance.csv</code>, <code>top_genes_*.csv</code>, <code>selected_files.csv</code></li>
+  </ul>
+
+  <p class="foot">Validated three ways: patient-held-out AUC 0.997 &middot; 5-fold grouped CV 0.997&plusmn;0.003 &middot; cancer-type-held-out AUC 0.994.</p>
+</div>
+<div class="tooltip" id="tt"></div>
+
+<script>
+document.getElementById("tiles").innerHTML = [
+  {v:"0.997", l:"Test AUC (held-out patients)"},
+  {v:"0.994", l:"AUC on an unseen cancer type"},
+  {v:"17", l:"TCGA cancer types"},
+  {v:"2,160", l:"samples (720 normal / 1,440 tumor)"}
+].map(function(t){ return '<div class="tile"><div class="v">'+t.v+'</div><div class="l">'+t.l+'</div></div>'; }).join("");
+
+// ---- reusable dumbbell renderer (ASCII-only; no var named 'top') ----
+var NS="http://www.w3.org/2000/svg";
+function mk(t,a){ var e=document.createElementNS(NS,t); for(var k in a){ e.setAttribute(k,a[k]); } return e; }
+var tt=document.getElementById("tt");
+function showTT(ev,html){ tt.innerHTML=html; tt.style.opacity=1;
+  tt.style.left=Math.min(ev.clientX+14,window.innerWidth-266)+"px"; tt.style.top=(ev.clientY+14)+"px"; }
+function hideTT(){ tt.style.opacity=0; }
+
+function dumbbell(svgId, rows, opts){
+  var W=720, rowH=26, padT=14, left=opts.left||120, right=64;
+  var x0=left, x1=W-right, dmin=opts.dmin, dmax=opts.dmax;
+  var H=padT+rows.length*rowH+38;
+  function sx(v){ return x0+(Math.min(Math.max(v,dmin),dmax)-dmin)/(dmax-dmin)*(x1-x0); }
+  var svg=document.getElementById(svgId); svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  opts.ticks.forEach(function(g){
+    var x=sx(g);
+    svg.appendChild(mk("line",{x1:x,y1:padT-4,x2:x,y2:padT+rows.length*rowH,stroke:"var(--grid)","stroke-width":1}));
+    var tk=mk("text",{x:x,y:padT+rows.length*rowH+15,"text-anchor":"middle","class":"tick"});
+    tk.textContent=g.toFixed(2); svg.appendChild(tk);
+  });
+  var axt=mk("text",{x:(x0+x1)/2,y:H-4,"text-anchor":"middle","class":"axtitle"});
+  axt.textContent=opts.axis; svg.appendChild(axt);
+  rows.forEach(function(d,i){
+    var y=padT+i*rowH+rowH/2;
+    var lab=mk("text",{x:left-10,y:y+4,"text-anchor":"end","class":"rowlab"}); lab.textContent=d.label; svg.appendChild(lab);
+    svg.appendChild(mk("line",{x1:sx(d.b),y1:y,x2:sx(d.a),y2:y,stroke:"var(--connector)","stroke-width":2,"stroke-linecap":"round"}));
+    var db=mk("circle",{cx:sx(d.b),cy:y,r:5,fill:opts.colorB,stroke:"var(--surface-1)","stroke-width":2}); svg.appendChild(db);
+    var da=mk("circle",{cx:sx(d.a),cy:y,r:5,fill:opts.colorA,stroke:"var(--surface-1)","stroke-width":2}); svg.appendChild(da);
+    var vl=mk("text",{x:x1+8,y:y+4,"class":"vallab"}); vl.textContent=d.a.toFixed(opts.dp||3); svg.appendChild(vl);
+    var info="<b>"+d.label+"</b><br>"+opts.nameA+": <b>"+d.a.toFixed(opts.dp||3)+"</b><br>"+opts.nameB+": "+d.b.toFixed(opts.dp||3)+(d.extra?("<br>"+d.extra):"");
+    [da,db].forEach(function(el){ el.style.cursor="pointer";
+      el.addEventListener("mousemove",function(e){ showTT(e,info); }); el.addEventListener("mouseleave",hideTT); });
+  });
+}
+
+// Chart 1: within-dist vs LOCO AUC (sorted worst-generalizing first)
+dumbbell("chartAUC", [
+  {label:"PRAD", a:0.950, b:0.965, extra:"prostate"},
+  {label:"THCA", a:0.982, b:0.972, extra:"thyroid"},
+  {label:"ESCA", a:0.988, b:1.000, extra:"esophageal"},
+  {label:"KIRC", a:0.992, b:1.000, extra:"kidney clear cell"},
+  {label:"HNSC", a:0.997, b:1.000, extra:"head & neck"},
+  {label:"KICH", a:0.998, b:1.000, extra:"kidney chromophobe"},
+  {label:"UCEC", a:0.998, b:1.000, extra:"endometrial"},
+  {label:"BRCA", a:0.999, b:1.000, extra:"breast"},
+  {label:"LIHC", a:0.999, b:1.000, extra:"liver"},
+  {label:"CHOL", a:1.000, b:1.000, extra:"bile duct"},
+  {label:"COAD", a:1.000, b:1.000, extra:"colon"},
+  {label:"BLCA", a:1.000, b:1.000, extra:"bladder"},
+  {label:"LUSC", a:1.000, b:1.000, extra:"lung squamous"},
+  {label:"LUAD", a:1.000, b:1.000, extra:"lung adeno"},
+  {label:"READ", a:1.000, b:1.000, extra:"rectum"},
+  {label:"KIRP", a:1.000, b:1.000, extra:"kidney papillary"},
+  {label:"STAD", a:1.000, b:1.000, extra:"stomach"}
+], {dmin:0.945, dmax:1.0, ticks:[0.95,0.96,0.97,0.98,0.99,1.0], axis:"AUC (unseen cancer type)",
+    colorA:"var(--s1)", colorB:"var(--s2)", nameA:"LOCO AUC", nameB:"within-dist AUC", left:120});
+
+// Chart 2: default vs optimal threshold accuracy (sorted lowest default first)
+dumbbell("chartACC", [
+  {label:"PRAD", a:0.936, b:0.750},
+  {label:"LIHC", a:0.993, b:0.847},
+  {label:"UCEC", a:0.981, b:0.886},
+  {label:"STAD", a:1.000, b:0.907},
+  {label:"ESCA", a:0.949, b:0.923},
+  {label:"HNSC", a:0.977, b:0.955},
+  {label:"KICH", a:0.987, b:0.960},
+  {label:"THCA", a:0.972, b:0.960},
+  {label:"LUAD", a:1.000, b:0.966},
+  {label:"BLCA", a:1.000, b:0.982},
+  {label:"KIRC", a:0.991, b:0.991},
+  {label:"LUSC", a:1.000, b:0.993},
+  {label:"BRCA", a:0.997, b:0.997},
+  {label:"CHOL", a:1.000, b:1.000},
+  {label:"COAD", a:1.000, b:1.000},
+  {label:"KIRP", a:1.000, b:1.000},
+  {label:"READ", a:1.000, b:1.000}
+], {dmin:0.70, dmax:1.0, ticks:[0.70,0.75,0.80,0.85,0.90,0.95,1.0], axis:"accuracy on held-out cancer type",
+    colorA:"var(--s1)", colorB:"var(--s-orange)", nameA:"optimal-threshold acc", nameB:"default-0.5 acc", left:120, dp:3});
+</script>
+</body>
+</html>
