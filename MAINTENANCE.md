@@ -36,9 +36,12 @@ python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
 
 ## Dependency updates
 
-Dependabot opens dependency PRs for GitHub Actions and Python requirement files.
-Review them with the full CI matrix and keep the lightweight runtime dependency
-contract minimal: default scoring should require only NumPy, pandas, and pyarrow.
+Dependabot opens dependency PRs for GitHub Actions only. Python dependency
+updates are manual because `requirements-light.txt` and `requirements.txt` are
+part of the release payload; changing them requires rebuilding `release-lite/`,
+`SHA256SUMS.txt`, `release_manifest.json`, and the release ZIP in the same
+commit. Keep the lightweight runtime dependency contract minimal: default
+scoring should require only NumPy, pandas, and pyarrow.
 
 ## Scope guardrails
 
