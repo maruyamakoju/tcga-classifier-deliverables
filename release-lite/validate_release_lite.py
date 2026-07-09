@@ -391,7 +391,18 @@ def validate_zip(zip_path, release_dir):
         if bad is not None:
             errors.append(f"Zip archive is corrupt at {bad}")
         infos = [info for info in zf.infolist() if not info.is_dir()]
-        zip_names = {info.filename for info in infos}
+        zip_records = []
+        zip_names = set()
+        for info in infos:
+            try:
+                rel = normalize_release_path(info.filename)
+            except ValueError as exc:
+                errors.append(f"Zip member {info.filename!r}: {exc}")
+                continue
+            if rel in zip_names:
+                errors.append(f"Zip contains duplicate member path: {info.filename}")
+            zip_names.add(rel)
+            zip_records.append((rel, info))
         release_names = set(release)
         if zip_names != release_names:
             missing = sorted(release_names - zip_names)
@@ -400,15 +411,15 @@ def validate_zip(zip_path, release_dir):
                 errors.append("Zip is missing files: " + ", ".join(missing))
             if extra:
                 errors.append("Zip has extra files: " + ", ".join(extra))
-        for info in infos:
-            if info.filename in release:
+        for rel, info in zip_records:
+            if rel in release:
                 with zf.open(info) as handle:
                     digest = sha256_bytes(handle.read())
-                if digest != sha256_file(release[info.filename]):
+                if digest != sha256_file(release[rel]):
                     errors.append(f"Zip content differs from release dir: {info.filename}")
     summary = {
         "zip_path": str(zip_path),
-        "zip_entries": len(zip_names),
+        "zip_entries": len(infos),
         "zip_bytes": zip_path.stat().st_size,
     }
     return errors, summary
