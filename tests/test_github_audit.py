@@ -5,6 +5,7 @@ from audit_github_repository import (
     check_release,
     check_vulnerability_alerts,
     infer_repo_from_remote,
+    required_status_check_contexts,
 )
 
 
@@ -41,6 +42,43 @@ def test_branch_protection_requires_all_expected_contexts():
     assert "linear_history_not_required" in codes
     assert "conversation_resolution_not_required" in codes
     assert "force_pushes_allowed" in codes
+
+
+def test_branch_protection_accepts_required_checks_shape():
+    messages = []
+    check_branch_protection(
+        {
+            "required_status_checks": {
+                "strict": True,
+                "contexts": [],
+                "checks": [
+                    {"context": "windows-latest / py3.11"},
+                    {"context": "ubuntu-latest / py3.11"},
+                    {"context": "macos-latest / py3.11"},
+                ],
+            },
+            "enforce_admins": {"enabled": True},
+            "required_linear_history": {"enabled": True},
+            "required_conversation_resolution": {"enabled": True},
+            "allow_force_pushes": {"enabled": False},
+            "allow_deletions": {"enabled": False},
+        },
+        messages,
+    )
+    assert messages == []
+
+
+def test_required_status_check_contexts_unions_legacy_and_current_shapes():
+    assert required_status_check_contexts(
+        {
+            "contexts": ["ubuntu-latest / py3.11"],
+            "checks": [
+                {"context": "windows-latest / py3.11"},
+                {"context": ""},
+                "malformed",
+            ],
+        }
+    ) == {"ubuntu-latest / py3.11", "windows-latest / py3.11"}
 
 
 def test_release_audit_detects_asset_mismatch():
