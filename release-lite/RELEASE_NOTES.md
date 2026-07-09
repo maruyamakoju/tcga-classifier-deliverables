@@ -1,5 +1,28 @@
 # Release notes
 
+## v1.1.8-gdc-starcounts — 2026-07-09
+
+Lite documentation audit release. Model weights, training data, and headline
+validation metrics are unchanged from v1.1.7; this release tightens the
+documentation integrity checks and makes the lightweight bundle's file map
+clearer when read outside the full development repository.
+
+### Added
+
+- `audit_release_docs.py` now validates code-spanned local file and directory
+  references, not only Markdown links and Python command references.
+- Central allowlists for generated workflow outputs, release sidecars, and
+  full-development-tree-only references, so unexpected stale paths fail the
+  audit.
+
+### Changed
+
+- `README.md` now separates lightweight-bundle files from full development
+  tree-only maintenance and historical-analysis assets.
+- `REPORT.md` now marks LOCO, cross-platform adaptation benchmark,
+  cancer-type classifier, and maintenance/regeneration artifacts as full
+  development tree-only when they are not part of the lightweight zip.
+
 ## v1.1.7-gdc-starcounts — 2026-07-09
 
 Core guardrail release. Model weights, training data, and headline validation

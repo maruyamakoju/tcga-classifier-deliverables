@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this repository, please cite the software release."
 title: "TCGA/GDC tumor-vs-normal RNA-seq classifier"
-version: "v1.1.7-gdc-starcounts"
+version: "v1.1.8-gdc-starcounts"
 date-released: "2026-07-09"
 type: software
 license: MIT

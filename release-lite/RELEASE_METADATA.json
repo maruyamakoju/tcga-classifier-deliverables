@@ -1,8 +1,14 @@
 {
   "release_date": "2026-07-09",
-  "release_name": "GDC STAR-Counts core guardrail release",
+  "release_name": "GDC STAR-Counts lite documentation audit release",
   "schema_version": "1.0",
-  "version": "v1.1.7-gdc-starcounts",
+  "version": "v1.1.8-gdc-starcounts",
+  "changes_since_v1_1_7": [
+    "Expanded audit_release_docs.py to validate code-spanned local file and directory references, not only Markdown links and Python commands.",
+    "Added explicit allowlisting for generated workflow outputs, release sidecars, and full-development-tree-only references so unexpected stale paths fail the audit.",
+    "Reworked README.md file listings to distinguish files included in the lightweight bundle from full development tree-only maintenance and historical-analysis assets.",
+    "Clarified REPORT.md references to LOCO, cross-platform adaptation, cancer-type classifier, and maintenance artifacts so extracted release-lite users are not directed to missing local paths."
+  ],
   "changes_since_v1_1_6": [
     "Made tcga_rnaseq.predict_proba() and score_binary_dataframe() reject invalid matched model-gene values by default unless explicitly allowed.",
     "Made the low-level align_to_genes() helper strict by default because its legacy return shape cannot carry invalid-value reports.",
