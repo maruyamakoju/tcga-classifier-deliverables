@@ -1,5 +1,8 @@
 """Unit tests for release-lite bundle validation."""
 import json
+import zipfile
+
+import pytest
 
 from validate_release_lite import (
     EXPECTED_BUNDLE_NAME,
@@ -8,7 +11,9 @@ from validate_release_lite import (
     validate_manifest_metadata,
     validate_release_dir,
     validate_source_parity,
+    validate_zip,
 )
+from validate_zip_bundle import validate_zip_members
 
 
 def write_release_metadata(path, version="v-test", release_date="2026-07-09"):
@@ -117,3 +122,31 @@ def test_validate_source_parity_rejects_non_list_manifest_files(tmp_path):
     errors = validate_source_parity(tmp_path, tmp_path, {"files": {}})
 
     assert errors == ["release_manifest.json files must be a list"]
+
+
+def test_validate_zip_rejects_duplicate_file_entries(tmp_path):
+    release_dir = tmp_path / "release-lite"
+    release_dir.mkdir()
+    (release_dir / "payload.txt").write_text("payload\n", encoding="utf-8")
+    zip_path = tmp_path / "bundle.zip"
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        zf.writestr("payload.txt", "payload\n")
+        with pytest.warns(UserWarning, match="Duplicate name"):
+            zf.writestr("payload.txt", "payload\n")
+
+    errors, summary = validate_zip(zip_path, release_dir)
+
+    assert "Zip contains duplicate member path: payload.txt" in errors
+    assert summary["zip_entries"] == 2
+
+
+def test_validate_zip_bundle_members_rejects_duplicate_file_entries(tmp_path):
+    zip_path = tmp_path / "bundle.zip"
+    with zipfile.ZipFile(zip_path, "w") as zf:
+        zf.writestr("payload.txt", "payload\n")
+        with pytest.warns(UserWarning, match="Duplicate name"):
+            zf.writestr("payload.txt", "payload\n")
+
+    errors = validate_zip_members(zip_path)
+
+    assert errors == ["Zip contains duplicate member path: payload.txt"]

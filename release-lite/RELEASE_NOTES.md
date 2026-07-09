@@ -1,5 +1,24 @@
 # Release notes
 
+## v1.1.12-gdc-starcounts — 2026-07-09
+
+Duplicate zip member validation release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.11; this release tightens
+the lightweight bundle validators so release archives with repeated member
+paths fail before publication or extraction.
+
+### Fixed
+
+- `validate_release_lite.py` now rejects duplicate file entries in the release
+  zip instead of silently collapsing names into a set during parity checks.
+- `validate_zip_bundle.py` now rejects duplicate member paths before extraction,
+  preventing overwrite ambiguity in malformed archives.
+
+### Tests
+
+- Added unit coverage for duplicate zip member detection in both validation
+  paths.
+
 ## v1.1.11-gdc-starcounts — 2026-07-09
 
 Timeout diagnostics hardening release. Model weights, training data, and

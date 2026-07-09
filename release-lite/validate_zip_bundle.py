@@ -92,8 +92,12 @@ def validate_zip_members(zip_path):
         bad = zf.testzip()
         if bad is not None:
             errors.append(f"Zip archive is corrupt at {bad}")
+        seen = set()
         for info in zf.infolist():
             name = info.filename.replace("\\", "/")
+            if name in seen:
+                errors.append(f"Zip contains duplicate member path: {info.filename}")
+            seen.add(name)
             path = Path(name)
             if name.startswith("/") or path.is_absolute():
                 errors.append(f"Zip contains absolute path: {info.filename}")

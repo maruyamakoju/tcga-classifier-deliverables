@@ -1,8 +1,13 @@
 {
   "release_date": "2026-07-09",
-  "release_name": "GDC STAR-Counts timeout diagnostics hardening release",
+  "release_name": "GDC STAR-Counts duplicate zip member validation release",
   "schema_version": "1.0",
-  "version": "v1.1.11-gdc-starcounts",
+  "version": "v1.1.12-gdc-starcounts",
+  "changes_since_v1_1_11": [
+    "Made validate_release_lite.py reject duplicate file entries in the release zip instead of silently collapsing them into a set.",
+    "Made validate_zip_bundle.py reject duplicate member paths before extraction so archive overwrite ambiguity is caught early.",
+    "Added unit coverage for duplicate zip member detection in both release validation paths."
+  ],
   "changes_since_v1_1_10": [
     "Hardened timeout reporting in run_release_acceptance.py and validate_zip_bundle.py so subprocess timeout output is normalized safely when Python returns bytes.",
     "Made timeout stderr reports append the timeout summary without inserting an extra blank line.",
