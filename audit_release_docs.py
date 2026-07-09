@@ -466,20 +466,32 @@ def build_report():
     }
 
 
+def print_report(report, show_info=False):
+    hidden_info = 0
+    for message in report["messages"]:
+        if message["level"] == "INFO" and not show_info:
+            hidden_info += 1
+            continue
+        stream = sys.stderr if message["level"] in {"ERROR", "WARNING"} else sys.stdout
+        print(f"[docs-audit] {message['level']}: {message['message']}", file=stream)
+    if hidden_info:
+        print(f"[docs-audit] info_messages={hidden_info} hidden; use --show-info to display")
+    print(f"[docs-audit] status={report['status']}")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Audit release documentation for stale local references."
     )
     parser.add_argument("-o", "--output", help="write JSON report")
+    parser.add_argument("--show-info", action="store_true",
+                        help="print informational messages; JSON output always includes them")
     parser.add_argument("--strict", action="store_true",
                         help="return non-zero on warnings as well as errors")
     args = parser.parse_args(argv)
 
     report = build_report()
-    for message in report["messages"]:
-        stream = sys.stderr if message["level"] in {"ERROR", "WARNING"} else sys.stdout
-        print(f"[docs-audit] {message['level']}: {message['message']}", file=stream)
-    print(f"[docs-audit] status={report['status']}")
+    print_report(report, show_info=args.show_info)
     if args.output:
         out_path = Path(args.output)
         if not out_path.is_absolute():
