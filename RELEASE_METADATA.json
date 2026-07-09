@@ -1,8 +1,13 @@
 {
   "release_date": "2026-07-09",
-  "release_name": "GDC STAR-Counts release manifest metadata audit release",
+  "release_name": "GDC STAR-Counts timeout diagnostics hardening release",
   "schema_version": "1.0",
-  "version": "v1.1.10-gdc-starcounts",
+  "version": "v1.1.11-gdc-starcounts",
+  "changes_since_v1_1_10": [
+    "Hardened timeout reporting in run_release_acceptance.py and validate_zip_bundle.py so subprocess timeout output is normalized safely when Python returns bytes.",
+    "Made timeout stderr reports append the timeout summary without inserting an extra blank line.",
+    "Added unit coverage for timeout reporting helpers in release acceptance and zip-bundle validation."
+  ],
   "changes_since_v1_1_9": [
     "Hardened validate_release_lite.py so release_manifest.json top-level metadata is checked against VERSION, RELEASE_METADATA.json, the manifest file count, and the validator forbidden-artifact deny-list.",
     "Added defensive manifest-shape handling so malformed release_manifest.json content reports validation errors instead of crashing.",

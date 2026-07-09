@@ -15,6 +15,21 @@ ROOT = Path(__file__).resolve().parent
 ZIP_NAME = "tcga-tumor-normal-release-lite.zip"
 
 
+def subprocess_output_text(value):
+    if value is None:
+        return ""
+    if isinstance(value, bytes):
+        return value.decode("utf-8", errors="replace")
+    return str(value)
+
+
+def append_timeout_message(stderr, timeout_seconds):
+    message = f"Timed out after {timeout_seconds}s"
+    if stderr:
+        return stderr.rstrip("\n") + "\n" + message
+    return message
+
+
 def run_step(label, cmd, required=True, timeout_seconds=300):
     print(f"[acceptance] {label}: {' '.join(str(x) for x in cmd)}")
     started = time.perf_counter()
@@ -27,8 +42,8 @@ def run_step(label, cmd, required=True, timeout_seconds=300):
         )
     except subprocess.TimeoutExpired as exc:
         duration = time.perf_counter() - started
-        stdout = exc.stdout or ""
-        stderr = exc.stderr or ""
+        stdout = subprocess_output_text(exc.stdout)
+        stderr = subprocess_output_text(exc.stderr)
         print(f"[acceptance] {label}: FAIL timeout after {duration:.1f}s", file=sys.stderr)
         return {
             "label": label,
@@ -38,7 +53,7 @@ def run_step(label, cmd, required=True, timeout_seconds=300):
             "status": "FAIL",
             "duration_seconds": round(duration, 3),
             "stdout": stdout,
-            "stderr": stderr + f"\nTimed out after {timeout_seconds}s",
+            "stderr": append_timeout_message(stderr, timeout_seconds),
         }
     duration = time.perf_counter() - started
     status = "PASS" if result.returncode == 0 else "FAIL"

@@ -1,5 +1,25 @@
 # Release notes
 
+## v1.1.11-gdc-starcounts — 2026-07-09
+
+Timeout diagnostics hardening release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.10; this release makes the
+release acceptance and zip-bundle validators more reliable when subprocesses
+time out.
+
+### Fixed
+
+- `run_release_acceptance.py` and `validate_zip_bundle.py` now normalize
+  timeout stdout/stderr safely when Python supplies captured timeout output as
+  bytes.
+- Timeout stderr reports now append the timeout summary without inserting an
+  extra blank line after existing stderr output.
+
+### Tests
+
+- Added unit coverage for timeout reporting helpers in release acceptance and
+  zip-bundle validation.
+
 ## v1.1.10-gdc-starcounts — 2026-07-09
 
 Release manifest metadata audit release. Model weights, training data, and
