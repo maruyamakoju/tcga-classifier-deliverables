@@ -6,6 +6,7 @@ from audit_github_repository import (
     check_release,
     check_vulnerability_alerts,
     infer_repo_from_remote,
+    release_tag_target_sha,
     required_status_check_contexts,
 )
 
@@ -130,32 +131,40 @@ def test_release_audit_allows_missing_legacy_asset_state():
     assert messages == []
 
 
-def test_release_tag_target_accepts_annotated_and_lightweight_refs():
-    messages = []
-    check_release_tag_target(
+def test_release_tag_target_sha_reads_annotated_and_lightweight_refs():
+    assert release_tag_target_sha(
         "v1",
         "\n".join([
             "tag-object refs/tags/v1",
             "commit-sha refs/tags/v1^{}",
         ]),
-        "commit-sha",
-        messages,
-    )
+    ) == "commit-sha"
+
+    assert release_tag_target_sha("v1", "commit-sha refs/tags/v1\n") == "commit-sha"
+
+
+def test_release_tag_target_accepts_head_or_ancestor_with_matching_version():
+    messages = []
+    check_release_tag_target("v1", "head-sha", "head-sha", True, "v1", messages)
     assert messages == []
 
     messages = []
-    check_release_tag_target("v1", "commit-sha refs/tags/v1\n", "commit-sha", messages)
+    check_release_tag_target("v1", "ancestor-sha", "head-sha", True, "v1", messages)
     assert messages == []
 
 
-def test_release_tag_target_reports_missing_or_mismatched_ref():
+def test_release_tag_target_reports_missing_or_invalid_ref():
     messages = []
-    check_release_tag_target("v1", "", "expected-sha", messages)
+    check_release_tag_target("v1", None, "head-sha", False, None, messages)
     assert {message["code"] for message in messages} == {"release_tag_ref_missing"}
 
     messages = []
-    check_release_tag_target("v1", "actual-sha refs/tags/v1\n", "expected-sha", messages)
-    assert {message["code"] for message in messages} == {"release_tag_target_mismatch"}
+    check_release_tag_target("v1", "other-sha", "head-sha", False, "v1", messages)
+    assert {message["code"] for message in messages} == {"release_tag_target_not_ancestor"}
+
+    messages = []
+    check_release_tag_target("v1", "head-sha", "head-sha", True, "v0", messages)
+    assert {message["code"] for message in messages} == {"release_tag_version_mismatch"}
 
 
 def test_release_tag_ruleset_requires_active_v_tag_protection():

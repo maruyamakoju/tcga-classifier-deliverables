@@ -214,17 +214,33 @@ def parse_ls_remote_refs(output):
     return refs
 
 
-def check_release_tag_target(version, ls_remote_output, expected_sha, messages):
+def release_tag_target_sha(version, ls_remote_output):
     refs = parse_ls_remote_refs(ls_remote_output)
     direct_ref = f"refs/tags/{version}"
     peeled_ref = f"{direct_ref}^{{}}"
-    actual_sha = refs.get(peeled_ref) or refs.get(direct_ref)
-    if actual_sha is None:
+    return refs.get(peeled_ref) or refs.get(direct_ref)
+
+
+def is_ancestor_commit(ancestor_sha, descendant_sha):
+    try:
+        run_command(["git", "merge-base", "--is-ancestor", ancestor_sha, descendant_sha])
+    except RuntimeError:
+        return False
+    return True
+
+
+def check_release_tag_target(version, target_sha, head_sha, is_ancestor, tag_version, messages):
+    if target_sha is None:
         add_message(messages, "ERROR", "release_tag_ref_missing",
                     f"Remote release tag {version!r} was not found.")
-    elif actual_sha != expected_sha:
-        add_message(messages, "ERROR", "release_tag_target_mismatch",
-                    f"Remote release tag {version!r} points to {actual_sha}, expected {expected_sha}.")
+        return
+    if target_sha != head_sha and not is_ancestor:
+        add_message(messages, "ERROR", "release_tag_target_not_ancestor",
+                    f"Remote release tag {version!r} points to {target_sha}, "
+                    f"which is not HEAD {head_sha} or one of its ancestors.")
+    if tag_version is not None and tag_version != version:
+        add_message(messages, "ERROR", "release_tag_version_mismatch",
+                    f"Remote release tag {version!r} has VERSION {tag_version!r}.")
 
 
 def check_open_pull_requests(pulls, messages):
@@ -339,6 +355,18 @@ def build_report(repo):
                 f"refs/tags/{version}",
                 f"refs/tags/{version}^{{}}",
             ])
+            tag_target = release_tag_target_sha(version, loaded["release_tag_refs"])
+            loaded["release_tag_target_sha"] = tag_target
+            if tag_target is not None:
+                loaded["release_tag_is_ancestor"] = is_ancestor_commit(
+                    tag_target,
+                    loaded["local_head_sha"],
+                )
+                loaded["release_tag_version"] = run_command([
+                    "git",
+                    "show",
+                    f"{tag_target}:VERSION",
+                ]).strip()
         except Exception as exc:
             add_message(messages, "ERROR", "github_release_tag_query_failed",
                         f"Could not query remote release tag: {exc}")
@@ -357,11 +385,13 @@ def build_report(repo):
             check_release_tag_rulesets(loaded["ruleset_details"], messages)
         if "vulnerability_alerts_status" in loaded:
             check_vulnerability_alerts(loaded["vulnerability_alerts_status"], messages)
-        if "release_tag_refs" in loaded and "local_head_sha" in loaded:
+        if "release_tag_target_sha" in loaded and "local_head_sha" in loaded:
             check_release_tag_target(
                 version,
-                loaded["release_tag_refs"],
+                loaded["release_tag_target_sha"],
                 loaded["local_head_sha"],
+                loaded.get("release_tag_is_ancestor", False),
+                loaded.get("release_tag_version"),
                 messages,
             )
 
