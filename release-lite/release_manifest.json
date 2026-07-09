@@ -6,27 +6,27 @@
     {
       "bytes": 1117,
       "path": ".zenodo.json",
-      "sha256": "f95f13f5d7a7c32352892899aaf02efc21f5f75882a93120216adb3729cc09e6"
+      "sha256": "63f158cdfa95fe59794c82d7d4c8f8ba6c88c670d039fa94397447aaebedceaa"
     },
     {
       "bytes": 742,
       "path": "CITATION.cff",
-      "sha256": "9e5f343084de2d92de2b42dd41921a69c3b8498583edd51e9e92427a4216f60d"
+      "sha256": "d5b5e8f2fb7aee62ede01ef8a7487a87078fecaeec16c819be122d1223435876"
     },
     {
       "bytes": 4287,
       "path": "DATA_DICTIONARY.md",
-      "sha256": "1988f8ca71c7606504b8daf2386642af42b09cba4a5329c0fd30df77bb39b07e"
+      "sha256": "0e51f3fd3a8bd9596b4639f820179621bf6a192a02e5ee0097c5bc65b74eeb72"
     },
     {
       "bytes": 4876,
       "path": "EXECUTIVE_SUMMARY.md",
-      "sha256": "a56c7f1330b983c8f2df4b4861a2e1aff2c46eff83979a84fbd8ae48479cf615"
+      "sha256": "86ef09a9550b11110fede1beb1c01f33c688f676f40ee8301320b3d2c5a54a08"
     },
     {
       "bytes": 2555,
       "path": "INDEX.md",
-      "sha256": "af4b200768264d95ebd6817fa352f420eafe068b9f47877d0f47a39df3ec39de"
+      "sha256": "bda377131e1ced92267d7c36a70626baf0273eb3618e3ca01d9ea8347ef6fb7a"
     },
     {
       "bytes": 1070,
@@ -41,7 +41,7 @@
     {
       "bytes": 4404,
       "path": "MODEL_CARD.md",
-      "sha256": "812f155b62eb3f8521e26f97bbd94c0076e689d5135f0cb8f78d6eeb175a1abc"
+      "sha256": "6724f1016369c85c409d985f00f50e075d39107553c1cd894778f3d6aa68001e"
     },
     {
       "bytes": 700,
@@ -51,47 +51,47 @@
     {
       "bytes": 9290,
       "path": "README.md",
-      "sha256": "63be730473135c76278415d26fb14043a21c49041f8c4565db931e0ea1c71d33"
+      "sha256": "6a2e1ac9203407e89865b78c72aeb6ab164b3b069f2ba9193de9b46b23da5a39"
     },
     {
       "bytes": 3851,
       "path": "RELEASE_BUNDLE.md",
-      "sha256": "70623c8ba4bb113b5fdfda9730736a9c165d88dd5eb2da246d2f5d4bedfdf8ce"
+      "sha256": "df4d3bb2dc9cacd316d584f6893192a7c70565be0bf8ec8c10f6b2cb7461365e"
     },
     {
-      "bytes": 7634,
+      "bytes": 7897,
       "path": "RELEASE_METADATA.json",
-      "sha256": "83b4b44fb1516d3cadf526423a64876ffb21d9bee877052f3cc0098ae9f7ab2a"
+      "sha256": "89cf73fa7dcc3c3c29398e60ad0c6634383f3c3b29eacc16a00f1ce62ba67612"
     },
     {
-      "bytes": 14975,
+      "bytes": 15683,
       "path": "RELEASE_NOTES.md",
-      "sha256": "905cc0df66051f6691c6f0423e7e1b053264a9dc994503548411d288838f6c45"
+      "sha256": "6eb8c7f38c940863a218b51f5031e0dd9686115f508b8a08d49a880818d25737"
     },
     {
       "bytes": 16633,
       "path": "REPORT.md",
-      "sha256": "70effd3aa7a41af7c09e08e98c102205039e7a8e7f68eb9f653a32737644d71e"
+      "sha256": "ca99a22c09eb82a35af567f3813ce94e0431d77eec411d3c5d13dc6532ced169"
     },
     {
       "bytes": 8116,
       "path": "REPRODUCIBILITY.md",
-      "sha256": "665da6a23a9583647a8172b23c0bf1142e13906a6213066074648be379df9c4f"
+      "sha256": "4ab43c59a0f5cc67bc1c19cf6743f173c44a75c8a60719ddb5ea52bbf917fc51"
     },
     {
       "bytes": 4426,
       "path": "TROUBLESHOOTING.md",
-      "sha256": "582211744ba27680a29e3f9fff7c8921703819bd2348bd7b15c3efd3847f6243"
+      "sha256": "d60c4fc404b4853cb7577e589c889eaed765810f212ecb9934694bd20f0037ea"
     },
     {
       "bytes": 5436,
       "path": "USER_GUIDE.md",
-      "sha256": "788405174c98d0a98e8229b31ccf1813d91cb2775b644a1d7d4c6ae441273433"
+      "sha256": "3956be8f31f414ba2f0406896ec4dfb337dc3ff91ca67c4ac27029dd47253f3b"
     },
     {
       "bytes": 22,
       "path": "VERSION",
-      "sha256": "fdd0129de4541895ae0ba474d29601ff8617e913349d11a3aa6327e2080a3282"
+      "sha256": "1add2b3f1cdf58d4c77bf675e29b0e0924baf94a4883c255b5cfe2315b13d652"
     },
     {
       "bytes": 6166,
@@ -104,9 +104,9 @@
       "sha256": "17e6176025c0d8b6c692be40c9ed578cfa62445e5153139f8e975687ad5c42fd"
     },
     {
-      "bytes": 16777,
+      "bytes": 17269,
       "path": "audit_release_docs.py",
-      "sha256": "6283021c614afcdf7369513fbe101b1077af3429776751382aa7fba6886a7d9e"
+      "sha256": "adb03894b0d09c009403994fec4ecaec0713ca0afb66a66381f5701affe952b9"
     },
     {
       "bytes": 8552,
@@ -121,7 +121,7 @@
     {
       "bytes": 1387,
       "path": "codemeta.json",
-      "sha256": "bd543d15574eef9bf73a81aff98d4e7a4370ab47ee349f41bb79bc9e6a05d9a3"
+      "sha256": "074062ea4120a9ff6c1a90f1827d95e483977aa59349985771730fae746b2b18"
     },
     {
       "bytes": 9538,
@@ -376,5 +376,5 @@
   "release_date": "2026-07-09",
   "schema_version": "1.0",
   "validation_command": "python validate_release_lite.py --release-dir release-lite --zip tcga-tumor-normal-release-lite.zip --source-root . --artifacts RELEASE_ARTIFACTS.json",
-  "version": "v1.1.8-gdc-starcounts"
+  "version": "v1.1.9-gdc-starcounts"
 }

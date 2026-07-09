@@ -1,8 +1,12 @@
 {
   "release_date": "2026-07-09",
-  "release_name": "GDC STAR-Counts lite documentation audit release",
+  "release_name": "GDC STAR-Counts quiet documentation audit release",
   "schema_version": "1.0",
-  "version": "v1.1.8-gdc-starcounts",
+  "version": "v1.1.9-gdc-starcounts",
+  "changes_since_v1_1_8": [
+    "Reduced default audit_release_docs.py CLI noise by hiding INFO messages unless --show-info is used.",
+    "Kept informational documentation-audit messages in JSON output and added unit coverage for audit output formatting."
+  ],
   "changes_since_v1_1_7": [
     "Expanded audit_release_docs.py to validate code-spanned local file and directory references, not only Markdown links and Python commands.",
     "Added explicit allowlisting for generated workflow outputs, release sidecars, and full-development-tree-only references so unexpected stale paths fail the audit.",

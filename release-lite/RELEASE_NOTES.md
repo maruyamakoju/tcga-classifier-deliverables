@@ -1,5 +1,24 @@
 # Release notes
 
+## v1.1.9-gdc-starcounts — 2026-07-09
+
+Quiet documentation audit release. Model weights, training data, and headline
+validation metrics are unchanged from v1.1.8; this release keeps the
+documentation-audit checks strict while making routine acceptance output easier
+to scan.
+
+### Changed
+
+- `audit_release_docs.py` now hides informational messages in normal CLI output
+  and prints a compact hidden-info count instead.
+- Passing `--show-info` restores the full informational audit listing for
+  debugging full-development-tree-only and sidecar references.
+
+### Tests
+
+- Added unit coverage for documentation-audit output formatting so errors stay
+  visible while INFO messages remain available on demand.
+
 ## v1.1.8-gdc-starcounts — 2026-07-09
 
 Lite documentation audit release. Model weights, training data, and headline
