@@ -91,6 +91,7 @@ def test_release_audit_detects_asset_mismatch():
             "assets": [
                 {
                     "name": "tcga-tumor-normal-release-lite.zip",
+                    "state": "starter",
                     "size": 9,
                     "digest": "sha256:bad",
                 }
@@ -101,8 +102,31 @@ def test_release_audit_detects_asset_mismatch():
         messages,
     )
     codes = {message["code"] for message in messages}
+    assert "release_asset_not_uploaded" in codes
     assert "release_asset_size_mismatch" in codes
     assert "release_asset_digest_mismatch" in codes
+
+
+def test_release_audit_allows_missing_legacy_asset_state():
+    messages = []
+    check_release(
+        {
+            "tag_name": "v1",
+            "draft": False,
+            "prerelease": False,
+            "assets": [
+                {
+                    "name": "tcga-tumor-normal-release-lite.zip",
+                    "size": 10,
+                    "digest": "sha256:abc",
+                }
+            ],
+        },
+        {"zip_bytes": 10, "zip_sha256": "abc"},
+        "v1",
+        messages,
+    )
+    assert messages == []
 
 
 def test_release_tag_ruleset_requires_active_v_tag_protection():

@@ -186,6 +186,10 @@ def check_release(release_data, artifacts, version, messages):
                     f"Release asset is missing: {ZIP_NAME}")
         return
 
+    if asset.get("state") not in {None, "uploaded"}:
+        add_message(messages, "ERROR", "release_asset_not_uploaded",
+                    f"Release asset state is {asset.get('state')!r}, expected 'uploaded'.")
+
     expected_size = artifacts.get("zip_bytes")
     if asset.get("size") != expected_size:
         add_message(messages, "ERROR", "release_asset_size_mismatch",
