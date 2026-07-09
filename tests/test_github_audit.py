@@ -2,6 +2,7 @@
 from audit_github_repository import (
     check_branch_protection,
     check_release_tag_rulesets,
+    check_release_tag_target,
     check_release,
     check_vulnerability_alerts,
     infer_repo_from_remote,
@@ -127,6 +128,34 @@ def test_release_audit_allows_missing_legacy_asset_state():
         messages,
     )
     assert messages == []
+
+
+def test_release_tag_target_accepts_annotated_and_lightweight_refs():
+    messages = []
+    check_release_tag_target(
+        "v1",
+        "\n".join([
+            "tag-object refs/tags/v1",
+            "commit-sha refs/tags/v1^{}",
+        ]),
+        "commit-sha",
+        messages,
+    )
+    assert messages == []
+
+    messages = []
+    check_release_tag_target("v1", "commit-sha refs/tags/v1\n", "commit-sha", messages)
+    assert messages == []
+
+
+def test_release_tag_target_reports_missing_or_mismatched_ref():
+    messages = []
+    check_release_tag_target("v1", "", "expected-sha", messages)
+    assert {message["code"] for message in messages} == {"release_tag_ref_missing"}
+
+    messages = []
+    check_release_tag_target("v1", "actual-sha refs/tags/v1\n", "expected-sha", messages)
+    assert {message["code"] for message in messages} == {"release_tag_target_mismatch"}
 
 
 def test_release_tag_ruleset_requires_active_v_tag_protection():
