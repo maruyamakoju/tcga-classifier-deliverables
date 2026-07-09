@@ -1,6 +1,6 @@
 # Pan-cancer tumor-vs-normal classifier from TCGA RNA-seq
 
-Release: `v1.1.10-gdc-starcounts` (`2026-07-09`)
+Release: `v1.1.11-gdc-starcounts` (`2026-07-09`)
 
 ## Data
 
