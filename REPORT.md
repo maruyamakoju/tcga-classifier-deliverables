@@ -1,6 +1,6 @@
 # Pan-cancer tumor-vs-normal classifier from TCGA RNA-seq
 
-Release: `v1.1.7-gdc-starcounts` (`2026-07-09`)
+Release: `v1.1.8-gdc-starcounts` (`2026-07-09`)
 
 ## Data
 
@@ -96,7 +96,8 @@ cancer types) and testing exclusively on the excluded type.
   consistent with prostate adenocarcinoma's comparatively subtle
   transcriptomic tumor/normal contrast relative to other solid tumors.
 
-See the root-level LOCO artifacts in `cross-cancer-holdout/`:
+Detailed LOCO artifacts are retained in the full development repository, not
+inside the lightweight zip, under `cross-cancer-holdout/`:
 `LOCO_REPORT.md`, `loco_report.html`, `loco_per_cancer_metrics.csv`,
 `loco_pooled_summary.csv`, `loco_vs_within_comparison.csv`, and
 `loco_predictions.pkl`. (The raw `loco_generalization*` figure/CSVs from the
@@ -122,7 +123,7 @@ while holding the expression pipeline constant.
   calibration.
 
 See `external-validation/cptac_gdc/CPTAC_EXTERNAL_VALIDATION.md`,
-`external-validation/cptac_gdc/cptac_predictions.csv`, and
+`external-validation/cptac_gdc/cptac_summary.csv`, and
 `external-validation/cptac_gdc/cptac_threshold_sweep.csv`.
 
 ## Cross-platform Toil/GTEx boundary check
@@ -193,17 +194,18 @@ The Toil/GTEx boundary above is a threshold- and scale-transfer failure, not a
 loss of biological signal. A label-free cohort standardization step aligns an
 incoming non-GDC matrix to the model's training distribution before scoring,
 which restores Toil accuracy from 0.515 to 0.935 without refitting the model.
-This is packaged as `cohort_adapt_score.py`. See
-`cross-platform-adaptation/CROSS_PLATFORM_ADAPTATION.md` for the method and
-benchmark.
+This is packaged in the lightweight release as `cohort_adapt_score.py`. The
+expanded method write-up and benchmark CSVs live in the full development
+repository under `cross-platform-adaptation/CROSS_PLATFORM_ADAPTATION.md`.
 
 ## Cancer-type classifier (tissue of origin)
 
 This tumor-vs-normal model deliberately does not identify which cancer type a
 sample is. A separate 17-class tissue-of-origin classifier ships alongside it,
 reaching patient-held-out accuracy 0.930 (balanced accuracy 0.878, macro-F1
-0.877). See `cancer-type-classifier/CANCER_TYPE_CLASSIFIER.md` and the
-`cancer-type-classifier/predict_cancer_type.py` entry point.
+0.877). Its write-up, weights, and prediction entry point live in the full
+development repository under `cancer-type-classifier/`; they are not part of
+the lightweight tumor-vs-normal zip.
 
 ## Caveats
 
@@ -230,28 +232,31 @@ reaching patient-held-out accuracy 0.930 (balanced accuracy 0.878, macro-F1
 
 ## Files
 
-- `model_performance.png` — ROC curves, confusion matrix, per-cancer-type AUC
-- `feature_importance.png` — top gene importances and PDGFRA expression by group
-- `cross-cancer-holdout/LOCO_REPORT.md`, `cross-cancer-holdout/loco_report.html` — leave-one-cancer-type-out write-up and interactive figure/table
-- `cross-cancer-holdout/loco_per_cancer_metrics.csv`, `cross-cancer-holdout/loco_pooled_summary.csv`, `cross-cancer-holdout/loco_vs_within_comparison.csv`, `cross-cancer-holdout/loco_predictions.pkl` — per-cancer-type LOCO metrics, pooled summary, comparison, and pooled predictions
-- `from-workbench-loco/loco_generalization.png`, `from-workbench-loco/loco_generalization.csv`, `from-workbench-loco/loco_generalization_with_optimal_threshold.csv` — raw LOCO figure/CSVs from the original workbench run
+The lightweight release contains the deployable tumor-vs-normal scorer,
+documentation, examples, validation checks, and summary external-validation
+artifacts. Full development tree-only artifacts are listed separately below so
+the extracted zip does not imply those paths are present locally.
+
+### Lightweight bundle
+
 - `external-validation/cptac_gdc/CPTAC_EXTERNAL_VALIDATION.md` — external CPTAC-3 smoke validation
-- `external-validation/validate_cptac_gdc.py` — reproducible GDC/CPTAC validation script
 - `external-validation/gtex_xena/GTEX_NORMAL_VALIDATION.md` — GTEx normal-tissue cross-platform check
 - `external-validation/tcga_toil_xena/TCGA_TOIL_PIPELINE_CHECK.md` — Toil/RSEM pipeline-transfer check
 - `test_metrics.csv` — held-out test metrics for all 3 models
 - `per_cancer_type_performance.csv` — per-cancer-type AUC/accuracy breakdown
 - `top_genes_xgboost.csv`, `top_genes_logreg.csv` — top 30 genes by each model
-- `EXECUTIVE_SUMMARY.md`, `VERSION`, `RELEASE_METADATA.json` — short handoff and release metadata
+- `EXECUTIVE_SUMMARY.md`, `VERSION`, `RELEASE_METADATA.json`,
+  `release_manifest.json`, and `SHA256SUMS.txt` — short handoff and release
+  metadata/integrity files
 - `USER_GUIDE.md`, `templates/` — practical input-preparation guide and CSV sketches
 - `DATA_DICTIONARY.md` — stable input/output columns and JSON contract reference
 - `TROUBLESHOOTING.md` — common install, input-QC, threshold, and release-integrity fixes
 - `example_workflow_output/` — reference output from the one-command example workflow
-- `deployable_pipeline.pkl` — fitted selector + scaler + all 3 trained models
-  + the exact 2,000-gene feature list, ready to score new TCGA-style
-  log2(TPM+1) expression vectors
 - `deployable_lr_weights.npz` — pure NumPy export of the default LR scorer
 - `run_tumor_normal_workflow.py` — one-command QC, scoring, calibration, explanations, and report
+- `score_tumor_normal.py` and `cohort_adapt_score.py` — public
+  scoring/adaptation entry points
+- `tcga_rnaseq/` — shared dependency-light scoring core
 - `check_environment.py` — runtime/package/file diagnostic and bundled self-test wrapper
 - `audit_lightweight_dependencies.py` — release import and minimal dependency audit
 - `audit_cli_entrypoints.py` — release CLI `--help` and shebang audit
@@ -261,14 +266,35 @@ reaching patient-held-out accuracy 0.930 (balanced accuracy 0.878, macro-F1
 - `model_gene_metadata.csv` — model gene coefficients, scaling metadata, and known gene names
 - `calibrate_threshold.py` — threshold calibration utility for labeled scored samples
 - `explain_scores.py` — per-sample LR logit contribution explanations
-- `export_lr_weights.py` — regenerates the pure NumPy LR weights from `deployable_pipeline.pkl`
-- `export_qc_reference.py` — regenerates the QC reference JSON from validation matrices
-- `export_model_gene_metadata.py` — regenerates the model gene metadata table
-- `build_release_lite.py` — regenerates the lightweight release folder, checksums, and zip
 - `validate_release_lite.py` — validates release folder, manifest, checksums, zip, and forbidden artifacts
 - `validate_zip_bundle.py` — extracts the zip into a clean temp directory and runs acceptance
 - `run_safety_tests.py` — verifies guardrails for invalid inputs and QC-fail workflow behavior
 - `run_release_acceptance.py` — one-command environment, smoke, safety, and release-integrity checks
-- `RELEASE_ARTIFACTS.json` — generated sidecar with zip size and SHA256
+
+### Full development tree only
+
+- `model_performance.png` and `feature_importance.png` — original figures.
+- `cross-cancer-holdout/LOCO_REPORT.md`, `cross-cancer-holdout/loco_report.html`,
+  `cross-cancer-holdout/loco_per_cancer_metrics.csv`,
+  `cross-cancer-holdout/loco_pooled_summary.csv`,
+  `cross-cancer-holdout/loco_vs_within_comparison.csv`, and
+  `cross-cancer-holdout/loco_predictions.pkl` — detailed LOCO artifacts.
+- `from-workbench-loco/loco_generalization.png`,
+  `from-workbench-loco/loco_generalization.csv`, and
+  `from-workbench-loco/loco_generalization_with_optimal_threshold.csv` — raw
+  workbench LOCO figure/CSVs.
+- `external-validation/validate_cptac_gdc.py`,
+  `external-validation/validate_gtex_xena.py`, and
+  `external-validation/validate_tcga_toil_xena.py` — data-fetching validation
+  scripts; the lightweight zip ships their summary outputs.
+- `cross-platform-adaptation/` — expanded adaptation benchmark write-up and CSVs.
+- `cancer-type-classifier/` — separate tissue-of-origin classifier artifacts.
+- `build_release_lite.py`, `export_lr_weights.py`, `export_qc_reference.py`,
+  and `export_model_gene_metadata.py` — maintenance/regeneration helpers.
 - `selected_files.csv` — full manifest of the 2,160 GDC file IDs / case IDs /
-  cancer types / labels used
+  cancer types / labels used.
+- `RELEASE_ARTIFACTS.json` — generated sidecar next to the release zip with
+  zip size and SHA256.
+- `deployable_pipeline.pkl` and other training/checkpoint pickle artifacts are
+  intentionally excluded from the public Git history and are not required by
+  the lightweight scorer.

@@ -1,11 +1,11 @@
 # TCGA tumor-vs-normal classifier — deliverables
 
 [![CI](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml/badge.svg)](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.7-gdc-starcounts)
+[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.8-gdc-starcounts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Citation](https://img.shields.io/badge/citation-CITATION.cff-blue.svg)](CITATION.cff)
 
-Release: `v1.1.7-gdc-starcounts` (`2026-07-09`). For a single guided path
+Release: `v1.1.8-gdc-starcounts` (`2026-07-09`). For a single guided path
 through the public lightweight bundle, start with `INDEX.md`. Otherwise start
 with `EXECUTIVE_SUMMARY.md` if you need a short
 handoff/readout, or `USER_GUIDE.md` if you are preparing a new input matrix.
@@ -96,67 +96,48 @@ UCSC Xena Toil/GTEx and should be treated as **not directly compatible** without
 pipeline-specific refitting or threshold calibration.
 
 ## Files
-- `INDEX.md` — guided single reading path through the whole deliverable
-- `release-lite/` / `tcga-tumor-normal-release-lite.zip` — lightweight deployment bundle
-- `EXECUTIVE_SUMMARY.md` — short handoff summary for reviewers/users
-- `USER_GUIDE.md` — practical input preparation, QC interpretation, and workflow guide
-- `DATA_DICTIONARY.md` — stable input/output columns and JSON contract reference
-- `TROUBLESHOOTING.md` — fixes for install, input, QC, threshold, and release-integrity issues
-- `VERSION`, `RELEASE_METADATA.json` — release version and metadata included in the bundle
-- `RELEASE_ARTIFACTS.json` — generated sidecar next to the zip with artifact size and SHA256
-- `run_tumor_normal_workflow.py` — one-command QC, scoring, calibration, explanations, and report
-- `score_tumor_normal.py` — scoring CLI (this tool)
-- `deployable_lr_weights.npz` — default pure NumPy LR scorer weights
-- `inspect_expression_input.py` / `model_qc_reference.json` — input compatibility QC
-- `model_gene_metadata.csv` — 2,000 model genes with LR coefficients and scaling metadata
-- `check_environment.py` — runtime/package/file/self-test diagnostic
-- `audit_lightweight_dependencies.py` — release import and `requirements-light.txt` dependency audit
-- `audit_cli_entrypoints.py` — release CLI `--help` and shebang audit
-- `audit_release_docs.py` — documentation and release-bundle reference audit
-- `audit_publication_readiness.py` — public-release audit for secrets, large blobs,
-  line endings, and release metadata consistency
-- `audit_github_repository.py` — hosted GitHub settings and release-asset audit
-- `validate_output_contracts.py` — bundled CSV/JSON output contract validator
-- `calibrate_threshold.py` — choose a cutoff from labeled scored samples
-- `explain_scores.py` — per-sample LR contribution explanations
-- `export_lr_weights.py` — regenerate `deployable_lr_weights.npz` from the pickle pipeline
-- `export_qc_reference.py` — regenerate `model_qc_reference.json` from validation matrices
-- `export_model_gene_metadata.py` — regenerate `model_gene_metadata.csv`
-- `run_smoke_tests.py` — local release sanity check including the one-command workflow
-- `run_safety_tests.py` — negative-path guardrail tests for QC and workflow failure behavior
-- `run_release_acceptance.py` — one-command environment, smoke, safety, and release-integrity check
-- `validate_zip_bundle.py` — extract zip into a clean temp directory and run acceptance
-- `build_release_lite.py` — rebuild `release-lite/`, `SHA256SUMS.txt`, and the zip archive
-- `validate_release_lite.py` — verify checksums, manifest, zip contents, and absence of large training artifacts
-- `release_manifest.json` — generated inside `release-lite/` with file hashes and sizes
-- `MODEL_CARD.md`, `RELEASE_NOTES.md` — deployment boundary and release summary
-- `requirements-light.txt`, `requirements.txt`, `environment.yml`, `REPRODUCIBILITY.md` — reproducible setup
-- `example_input.csv` / `example_output.csv` / `example_labels.csv` — runnable demo + expected result + labels
-- `example_workflow_output/` — reference output from the one-command demo workflow
-- `templates/` — minimal input and label CSV format templates
-- `REPORT.md` — full methods/results (now includes the leave-one-cancer-type-out section)
-- `model_performance.png`, `feature_importance.png` — original figures
-- `test_metrics.csv`, `per_cancer_type_performance.csv`, `top_genes_*.csv`, `selected_files.csv`
-- `cross-cancer-holdout/` — generalization test: `LOCO_REPORT.md`, `loco_report.html`
-  (interactive figure + table), per-cancer metrics CSVs, pooled predictions
-- `external-validation/` — CPTAC-3 external smoke validation script, manifest, cached
-  selected-gene matrix, predictions, threshold sweep, and report; GTEx/Toil and
-  TCGA/Toil cross-platform checks
-- `from-workbench-loco/` — the Claude Science workbench's own LOCO run
-  (`loco_generalization.png` + optimal-threshold CSVs); agrees with `cross-cancer-holdout/`
-- `cross-platform-adaptation/` — label-free cohort standardization that restores
-  Toil accuracy 0.515→0.935; `CROSS_PLATFORM_ADAPTATION.md` + benchmark CSVs
-- `cancer-type-classifier/` — separate 17-class tissue-of-origin classifier
-  (`CANCER_TYPE_CLASSIFIER.md`, `predict_cancer_type.py`, weights, and metrics)
-- `tcga_rnaseq/` — shared core library (I/O, gene alignment, scoring, metrics)
-  used by the scoring entry points
-- `tests/` — pytest suite for core units and numerical reproducibility
-- `.zenodo.json`, `codemeta.json`, `CITATION.cff` — machine-readable citation and
-  software metadata
-- full training/checkpoint artifacts such as `model_lr.pkl`, `model_rf.pkl`,
-  `feature_selection.pkl`, `X_full_filtered.pkl`, `y_full.pkl`, and
-  `deployable_pipeline.pkl` are intentionally excluded from the public Git history; the
-  lightweight release does not require them
+
+### Lightweight bundle
+
+- `INDEX.md` — guided single reading path through the public bundle.
+- `EXECUTIVE_SUMMARY.md`, `USER_GUIDE.md`, `DATA_DICTIONARY.md`,
+  `TROUBLESHOOTING.md`, `MODEL_CARD.md`, `REPORT.md`, `REPRODUCIBILITY.md`,
+  and `RELEASE_NOTES.md` — user-facing documentation.
+- `VERSION`, `RELEASE_METADATA.json`, `release_manifest.json`, and
+  `SHA256SUMS.txt` — release metadata and integrity files.
+- `run_tumor_normal_workflow.py`, `score_tumor_normal.py`,
+  `inspect_expression_input.py`, `calibrate_threshold.py`, and
+  `explain_scores.py` — deployable command-line tools.
+- `deployable_lr_weights.npz`, `model_qc_reference.json`, and
+  `model_gene_metadata.csv` — model payload and QC/gene metadata.
+- `tcga_rnaseq/` — shared core library used by the scoring entry points.
+- `check_environment.py`, `run_smoke_tests.py`, `run_safety_tests.py`,
+  `run_release_acceptance.py`, `validate_release_lite.py`,
+  `validate_zip_bundle.py`, `validate_output_contracts.py`,
+  `audit_lightweight_dependencies.py`, `audit_cli_entrypoints.py`, and
+  `audit_release_docs.py` — bundled validation and acceptance checks.
+- `requirements-light.txt`, `example_input.csv`, `example_output.csv`,
+  `example_labels.csv`, `example_workflow_output/`, and `templates/` —
+  runnable examples and input templates.
+- `external-validation/` — bundled summary reports and CSVs for CPTAC/GDC and
+  Toil/GTEx boundary checks.
+- `LICENSE`, `NOTICE.md`, `.zenodo.json`, `codemeta.json`, and `CITATION.cff`
+  — license, attribution, and citation metadata.
+
+### Full development tree only
+
+The full repository, not the lightweight zip, also contains maintenance and
+historical-analysis assets such as `build_release_lite.py`,
+`audit_publication_readiness.py`, `audit_github_repository.py`,
+`requirements.txt`, `environment.yml`, `tests/`, `cross-cancer-holdout/`,
+`from-workbench-loco/`, `cross-platform-adaptation/`, and
+`cancer-type-classifier/`. Full training/checkpoint artifacts such as
+`model_lr.pkl`, `model_rf.pkl`, `feature_selection.pkl`,
+`X_full_filtered.pkl`, `y_full.pkl`, and `deployable_pipeline.pkl` are
+intentionally excluded from the public Git history; the lightweight release
+does not require them. `RELEASE_ARTIFACTS.json` is a sidecar next to the zip in
+the source tree and GitHub release metadata, not a file inside the extracted
+bundle.
 
 ## Citation and license
 

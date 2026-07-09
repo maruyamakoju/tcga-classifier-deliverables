@@ -69,6 +69,98 @@ CORE_FILES = [
 
 FULL_DELIVERABLE_COMMANDS = {"build_release_lite.py"}
 
+PATH_LIKE_SUFFIXES = {
+    ".cff",
+    ".csv",
+    ".html",
+    ".json",
+    ".md",
+    ".npz",
+    ".pkl",
+    ".png",
+    ".py",
+    ".txt",
+    ".yaml",
+    ".yml",
+    ".zip",
+}
+
+FULL_DELIVERABLE_ONLY_REFS = {
+    "CANCER_TYPE_CLASSIFIER.md",
+    "audit_github_repository.py",
+    "audit_publication_readiness.py",
+    "build_release_lite.py",
+    "CROSS_PLATFORM_ADAPTATION.md",
+    "deployable_pipeline.pkl",
+    "environment.yml",
+    "feature_importance.png",
+    "export_lr_weights.py",
+    "export_model_gene_metadata.py",
+    "export_qc_reference.py",
+    "feature_selection.pkl",
+    "final_model_results.pkl",
+    "model_performance.png",
+    "loco_generalization.png",
+    "loco_per_cancer_metrics.csv",
+    "loco_pooled_summary.csv",
+    "loco_predictions.pkl",
+    "loco_report.html",
+    "LOCO_REPORT.md",
+    "loco_vs_within_comparison.csv",
+    "model_lr.pkl",
+    "model_rf.pkl",
+    "model_xgb.pkl",
+    "predict_cancer_type.py",
+    "requirements.txt",
+    "selected_files.csv",
+    "tcga-tumor-normal-release-lite.zip",
+    "train_classifier.py",
+    "X_full_filtered.pkl",
+    "y_full.pkl",
+    "external-validation/cptac_gdc/cptac_gdc_manifest.csv",
+    "external-validation/cptac_gdc/cptac_predictions.csv",
+    "external-validation/cptac_gdc/sampled_manifest.csv",
+    "external-validation/gtex_xena/TcgaTargetGTEX_phenotype.csv",
+    "external-validation/gtex_xena/gtex_per_site_summary.csv",
+    "external-validation/gtex_xena/gtex_predictions.csv",
+    "external-validation/gtex_xena/sampled_gtex_manifest.csv",
+    "external-validation/tcga_toil_xena/TcgaTargetGTEX_phenotype.csv",
+    "external-validation/tcga_toil_xena/sampled_tcga_toil_manifest.csv",
+    "external-validation/tcga_toil_xena/tcga_toil_predictions.csv",
+    "external-validation/validate_cptac_gdc.py",
+    "external-validation/validate_gtex_xena.py",
+    "external-validation/validate_tcga_toil_xena.py",
+}
+
+FULL_DELIVERABLE_ONLY_PREFIXES = (
+    "cancer-type-classifier/",
+    "cross-cancer-holdout/",
+    "cross-platform-adaptation/",
+    "from-workbench-loco/",
+    "tests/",
+)
+
+RELEASE_SIDECAR_REFS = {
+    "RELEASE_ARTIFACTS.json",
+    "release_manifest.json",
+    "SHA256SUMS.txt",
+}
+
+GENERATED_OUTPUT_REFS = {
+    "calibration.json",
+    "explanations.csv",
+    "labels.csv",
+    "manifest.json",
+    "qc.json",
+    "scores.csv",
+    "thresholds.csv",
+    "workflow_report.md",
+}
+
+HISTORICAL_RELEASE_NOTE_REFS = {
+    "release-lite/release-lite",
+}
+
 CODE_SPAN_RE = re.compile(r"`([^`\n]+)`")
 MARKDOWN_LINK_RE = re.compile(r"!?\[[^\]\n]*\]\(([^)\n]+)\)")
 PYTHON_SCRIPT_COMMAND_RE = re.compile(
@@ -197,6 +289,115 @@ def check_python_commands(messages):
                         f"{rel} references missing Python script: {script}", script_path)
 
 
+def normalize_inline_path(raw_target):
+    target = raw_target.strip()
+    if not target or target.startswith(("-", "$")):
+        return None
+    if "<" in target or ">" in target:
+        return None
+    if any(ch.isspace() for ch in target):
+        return None
+    target = target.replace("\\", "/")
+    target = target.split("#", 1)[0].split("?", 1)[0]
+    target = target.rstrip(".,;:")
+    if not target or target in {".", ".."}:
+        return None
+    if target.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", target):
+        return target
+    if "/" in target:
+        return target
+    suffix = Path(target).suffix.lower()
+    if suffix in PATH_LIKE_SUFFIXES:
+        return target
+    if target in CORE_FILES or target in RELEASE_SIDECAR_REFS:
+        return target
+    return None
+
+
+def is_intentionally_external_to_lite(target):
+    normalized = target.replace("\\", "/").rstrip("/")
+    if (
+        normalized in FULL_DELIVERABLE_ONLY_REFS
+        or normalized in RELEASE_SIDECAR_REFS
+        or normalized in HISTORICAL_RELEASE_NOTE_REFS
+    ):
+        return True
+    return any(
+        normalized == prefix.rstrip("/") or normalized.startswith(prefix)
+        for prefix in FULL_DELIVERABLE_ONLY_PREFIXES
+    )
+
+
+def is_release_root():
+    return (ROOT / "release_manifest.json").exists() and (ROOT / "SHA256SUMS.txt").exists()
+
+
+def candidate_exists(base_path, target):
+    if "*" in target or "?" in target:
+        return any(base_path.parent.glob(target))
+    target_path = (base_path.parent / target).resolve()
+    return target_path.is_dir() if target.endswith("/") else target_path.exists()
+
+
+def release_lite_prefix_exists(base_path, target):
+    if not is_release_root():
+        return False
+    normalized = target.replace("\\", "/")
+    stripped = normalized.rstrip("/")
+    if stripped == "release-lite":
+        mapped_target = "."
+    elif normalized.startswith("release-lite/"):
+        mapped_target = normalized[len("release-lite/"):]
+    else:
+        return False
+    if not mapped_target:
+        mapped_target = "."
+    return candidate_exists(base_path, mapped_target)
+
+
+def check_code_spanned_paths(messages):
+    docs = list(dict.fromkeys(COMMAND_DOCS + OPTIONAL_FULL_REPO_DOCS))
+    for rel in docs:
+        path = ROOT / rel
+        if not path.exists():
+            continue
+        text = read_text(path, messages)
+        if text is None:
+            continue
+        seen = set()
+        for match in CODE_SPAN_RE.finditer(text):
+            target = normalize_inline_path(match.group(1))
+            if target is None or target in seen:
+                continue
+            seen.add(target)
+            if target.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", target):
+                add_message(messages, "ERROR", "code_span_absolute_local_path",
+                            f"{rel} uses an absolute local code-spanned path: {target}",
+                            path)
+                continue
+            target_path = (path.parent / target).resolve()
+            try:
+                target_path.relative_to(ROOT.resolve())
+            except ValueError:
+                add_message(messages, "ERROR", "code_span_path_outside_root",
+                            f"{rel} references a code-spanned path outside the root: {target}",
+                            path)
+                continue
+            exists = candidate_exists(path, target) or release_lite_prefix_exists(path, target)
+            if exists:
+                continue
+            if target.replace("\\", "/").rstrip("/") in GENERATED_OUTPUT_REFS:
+                continue
+            if is_intentionally_external_to_lite(target):
+                add_message(messages, "INFO", "full_deliverable_reference",
+                            f"{rel} references a full-deliverable or sidecar path: {target}",
+                            path)
+                continue
+            add_message(messages, "ERROR", "code_span_path_missing",
+                        f"{rel} references missing code-spanned local path: {target}",
+                        target_path)
+
+
 def is_external_link(target):
     lower = target.lower()
     return (
@@ -252,6 +453,7 @@ def build_report():
     check_version_consistency(messages)
     check_release_bundle_contents(messages)
     check_python_commands(messages)
+    check_code_spanned_paths(messages)
     check_markdown_links(messages)
     levels = {item["level"] for item in messages}
     status = "FAIL" if "ERROR" in levels else "WARN" if "WARNING" in levels else "PASS"
