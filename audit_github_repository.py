@@ -129,9 +129,17 @@ def check_topics(topics_data, messages):
                     "Repository topics are missing: " + ", ".join(missing))
 
 
+def required_status_check_contexts(required_status_checks):
+    contexts = set(required_status_checks.get("contexts") or [])
+    for check in required_status_checks.get("checks") or []:
+        if isinstance(check, dict) and check.get("context"):
+            contexts.add(check["context"])
+    return contexts
+
+
 def check_branch_protection(protection, messages):
     checks = protection.get("required_status_checks") or {}
-    contexts = set(checks.get("contexts") or [])
+    contexts = required_status_check_contexts(checks)
     missing = sorted(EXPECTED_REQUIRED_CONTEXTS - contexts)
     if checks.get("strict") is not True:
         add_message(messages, "ERROR", "required_checks_not_strict",
