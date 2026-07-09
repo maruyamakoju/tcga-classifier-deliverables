@@ -205,6 +205,28 @@ def check_release(release_data, artifacts, version, messages):
                     f"Release asset digest is {actual_digest}, expected {expected_digest}.")
 
 
+def parse_ls_remote_refs(output):
+    refs = {}
+    for line in output.splitlines():
+        parts = line.split()
+        if len(parts) >= 2:
+            refs[parts[1]] = parts[0]
+    return refs
+
+
+def check_release_tag_target(version, ls_remote_output, expected_sha, messages):
+    refs = parse_ls_remote_refs(ls_remote_output)
+    direct_ref = f"refs/tags/{version}"
+    peeled_ref = f"{direct_ref}^{{}}"
+    actual_sha = refs.get(peeled_ref) or refs.get(direct_ref)
+    if actual_sha is None:
+        add_message(messages, "ERROR", "release_tag_ref_missing",
+                    f"Remote release tag {version!r} was not found.")
+    elif actual_sha != expected_sha:
+        add_message(messages, "ERROR", "release_tag_target_mismatch",
+                    f"Remote release tag {version!r} points to {actual_sha}, expected {expected_sha}.")
+
+
 def check_open_pull_requests(pulls, messages):
     for pull in pulls:
         user = pull.get("user") or {}
@@ -308,6 +330,18 @@ def build_report(repo):
         except Exception as exc:
             add_message(messages, "ERROR", "github_vulnerability_alerts_query_failed",
                         f"Could not query GitHub vulnerability alerts: {exc}")
+        try:
+            loaded["local_head_sha"] = run_command(["git", "rev-parse", "HEAD"]).strip()
+            loaded["release_tag_refs"] = run_command([
+                "git",
+                "ls-remote",
+                "origin",
+                f"refs/tags/{version}",
+                f"refs/tags/{version}^{{}}",
+            ])
+        except Exception as exc:
+            add_message(messages, "ERROR", "github_release_tag_query_failed",
+                        f"Could not query remote release tag: {exc}")
 
         if "repo" in loaded:
             check_repository_metadata(loaded["repo"], repo, messages)
@@ -323,6 +357,13 @@ def build_report(repo):
             check_release_tag_rulesets(loaded["ruleset_details"], messages)
         if "vulnerability_alerts_status" in loaded:
             check_vulnerability_alerts(loaded["vulnerability_alerts_status"], messages)
+        if "release_tag_refs" in loaded and "local_head_sha" in loaded:
+            check_release_tag_target(
+                version,
+                loaded["release_tag_refs"],
+                loaded["local_head_sha"],
+                messages,
+            )
 
     levels = {item["level"] for item in messages}
     status = "FAIL" if "ERROR" in levels else "WARN" if "WARNING" in levels else "PASS"
