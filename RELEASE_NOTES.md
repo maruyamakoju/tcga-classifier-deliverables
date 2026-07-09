@@ -1,5 +1,26 @@
 # Release notes
 
+## v1.1.10-gdc-starcounts — 2026-07-09
+
+Release manifest metadata audit release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.9; this release tightens
+the lightweight bundle's self-validation so stale or malformed release metadata
+fails before publication.
+
+### Added
+
+- `validate_release_lite.py` now checks `release_manifest.json` top-level
+  metadata against `VERSION`, `RELEASE_METADATA.json`, the manifest file count,
+  and the validator's forbidden-artifact deny-list.
+- Unit coverage for valid manifest metadata, stale top-level manifest fields,
+  non-integer manifest file counts, and malformed manifest shapes.
+
+### Fixed
+
+- Malformed `release_manifest.json` content, such as a non-object top level or
+  non-list `files` value, now returns validation errors instead of risking a
+  validator crash.
+
 ## v1.1.9-gdc-starcounts — 2026-07-09
 
 Quiet documentation audit release. Model weights, training data, and headline

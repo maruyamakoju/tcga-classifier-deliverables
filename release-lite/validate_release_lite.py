@@ -68,6 +68,8 @@ FORBIDDEN_NAMES = {
     "y_full.pkl",
 }
 
+EXPECTED_MANIFEST_SCHEMA_VERSION = "1.0"
+EXPECTED_BUNDLE_NAME = "tcga-tumor-normal-release-lite"
 TRANSIENT_NAMES = {"__pycache__"}
 TRANSIENT_PREFIXES = ("_smoke_", "_acceptance_")
 TRANSIENT_SUFFIXES = (".pyc",)
@@ -140,6 +142,91 @@ def load_manifest(release_dir):
         return json.load(handle)
 
 
+def validate_manifest_metadata(release_dir, manifest, manifest_files):
+    errors = []
+    if not isinstance(manifest, dict):
+        return ["release_manifest.json top-level value must be an object"]
+
+    schema_version = manifest.get("schema_version")
+    if schema_version != EXPECTED_MANIFEST_SCHEMA_VERSION:
+        errors.append(
+            "release_manifest.json schema_version mismatch: "
+            f"expected {EXPECTED_MANIFEST_SCHEMA_VERSION!r}, found {schema_version!r}"
+        )
+
+    bundle_name = manifest.get("bundle_name")
+    if bundle_name != EXPECTED_BUNDLE_NAME:
+        errors.append(
+            "release_manifest.json bundle_name mismatch: "
+            f"expected {EXPECTED_BUNDLE_NAME!r}, found {bundle_name!r}"
+        )
+
+    expected_count = len(manifest_files)
+    manifest_count = manifest.get("file_count_excluding_manifest_and_checksums")
+    if not isinstance(manifest_count, int) or isinstance(manifest_count, bool):
+        errors.append(
+            "release_manifest.json file_count_excluding_manifest_and_checksums "
+            "must be an integer"
+        )
+    elif manifest_count != expected_count:
+        errors.append(
+            "release_manifest.json file_count_excluding_manifest_and_checksums "
+            f"mismatch: expected {expected_count}, found {manifest_count}"
+        )
+
+    expected_forbidden = sorted(FORBIDDEN_NAMES)
+    forbidden_names = manifest.get("forbidden_artifact_names")
+    if forbidden_names != expected_forbidden:
+        errors.append(
+            "release_manifest.json forbidden_artifact_names mismatch: "
+            "expected validator deny-list"
+        )
+
+    version_path = release_dir / "VERSION"
+    expected_version = None
+    if version_path.exists():
+        expected_version = version_path.read_text(encoding="utf-8").strip()
+        manifest_version = manifest.get("version")
+        if manifest_version != expected_version:
+            errors.append(
+                "release_manifest.json version mismatch: "
+                f"expected {expected_version!r} from VERSION, found {manifest_version!r}"
+            )
+
+    metadata_path = release_dir / "RELEASE_METADATA.json"
+    if metadata_path.exists():
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            errors.append(f"Could not parse RELEASE_METADATA.json: {exc}")
+            metadata = None
+        if metadata is not None:
+            if not isinstance(metadata, dict):
+                errors.append("RELEASE_METADATA.json top-level value must be an object")
+            else:
+                metadata_version = metadata.get("version")
+                if expected_version is not None and metadata_version != expected_version:
+                    errors.append(
+                        "RELEASE_METADATA.json version mismatch: "
+                        f"expected {expected_version!r} from VERSION, "
+                        f"found {metadata_version!r}"
+                    )
+                if manifest.get("version") != metadata_version:
+                    errors.append(
+                        "release_manifest.json version mismatch: "
+                        f"expected {metadata_version!r} from RELEASE_METADATA.json, "
+                        f"found {manifest.get('version')!r}"
+                    )
+                metadata_date = metadata.get("release_date")
+                if manifest.get("release_date") != metadata_date:
+                    errors.append(
+                        "release_manifest.json release_date mismatch: "
+                        f"expected {metadata_date!r} from RELEASE_METADATA.json, "
+                        f"found {manifest.get('release_date')!r}"
+                    )
+    return errors
+
+
 def validate_release_dir(release_dir, max_file_bytes):
     errors = []
     warnings = []
@@ -150,25 +237,34 @@ def validate_release_dir(release_dir, max_file_bytes):
         return [f"Release path is not a directory: {release_dir}"], warnings, None
 
     files = release_files(release_dir)
+    manifest_present = (release_dir / "release_manifest.json").exists()
     manifest = load_manifest(release_dir)
     required = set(REQUIRED_FALLBACK)
     manifest_files = {}
-    if manifest:
+    if manifest_present:
         seen_manifest_paths = set()
-        for idx, item in enumerate(manifest.get("files", []), start=1):
-            if not isinstance(item, dict):
-                errors.append(f"Manifest file entry {idx} is not an object")
-                continue
-            try:
-                rel = normalize_release_path(item.get("path"))
-            except ValueError as exc:
-                errors.append(f"Manifest file entry {idx}: {exc}")
-                continue
-            if rel in seen_manifest_paths:
-                errors.append(f"Duplicate release_manifest.json file entry: {rel}")
-                continue
-            seen_manifest_paths.add(rel)
-            manifest_files[rel] = item
+        if not isinstance(manifest, dict):
+            errors.append("release_manifest.json top-level value must be an object")
+        else:
+            manifest_items = manifest.get("files", [])
+            if not isinstance(manifest_items, list):
+                errors.append("release_manifest.json files must be a list")
+                manifest_items = []
+            for idx, item in enumerate(manifest_items, start=1):
+                if not isinstance(item, dict):
+                    errors.append(f"Manifest file entry {idx} is not an object")
+                    continue
+                try:
+                    rel = normalize_release_path(item.get("path"))
+                except ValueError as exc:
+                    errors.append(f"Manifest file entry {idx}: {exc}")
+                    continue
+                if rel in seen_manifest_paths:
+                    errors.append(f"Duplicate release_manifest.json file entry: {rel}")
+                    continue
+                seen_manifest_paths.add(rel)
+                manifest_files[rel] = item
+            errors.extend(validate_manifest_metadata(release_dir, manifest, manifest_files))
         required.update(manifest_files)
         required.update({"release_manifest.json", "SHA256SUMS.txt"})
     missing_required = sorted(path for path in required if path not in files)
@@ -215,7 +311,7 @@ def validate_release_dir(release_dir, max_file_bytes):
                 if actual != expected:
                     errors.append(f"SHA256 mismatch for {rel}")
 
-    if manifest:
+    if manifest_present:
         manifest_actual = set(files) - {"SHA256SUMS.txt", "release_manifest.json"}
         missing_from_manifest = sorted(manifest_actual - set(manifest_files))
         stale_manifest = sorted(set(manifest_files) - manifest_actual)
@@ -229,7 +325,10 @@ def validate_release_dir(release_dir, max_file_bytes):
             if path.exists():
                 size = path.stat().st_size
                 digest = sha256_file(path)
-                if int(item.get("bytes", -1)) != size:
+                manifest_bytes = item.get("bytes")
+                if not isinstance(manifest_bytes, int) or isinstance(manifest_bytes, bool):
+                    errors.append(f"Manifest byte size for {rel} must be an integer")
+                elif manifest_bytes != size:
                     errors.append(f"Manifest byte size mismatch for {rel}")
                 if item.get("sha256") != digest:
                     errors.append(f"Manifest SHA256 mismatch for {rel}")
@@ -240,7 +339,7 @@ def validate_release_dir(release_dir, max_file_bytes):
         "release_dir": str(release_dir),
         "file_count": len(files),
         "checksum_count": len(expected_hashes),
-        "has_manifest": manifest is not None,
+        "has_manifest": manifest_present,
         "total_bytes": sum(path.stat().st_size for path in files.values()),
     }
     return errors, warnings, summary
@@ -253,8 +352,16 @@ def validate_source_parity(release_dir, source_root, manifest):
         return [f"Source root not found or not a directory: {source_root}"]
     if manifest is None:
         return ["Cannot validate source parity without release_manifest.json"]
+    if not isinstance(manifest, dict):
+        return ["release_manifest.json top-level value must be an object"]
+    manifest_items = manifest.get("files", [])
+    if not isinstance(manifest_items, list):
+        return ["release_manifest.json files must be a list"]
 
-    for idx, item in enumerate(manifest.get("files", []), start=1):
+    for idx, item in enumerate(manifest_items, start=1):
+        if not isinstance(item, dict):
+            errors.append(f"Manifest file entry {idx} is not an object")
+            continue
         try:
             rel = normalize_release_path(item.get("path"))
         except ValueError as exc:
