@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from release_tools.common import add_message, exit_code_for_status, status_from_levels, write_json_report
+
 
 ROOT = Path(__file__).resolve().parent
 
@@ -62,13 +64,6 @@ CALIBRATION_KEYS = {
     "recommended_specificity",
     "recommended_threshold",
 }
-
-
-def add_message(messages, level, code, message, path=None):
-    item = {"level": level, "code": code, "message": message}
-    if path is not None:
-        item["path"] = str(path)
-    messages.append(item)
 
 
 def require_file(rel, messages):
@@ -445,11 +440,9 @@ def build_report():
     check_json_contracts(messages)
     check_gene_metadata(messages)
     check_qc_reference(messages)
-    levels = {item["level"] for item in messages}
-    status = "FAIL" if "ERROR" in levels else "WARN" if "WARNING" in levels else "PASS"
     return {
         "schema_version": "1.0",
-        "status": status,
+        "status": status_from_levels(messages),
         "root": str(ROOT),
         "messages": messages,
     }
@@ -468,15 +461,8 @@ def main(argv=None):
         print(f"[contracts] {message['level']}: {message['message']}", file=stream)
     print(f"[contracts] status={report['status']}")
     if args.output:
-        out_path = Path(args.output)
-        if not out_path.is_absolute():
-            out_path = ROOT / out_path
-        out_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n",
-                            encoding="utf-8")
-        print(f"[contracts] wrote {out_path}")
-    if report["status"] == "FAIL" or (args.strict and report["status"] == "WARN"):
-        return 1
-    return 0
+        write_json_report(args.output, report, root=ROOT, prefix="contracts")
+    return exit_code_for_status(report["status"], strict=args.strict)
 
 
 if __name__ == "__main__":

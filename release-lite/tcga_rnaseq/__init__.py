@@ -45,4 +45,7 @@ __all__ = [
     "standardize", "ADAPT_MODES",
 ]
 
+# tcga_rnaseq's own library version, independent of the release VERSION file
+# (currently v1.1.22-gdc-starcounts) -- this bumps only on changes to this
+# package's public API/behavior, not on every release.
 __version__ = "2.0.0"

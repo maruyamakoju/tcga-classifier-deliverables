@@ -1,79 +1,28 @@
 #!/usr/bin/env python3
 """Run end-to-end acceptance checks for the lightweight release."""
 import argparse
-import json
-import os
 import shutil
-import subprocess
+import subprocess  # noqa: F401 -- re-exported: tests monkeypatch subprocess.run via this module
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+from release_tools.common import (
+    RELEASE_ZIP_NAME,
+    append_timeout_message,  # noqa: F401 -- re-exported for tests/test_subprocess_reporting.py
+    run_subprocess_step,
+    subprocess_output_text,  # noqa: F401 -- re-exported for tests/test_subprocess_reporting.py
+    write_json_report as _write_json_report,
+)
+
 
 ROOT = Path(__file__).resolve().parent
-ZIP_NAME = "tcga-tumor-normal-release-lite.zip"
-
-
-def subprocess_output_text(value):
-    if value is None:
-        return ""
-    if isinstance(value, bytes):
-        return value.decode("utf-8", errors="replace")
-    return str(value)
-
-
-def append_timeout_message(stderr, timeout_seconds):
-    message = f"Timed out after {timeout_seconds}s"
-    if stderr:
-        return stderr.rstrip("\n") + "\n" + message
-    return message
+ZIP_NAME = RELEASE_ZIP_NAME
 
 
 def run_step(label, cmd, required=True, timeout_seconds=300):
-    print(f"[acceptance] {label}: {' '.join(str(x) for x in cmd)}")
-    started = time.perf_counter()
-    env = dict(os.environ)
-    env["PYTHONDONTWRITEBYTECODE"] = "1"
-    try:
-        result = subprocess.run(
-            cmd, cwd=ROOT, text=True, capture_output=True, env=env,
-            timeout=timeout_seconds,
-        )
-    except subprocess.TimeoutExpired as exc:
-        duration = time.perf_counter() - started
-        stdout = subprocess_output_text(exc.stdout)
-        stderr = subprocess_output_text(exc.stderr)
-        print(f"[acceptance] {label}: FAIL timeout after {duration:.1f}s", file=sys.stderr)
-        return {
-            "label": label,
-            "command": [str(x) for x in cmd],
-            "required": required,
-            "returncode": 124,
-            "status": "FAIL",
-            "duration_seconds": round(duration, 3),
-            "stdout": stdout,
-            "stderr": append_timeout_message(stderr, timeout_seconds),
-        }
-    duration = time.perf_counter() - started
-    status = "PASS" if result.returncode == 0 else "FAIL"
-    if not required and result.returncode != 0:
-        status = "WARN"
-    if result.stdout:
-        print(result.stdout.rstrip())
-    if result.stderr:
-        print(result.stderr.rstrip(), file=sys.stderr)
-    print(f"[acceptance] {label}: {status} ({duration:.1f}s)")
-    return {
-        "label": label,
-        "command": [str(x) for x in cmd],
-        "required": required,
-        "returncode": result.returncode,
-        "status": status,
-        "duration_seconds": round(duration, 3),
-        "stdout": result.stdout,
-        "stderr": result.stderr,
-    }
+    return run_subprocess_step(label, cmd, ROOT, timeout_seconds=timeout_seconds,
+                               required=required, prefix="acceptance")
 
 
 def cleanup_transient_files():
@@ -109,12 +58,7 @@ def choose_release_validation():
 
 
 def write_json_report(path, report):
-    path = Path(path)
-    if not path.is_absolute():
-        path = ROOT / path
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    print(f"[acceptance] wrote {path}")
+    _write_json_report(path, report, root=ROOT, prefix="acceptance")
 
 
 def write_markdown_report(path, report):

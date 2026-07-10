@@ -13,6 +13,23 @@ validation metrics are unchanged from v1.1.21.
 - The scorer safety suite now verifies that missing expression inputs do not
   write partial score outputs.
 - Added unit coverage for missing expression input handling.
+- Fixed a real `IndentationError` in `cross-platform-adaptation/run_adaptation_benchmark.py`
+  (an internal, non-CI-tested analysis script) introduced by an earlier commit;
+  it now runs and reproduces its previously committed benchmark numbers exactly.
+- `cohort_adapt_score.py`, `calibrate_threshold.py`, and `inspect_expression_input.py`
+  now call the shared `tcga_rnaseq` core (alignment, standardization, scoring,
+  Youden threshold) instead of partially reimplementing it; fixed an output-ordering
+  bug where a malformed `--labels` file could discard an already-successful
+  `cohort_adapt_score.py` scoring run.
+- `export_lr_weights.py` and `export_model_gene_metadata.py` now validate/load
+  through the same shape-checked path as the shipped scorer.
+- Consolidated the audit/validate/build script family's duplicated boilerplate
+  (issue collection, JSON report writing, subprocess step running) into a new
+  `release_tools/common.py`, shipped alongside the scripts that use it.
+- Added a `ruff` lint step to CI and 41 new unit tests (`tcga_rnaseq` edge
+  cases, `release_tools.common`).
+- Fixed several docs-vs-code inconsistencies, including an undocumented CLI
+  and a rounding error in a reported metric (0.9963 shown as "0.997").
 
 ## Validation
 
@@ -30,6 +47,6 @@ validation metrics are unchanged from v1.1.21.
 ## Release asset
 
 - Asset: `tcga-tumor-normal-release-lite.zip`
-- SHA256: `86ccea066043fadb6932d98e00274a2cdd945ed2ca8f0c409db52ffa09bc5128`
-- Size: `318271` bytes
-- Zip entries: `72`
+- SHA256: `ad0a7a66a5e6a91c4e454f9c56bef42f7905fa14f6aa57b16093199bf0bbfe89`
+- Size: `321465` bytes
+- Zip entries: `74`
