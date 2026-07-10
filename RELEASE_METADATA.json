@@ -1,8 +1,14 @@
 {
-  "release_date": "2026-07-09",
-  "release_name": "GDC STAR-Counts duplicate zip member validation release",
+  "release_date": "2026-07-10",
+  "release_name": "GDC STAR-Counts output contract JSON hardening release",
   "schema_version": "1.0",
-  "version": "v1.1.12-gdc-starcounts",
+  "version": "v1.1.13-gdc-starcounts",
+  "changes_since_v1_1_12": [
+    "Hardened validate_output_contracts.py so malformed JSON top-level values are reported as contract errors instead of crashing validation.",
+    "Made calibration metric validation reject non-numeric, boolean, and out-of-range values with explicit diagnostics.",
+    "Made workflow manifest outputs validation reject non-object output maps and non-string output paths.",
+    "Added unit coverage for malformed JSON output contracts."
+  ],
   "changes_since_v1_1_11": [
     "Made validate_release_lite.py reject duplicate file entries in the release zip instead of silently collapsing them into a set.",
     "Made validate_zip_bundle.py reject duplicate member paths before extraction so archive overwrite ambiguity is caught early.",

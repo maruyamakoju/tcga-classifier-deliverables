@@ -3,6 +3,7 @@
 import argparse
 import json
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 import pandas as pd
@@ -103,6 +104,28 @@ def read_json(rel, messages):
         return None
 
 
+def require_json_object(value, rel, messages):
+    if not isinstance(value, Mapping):
+        add_message(messages, "ERROR", "json_top_level_not_object",
+                    f"{rel} top-level value must be a JSON object.", ROOT / rel)
+        return None
+    return value
+
+
+def check_numeric_range(value, rel, key, messages, minimum=0, maximum=1):
+    if isinstance(value, bool):
+        numeric = None
+    else:
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            numeric = None
+    if numeric is None or not (minimum <= numeric <= maximum):
+        add_message(messages, "ERROR", "json_metric_out_of_range",
+                    f"{rel}:{key} must be numeric and in [{minimum}, {maximum}].",
+                    ROOT / rel)
+
+
 def check_columns(df, expected, rel, messages):
     actual = list(df.columns)
     if actual != expected:
@@ -169,10 +192,16 @@ def check_thresholds(messages):
                             f"thresholds.csv:{column} must be in [0, 1] when present.",
                             ROOT / "example_workflow_output/thresholds.csv")
     for column in ["tn", "fp", "fn", "tp"]:
-        if column in df and (pd.to_numeric(df[column], errors="coerce") < 0).any():
-            add_message(messages, "ERROR", "negative_count",
-                        f"thresholds.csv:{column} must be non-negative.",
-                        ROOT / "example_workflow_output/thresholds.csv")
+        if column in df:
+            values = pd.to_numeric(df[column], errors="coerce")
+            if values.isna().any():
+                add_message(messages, "ERROR", "non_numeric_count",
+                            f"thresholds.csv:{column} must be numeric.",
+                            ROOT / "example_workflow_output/thresholds.csv")
+            elif (values < 0).any():
+                add_message(messages, "ERROR", "negative_count",
+                            f"thresholds.csv:{column} must be non-negative.",
+                            ROOT / "example_workflow_output/thresholds.csv")
 
 
 def check_explanations(messages):
@@ -203,6 +232,8 @@ def check_explanations(messages):
 def check_json_contracts(messages):
     qc = read_json("example_workflow_output/qc.json", messages)
     if qc is not None:
+        qc = require_json_object(qc, "example_workflow_output/qc.json", messages)
+    if qc is not None:
         missing = QC_TOP_LEVEL_KEYS - set(qc)
         if missing:
             add_message(messages, "ERROR", "qc_keys_missing",
@@ -220,6 +251,12 @@ def check_json_contracts(messages):
 
     manifest = read_json("example_workflow_output/manifest.json", messages)
     if manifest is not None:
+        manifest = require_json_object(
+            manifest,
+            "example_workflow_output/manifest.json",
+            messages,
+        )
+    if manifest is not None:
         missing = MANIFEST_TOP_LEVEL_KEYS - set(manifest)
         if missing:
             add_message(messages, "ERROR", "manifest_keys_missing",
@@ -230,13 +267,29 @@ def check_json_contracts(messages):
                         "Example workflow manifest should be complete with QC PASS.",
                         ROOT / "example_workflow_output/manifest.json")
         outputs = manifest.get("outputs", {})
-        for key, rel in outputs.items():
-            if not (ROOT / "example_workflow_output" / rel).exists():
-                add_message(messages, "ERROR", "manifest_output_missing",
-                            f"manifest output is missing: {key}={rel}",
-                            ROOT / "example_workflow_output" / rel)
+        if not isinstance(outputs, Mapping):
+            add_message(messages, "ERROR", "manifest_outputs_not_object",
+                        "manifest.json:outputs must be a JSON object.",
+                        ROOT / "example_workflow_output/manifest.json")
+        else:
+            for key, rel in outputs.items():
+                if not isinstance(rel, str):
+                    add_message(messages, "ERROR", "manifest_output_path_not_string",
+                                f"manifest output path must be a string: {key}={rel!r}",
+                                ROOT / "example_workflow_output/manifest.json")
+                    continue
+                if not (ROOT / "example_workflow_output" / rel).exists():
+                    add_message(messages, "ERROR", "manifest_output_missing",
+                                f"manifest output is missing: {key}={rel}",
+                                ROOT / "example_workflow_output" / rel)
 
     calibration = read_json("example_workflow_output/calibration.json", messages)
+    if calibration is not None:
+        calibration = require_json_object(
+            calibration,
+            "example_workflow_output/calibration.json",
+            messages,
+        )
     if calibration is not None:
         missing = CALIBRATION_KEYS - set(calibration)
         if missing:
@@ -245,11 +298,12 @@ def check_json_contracts(messages):
                         ROOT / "example_workflow_output/calibration.json")
         for key in ["auc", "recommended_accuracy", "recommended_recall",
                     "recommended_specificity", "recommended_threshold"]:
-            value = calibration.get(key)
-            if value is None or not (0 <= float(value) <= 1):
-                add_message(messages, "ERROR", "calibration_metric_out_of_range",
-                            f"calibration.json:{key} must be in [0, 1].",
-                            ROOT / "example_workflow_output/calibration.json")
+            check_numeric_range(
+                calibration.get(key),
+                "example_workflow_output/calibration.json",
+                key,
+                messages,
+            )
 
 
 def check_gene_metadata(messages):
@@ -297,6 +351,9 @@ def check_score_consistency(messages):
 
 def check_qc_reference(messages):
     report = read_json("model_qc_reference.json", messages)
+    if report is None:
+        return
+    report = require_json_object(report, "model_qc_reference.json", messages)
     if report is None:
         return
     for key in ["intended_input", "reference_reports", "rules"]:
