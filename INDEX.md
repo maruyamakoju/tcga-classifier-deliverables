@@ -1,6 +1,6 @@
 # INDEX — a guided reading path
 
-Release: `v1.1.12-gdc-starcounts`
+Release: `v1.1.13-gdc-starcounts`
 
 This lightweight release focuses on the deployable tumor-vs-normal classifier,
 its validation boundary, and the runnable scoring workflow. Read it in this

@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Release: `v1.1.12-gdc-starcounts` (`2026-07-09`)
+Release: `v1.1.13-gdc-starcounts` (`2026-07-10`)
 
 Start with:
 

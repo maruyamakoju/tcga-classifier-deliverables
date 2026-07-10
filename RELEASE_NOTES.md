@@ -1,5 +1,26 @@
 # Release notes
 
+## v1.1.13-gdc-starcounts — 2026-07-10
+
+Output contract JSON hardening release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.12; this release makes the
+bundled output-contract validator report malformed JSON contracts cleanly
+instead of crashing on unexpected shapes.
+
+### Fixed
+
+- `validate_output_contracts.py` now reports non-object JSON top-level values
+  as contract errors for bundled QC, manifest, calibration, and QC-reference
+  files.
+- Calibration metric validation now rejects non-numeric, boolean, and
+  out-of-range values with explicit diagnostics.
+- Workflow manifest `outputs` validation now rejects non-object output maps and
+  non-string output paths.
+
+### Tests
+
+- Added unit coverage for malformed JSON output contracts.
+
 ## v1.1.12-gdc-starcounts — 2026-07-09
 
 Duplicate zip member validation release. Model weights, training data, and

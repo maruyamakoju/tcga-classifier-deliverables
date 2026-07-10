@@ -11,7 +11,7 @@
   ],
   "citation": "CITATION.cff",
   "codeRepository": "https://github.com/maruyamakoju/tcga-classifier-deliverables",
-  "datePublished": "2026-07-09",
+  "datePublished": "2026-07-10",
   "description": "Research-only TCGA/GDC STAR-Counts-scale bulk RNA-seq tumor-vs-adjacent-normal classifier deliverables with lightweight scoring, input QC, threshold calibration, explanations, release validation, and compact external-validation artifacts.",
   "issueTracker": "https://github.com/maruyamakoju/tcga-classifier-deliverables/issues",
   "keywords": [
@@ -31,12 +31,12 @@
     "macOS"
   ],
   "programmingLanguage": "Python",
-  "releaseNotes": "https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.12-gdc-starcounts",
+  "releaseNotes": "https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.13-gdc-starcounts",
   "runtimePlatform": "Python 3.11",
   "softwareRequirements": [
     "numpy",
     "pandas",
     "pyarrow"
   ],
-  "version": "v1.1.12-gdc-starcounts"
+  "version": "v1.1.13-gdc-starcounts"
 }
