@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Release: `v1.1.21-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.22-gdc-starcounts` (`2026-07-10`)
 
 Start with:
 
@@ -14,6 +14,13 @@ python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
 ```
 
 If these pass, most issues are input-specific rather than installation-specific.
+
+### CLI says `expression matrix file not found`
+
+The input path does not point to a readable expression matrix file. Check the
+path, working directory, and file extension before rerunning. The public CLIs
+expect `.csv`, `.tsv`, `.txt`, or `.parquet` expression matrices by default;
+pickled expression inputs are blocked unless an internal trusted caller opts in.
 
 ## Installation issues
 

@@ -378,6 +378,33 @@ def test_read_matrix_rejects_pickle_by_default(tmp_path):
     pd.testing.assert_frame_equal(observed, expected)
 
 
+def test_read_matrix_reports_missing_file_as_valueerror(tmp_path):
+    missing = tmp_path / "missing.csv"
+    with pytest.raises(ValueError, match="expression matrix file not found"):
+        read_matrix(missing)
+
+
+def test_scoring_cli_reports_missing_input_without_traceback(tmp_path, root):
+    output = tmp_path / "missing.scored.csv"
+    result = subprocess.run(
+        [
+            sys.executable,
+            "score_tumor_normal.py",
+            str(tmp_path / "missing.csv"),
+            "-o",
+            str(output),
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+    )
+
+    assert result.returncode != 0
+    assert "expression matrix file not found" in result.stderr
+    assert "Traceback" not in result.stderr
+    assert not output.exists()
+
+
 def test_binary_cli_rejects_multiclass_weights(root, cancer_type_model):
     with pytest.raises(ValueError, match="requires a binary LR weights file"):
         load_lr_weights(f"{root}/cancer-type-classifier/cancer_type_lr_weights.npz")

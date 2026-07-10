@@ -81,6 +81,8 @@ def main():
         invalid_workflow = temp_root / "invalid_matched_workflow"
         bad_labels = temp_root / "bad_labels.csv"
         bad_labels_workflow = temp_root / "bad_labels_workflow"
+        missing_input = temp_root / "missing_expression.csv"
+        missing_output = temp_root / "missing_expression.scored.csv"
         pickle_input = temp_root / "untrusted_expression.pkl"
         pickle_output = temp_root / "untrusted_expression.scored.csv"
 
@@ -118,6 +120,16 @@ def main():
                 "pickle expression input rejection message missing")
         require(not pickle_output.exists(),
                 "score_tumor_normal.py wrote scores after pickle input rejection")
+
+        result = run([sys.executable, "score_tumor_normal.py", str(missing_input),
+                      "-o", str(missing_output)])
+        require_fail(result, "missing expression input")
+        require("expression matrix file not found" in result.stderr,
+                "missing expression input message missing")
+        require("Traceback" not in result.stderr,
+                "missing expression input produced a traceback")
+        require(not missing_output.exists(),
+                "score_tumor_normal.py wrote scores after missing input rejection")
 
         result = run([sys.executable, "score_tumor_normal.py", str(no_match_input),
                       "-o", str(no_match_scores)])

@@ -1,8 +1,13 @@
 {
   "release_date": "2026-07-10",
-  "release_name": "GDC STAR-Counts output sample ID contract hardening release",
+  "release_name": "GDC STAR-Counts expression input read error handling release",
   "schema_version": "1.0",
-  "version": "v1.1.21-gdc-starcounts",
+  "version": "v1.1.22-gdc-starcounts",
+  "changes_since_v1_1_21": [
+    "Hardened tcga_rnaseq.read_matrix so missing expression paths, directory paths, and common pandas/OS read failures become user-facing ValueError messages.",
+    "Kept CLI missing-input failures from printing Python tracebacks or writing partial score outputs.",
+    "Expanded core unit and release safety tests for missing expression input handling."
+  ],
   "changes_since_v1_1_20": [
     "Hardened validate_output_contracts.py so score and label sample identifiers are checked with the same non-empty, trimmed uniqueness contract used by calibration.",
     "Added contract errors for leading or trailing whitespace in sample identifiers and duplicate sample IDs after trimming whitespace.",

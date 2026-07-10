@@ -1,5 +1,26 @@
 # Release notes
 
+## v1.1.22-gdc-starcounts — 2026-07-10
+
+Expression input read error handling release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.21; this release makes
+missing or unreadable expression inputs fail through normal CLI error handling
+instead of leaking low-level exceptions.
+
+### Fixed
+
+- `tcga_rnaseq.read_matrix()` now reports missing expression files and directory
+  paths as user-facing `ValueError` messages.
+- Common pandas/OS read failures are converted to expression matrix read errors
+  so bundled CLIs can report them without Python tracebacks.
+- The scorer now has explicit safety coverage that missing expression inputs do
+  not write partial score outputs.
+
+### Tests
+
+- Expanded core unit tests and release safety tests for missing expression input
+  handling.
+
 ## v1.1.21-gdc-starcounts — 2026-07-10
 
 Output sample ID contract hardening release. Model weights, training data, and
