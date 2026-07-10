@@ -7,6 +7,15 @@ import sys
 from urllib.parse import unquote
 from pathlib import Path
 
+from release_tools.common import (
+    RELEASE_FILES,
+    add_message,
+    exit_code_for_status,
+    release_target_root as _release_target_root,
+    status_from_levels,
+    write_json_report,
+)
+
 
 ROOT = Path(__file__).resolve().parent
 
@@ -66,6 +75,12 @@ CORE_FILES = [
     "validate_zip_bundle.py",
     "VERSION",
 ]
+# CORE_FILES is a curated subset of what build_release_lite.py actually ships
+# (full-repo files that must never disappear); this assertion is a canary so
+# the two lists can't silently drift apart without someone noticing.
+assert set(CORE_FILES) <= set(RELEASE_FILES), (
+    "CORE_FILES has entries release_tools.common.RELEASE_FILES does not ship"
+)
 
 FULL_DELIVERABLE_COMMANDS = {"build_release_lite.py"}
 
@@ -168,13 +183,6 @@ PYTHON_SCRIPT_COMMAND_RE = re.compile(
 )
 
 
-def add_message(messages, level, code, message, path=None):
-    item = {"level": level, "code": code, "message": message}
-    if path is not None:
-        item["path"] = str(path)
-    messages.append(item)
-
-
 def read_text(path, messages):
     if not path.exists():
         add_message(messages, "ERROR", "doc_missing", f"Document is missing: {path.name}", path)
@@ -187,12 +195,7 @@ def read_text(path, messages):
 
 
 def release_target_root():
-    if (ROOT / "release_manifest.json").exists() and (ROOT / "SHA256SUMS.txt").exists():
-        return ROOT
-    nested = ROOT / "release-lite"
-    if (nested / "release_manifest.json").exists() and (nested / "SHA256SUMS.txt").exists():
-        return nested
-    return ROOT
+    return _release_target_root(ROOT)
 
 
 def check_core_files(messages):
@@ -455,11 +458,9 @@ def build_report():
     check_python_commands(messages)
     check_code_spanned_paths(messages)
     check_markdown_links(messages)
-    levels = {item["level"] for item in messages}
-    status = "FAIL" if "ERROR" in levels else "WARN" if "WARNING" in levels else "PASS"
     return {
         "schema_version": "1.0",
-        "status": status,
+        "status": status_from_levels(messages),
         "root": str(ROOT),
         "release_target_root": str(release_target_root()),
         "messages": messages,
@@ -493,15 +494,8 @@ def main(argv=None):
     report = build_report()
     print_report(report, show_info=args.show_info)
     if args.output:
-        out_path = Path(args.output)
-        if not out_path.is_absolute():
-            out_path = ROOT / out_path
-        out_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n",
-                            encoding="utf-8")
-        print(f"[docs-audit] wrote {out_path}")
-    if report["status"] == "FAIL" or (args.strict and report["status"] == "WARN"):
-        return 1
-    return 0
+        write_json_report(args.output, report, root=ROOT, prefix="docs-audit")
+    return exit_code_for_status(report["status"], strict=args.strict)
 
 
 if __name__ == "__main__":

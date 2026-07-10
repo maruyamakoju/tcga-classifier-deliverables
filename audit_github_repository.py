@@ -8,9 +8,17 @@ import subprocess
 import sys
 from pathlib import Path
 
+from release_tools.common import (
+    RELEASE_ZIP_NAME,
+    add_message,
+    exit_code_for_status,
+    status_from_levels,
+    write_json_report,
+)
+
 
 ROOT = Path(__file__).resolve().parent
-ZIP_NAME = "tcga-tumor-normal-release-lite.zip"
+ZIP_NAME = RELEASE_ZIP_NAME
 
 EXPECTED_REQUIRED_CONTEXTS = {
     "windows-latest / py3.11",
@@ -29,13 +37,6 @@ EXPECTED_TOPICS = {
 
 EXPECTED_TAG_RULESET_REF = "refs/tags/v*"
 EXPECTED_TAG_RULESET_RULES = {"deletion", "non_fast_forward", "update"}
-
-
-def add_message(messages, level, code, message, path=None):
-    item = {"level": level, "code": code, "message": message}
-    if path is not None:
-        item["path"] = str(path)
-    messages.append(item)
 
 
 def run_command(args):
@@ -395,11 +396,9 @@ def build_report(repo):
                 messages,
             )
 
-    levels = {item["level"] for item in messages}
-    status = "FAIL" if "ERROR" in levels else "WARN" if "WARNING" in levels else "PASS"
     return {
         "schema_version": "1.0",
-        "status": status,
+        "status": status_from_levels(messages),
         "repo": repo,
         "version": version,
         "messages": messages,
@@ -424,15 +423,8 @@ def main(argv=None):
     print(f"[github-audit] version={report['version']}")
     print(f"[github-audit] status={report['status']}")
     if args.output:
-        out_path = Path(args.output)
-        if not out_path.is_absolute():
-            out_path = ROOT / out_path
-        out_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n",
-                            encoding="utf-8")
-        print(f"[github-audit] wrote {out_path}")
-    if report["status"] == "FAIL" or (args.strict and report["status"] == "WARN"):
-        return 1
-    return 0
+        write_json_report(args.output, report, root=ROOT, prefix="github-audit")
+    return exit_code_for_status(report["status"], strict=args.strict)
 
 
 if __name__ == "__main__":

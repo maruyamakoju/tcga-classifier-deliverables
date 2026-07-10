@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Build the lightweight release bundle and zip archive."""
 import argparse
-import hashlib
 import json
 import os
 import shutil
@@ -11,86 +10,19 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
-from validate_release_lite import FORBIDDEN_NAMES
+from release_tools.common import (
+    FORBIDDEN_NAMES,
+    RELEASE_BUNDLE_NAME,
+    RELEASE_FILES,
+    RELEASE_ZIP_NAME,
+    sha256_file,
+)
 
 
 ROOT = Path(__file__).resolve().parent
 RELEASE_DIR = ROOT / "release-lite"
-ZIP_PATH = ROOT / "tcga-tumor-normal-release-lite.zip"
+ZIP_PATH = ROOT / RELEASE_ZIP_NAME
 ARTIFACTS_PATH = ROOT / "RELEASE_ARTIFACTS.json"
-
-RELEASE_FILES = [
-    "audit_cli_entrypoints.py",
-    "audit_lightweight_dependencies.py",
-    "audit_release_docs.py",
-    "calibrate_threshold.py",
-    "check_environment.py",
-    "cohort_adapt_score.py",
-    "DATA_DICTIONARY.md",
-    "deployable_lr_weights.npz",
-    "EXECUTIVE_SUMMARY.md",
-    "INDEX.md",
-    "LICENSE",
-    "NOTICE.md",
-    "CITATION.cff",
-    ".zenodo.json",
-    "codemeta.json",
-    "tcga_rnaseq/__init__.py",
-    "tcga_rnaseq/io.py",
-    "tcga_rnaseq/align.py",
-    "tcga_rnaseq/score.py",
-    "tcga_rnaseq/metrics.py",
-    "example_input.csv",
-    "example_labels.csv",
-    "example_output.csv",
-    "explain_scores.py",
-    "inspect_expression_input.py",
-    "run_tumor_normal_workflow.py",
-    "LITERATURE_CHECK.md",
-    "MODEL_CARD.md",
-    "model_gene_metadata.csv",
-    "model_qc_reference.json",
-    "per_cancer_type_performance.csv",
-    "README.md",
-    "RELEASE_BUNDLE.md",
-    "RELEASE_METADATA.json",
-    "RELEASE_NOTES.md",
-    "REPORT.md",
-    "REPRODUCIBILITY.md",
-    "requirements-light.txt",
-    "run_release_acceptance.py",
-    "run_safety_tests.py",
-    "run_smoke_tests.py",
-    "score_tumor_normal.py",
-    "test_metrics.csv",
-    "top_genes_logreg.csv",
-    "top_genes_xgboost.csv",
-    "TROUBLESHOOTING.md",
-    "USER_GUIDE.md",
-    "validate_output_contracts.py",
-    "validate_release_lite.py",
-    "validate_zip_bundle.py",
-    "VERSION",
-    "templates/input_matrix_template.csv",
-    "templates/labels_template.csv",
-    "example_workflow_output/README.md",
-    "example_workflow_output/calibration.json",
-    "example_workflow_output/explanations.csv",
-    "example_workflow_output/manifest.json",
-    "example_workflow_output/qc.json",
-    "example_workflow_output/scores.csv",
-    "example_workflow_output/thresholds.csv",
-    "example_workflow_output/workflow_report.md",
-    "external-validation/cptac_gdc/CPTAC_EXTERNAL_VALIDATION.md",
-    "external-validation/cptac_gdc/cptac_summary.csv",
-    "external-validation/cptac_gdc/cptac_threshold_sweep.csv",
-    "external-validation/gtex_xena/GTEX_NORMAL_VALIDATION.md",
-    "external-validation/gtex_xena/gtex_summary.csv",
-    "external-validation/gtex_xena/gtex_threshold_sweep.csv",
-    "external-validation/tcga_toil_xena/TCGA_TOIL_PIPELINE_CHECK.md",
-    "external-validation/tcga_toil_xena/tcga_toil_summary.csv",
-    "external-validation/tcga_toil_xena/tcga_toil_threshold_sweep.csv",
-]
 
 BINARY_SUFFIXES = {".npy", ".npz", ".pkl", ".png", ".zip"}
 TEXT_NAMES = {"LICENSE", "VERSION"}
@@ -102,14 +34,6 @@ def assert_inside_root(path):
     if resolved != root and root not in resolved.parents:
         raise RuntimeError(f"Refusing to operate outside project root: {resolved}")
     return resolved
-
-
-def sha256(path):
-    digest = hashlib.sha256()
-    with open(path, "rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def write_text_lf(path, text, encoding="utf-8"):
@@ -169,7 +93,7 @@ def manifest_file_records():
         records.append({
             "path": path.relative_to(RELEASE_DIR).as_posix(),
             "bytes": path.stat().st_size,
-            "sha256": sha256(path),
+            "sha256": sha256_file(path),
         })
     return records
 
@@ -182,7 +106,7 @@ def write_manifest():
         release_metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     manifest = {
         "schema_version": "1.0",
-        "bundle_name": "tcga-tumor-normal-release-lite",
+        "bundle_name": RELEASE_BUNDLE_NAME,
         "version": release_metadata.get("version"),
         "release_date": release_metadata.get("release_date"),
         "intended_input": "GDC STAR-Counts-style log2(TPM+1), rows=samples, columns=Ensembl genes.",
@@ -209,7 +133,7 @@ def write_checksums():
         if path.name == "SHA256SUMS.txt":
             continue
         rel = path.relative_to(RELEASE_DIR).as_posix()
-        rows.append(f"{sha256(path)}  {rel}")
+        rows.append(f"{sha256_file(path)}  {rel}")
     checksum_path = RELEASE_DIR / "SHA256SUMS.txt"
     write_text_lf(checksum_path, "\n".join(rows) + "\n", encoding="ascii")
     return len(rows)
@@ -266,7 +190,7 @@ def write_artifact_metadata(zip_entries):
         "zip_path": ZIP_PATH.relative_to(ROOT).as_posix(),
         "zip_entries": zip_entries,
         "zip_bytes": ZIP_PATH.stat().st_size,
-        "zip_sha256": sha256(ZIP_PATH),
+        "zip_sha256": sha256_file(ZIP_PATH),
         "validation_command": (
             "python validate_release_lite.py --release-dir release-lite "
             "--zip tcga-tumor-normal-release-lite.zip --source-root . "
@@ -340,7 +264,7 @@ def build(run_smoke=False, timeout_seconds=300):
     print(f"[release] files with checksums: {checksum_count}")
     print(f"[release] zip entries: {zip_entries}")
     print(f"[release] zip bytes: {ZIP_PATH.stat().st_size}")
-    print(f"[release] zip sha256: {sha256(ZIP_PATH)}")
+    print(f"[release] zip sha256: {sha256_file(ZIP_PATH)}")
     print(f"[release] wrote {RELEASE_DIR}")
     print(f"[release] wrote {ZIP_PATH}")
     print(f"[release] wrote {ARTIFACTS_PATH}")

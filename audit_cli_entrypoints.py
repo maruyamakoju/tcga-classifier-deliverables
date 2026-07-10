@@ -1,14 +1,27 @@
 #!/usr/bin/env python3
 """Audit release CLI entry points for usable --help output."""
 import argparse
-import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 
+from release_tools.common import (
+    add_message,
+    exit_code_for_status,
+    release_python_files,
+    release_target_root as _release_target_root,
+    status_from_levels,
+    write_json_report,
+)
+
 
 ROOT = Path(__file__).resolve().parent
+
+
+def release_target_root():
+    return _release_target_root(ROOT)
+
 
 HELP_COMMANDS = [
     "score_tumor_normal.py",
@@ -26,42 +39,6 @@ HELP_COMMANDS = [
     "validate_release_lite.py",
     "validate_zip_bundle.py",
 ]
-
-
-def add_message(messages, level, code, message, path=None):
-    item = {"level": level, "code": code, "message": message}
-    if path is not None:
-        item["path"] = str(path)
-    messages.append(item)
-
-
-def release_target_root():
-    if (ROOT / "release_manifest.json").exists() and (ROOT / "SHA256SUMS.txt").exists():
-        return ROOT
-    nested = ROOT / "release-lite"
-    if (nested / "release_manifest.json").exists() and (nested / "SHA256SUMS.txt").exists():
-        return nested
-    return ROOT
-
-
-def load_manifest_paths(target_root):
-    manifest_path = target_root / "release_manifest.json"
-    if not manifest_path.exists():
-        return None
-    try:
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return None
-    return [item["path"] for item in manifest.get("files", [])]
-
-
-def release_python_files(target_root):
-    manifest_paths = load_manifest_paths(target_root)
-    if manifest_paths is not None:
-        paths = [target_root / rel for rel in manifest_paths if rel.endswith(".py")]
-    else:
-        paths = sorted(target_root.glob("*.py"))
-    return [path for path in paths if path.exists() and path.is_file()]
 
 
 def check_shebangs(target_root, messages):
@@ -126,11 +103,9 @@ def build_report(timeout_seconds):
         result = run_help(target_root, script, timeout_seconds, messages)
         if result is not None:
             help_results.append(result)
-    levels = {item["level"] for item in messages}
-    status = "FAIL" if "ERROR" in levels else "WARN" if "WARNING" in levels else "PASS"
     return {
         "schema_version": "1.0",
-        "status": status,
+        "status": status_from_levels(messages),
         "root": str(ROOT),
         "target_root": str(target_root),
         "help_commands": HELP_COMMANDS,
@@ -156,15 +131,8 @@ def main(argv=None):
     print(f"[cli-audit] checked {len(report['help_results'])} help commands")
     print(f"[cli-audit] status={report['status']}")
     if args.output:
-        out_path = Path(args.output)
-        if not out_path.is_absolute():
-            out_path = ROOT / out_path
-        out_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n",
-                            encoding="utf-8")
-        print(f"[cli-audit] wrote {out_path}")
-    if report["status"] == "FAIL" or (args.strict and report["status"] == "WARN"):
-        return 1
-    return 0
+        write_json_report(args.output, report, root=ROOT, prefix="cli-audit")
+    return exit_code_for_status(report["status"], strict=args.strict)
 
 
 if __name__ == "__main__":

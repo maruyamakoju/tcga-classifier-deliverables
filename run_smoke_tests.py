@@ -11,9 +11,10 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 
 
-def run(cmd):
+def run(cmd, timeout_seconds=300):
     print("[smoke]", " ".join(cmd))
-    return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True)
+    return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True,
+                          encoding="utf-8", errors="replace", timeout=timeout_seconds)
 
 
 def require_ok(result):

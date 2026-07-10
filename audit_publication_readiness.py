@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """Audit repository state before making a release repository public."""
 import argparse
-import hashlib
 import json
 import re
 import subprocess
 import zipfile
 from pathlib import Path
 
+from release_tools.common import RELEASE_ZIP_NAME, add_message, sha256_file, write_json_report
+
 
 ROOT = Path(__file__).resolve().parent
-ZIP_NAME = "tcga-tumor-normal-release-lite.zip"
+ZIP_NAME = RELEASE_ZIP_NAME
 
 MAX_TRACKED_BYTES = 25 * 1024 * 1024
 MAX_HISTORY_BLOB_BYTES = 25 * 1024 * 1024
@@ -30,7 +31,6 @@ REQUIRED_FILES = {
     ".zenodo.json",
     "CITATION.cff",
     "CONTRIBUTING.md",
-    "GITHUB_RELEASE_v1.1.3.md",
     "LICENSE",
     "MAINTENANCE.md",
     "NOTICE.md",
@@ -84,11 +84,17 @@ SECRET_PATTERNS = [
 ]
 
 
-def add_message(messages, level, code, message, path=None):
-    item = {"level": level, "code": code, "message": message}
-    if path is not None:
-        item["path"] = str(path)
-    messages.append(item)
+def current_github_release_note_name():
+    """GITHUB_RELEASE_<prefix>.md for the current VERSION (e.g. GITHUB_RELEASE_v1.1.22.md).
+
+    Historical release notes for older versions are never deleted, so this
+    must be derived from VERSION rather than hardcoded -- a hardcoded name
+    only fails once the file it names has actually been removed, silently
+    skipping the real "does the current release note exist" check.
+    """
+    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    release_prefix = version.split("-", 1)[0]
+    return f"GITHUB_RELEASE_{release_prefix}.md"
 
 
 def run_git(args):
@@ -115,17 +121,11 @@ def is_text_path(rel):
     return path.suffix.lower() not in BINARY_SUFFIXES
 
 
-def sha256_file(path):
-    digest = hashlib.sha256()
-    with open(path, "rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def check_required_files(files, messages):
     file_set = set(files)
-    for rel in sorted(REQUIRED_FILES):
+    required = set(REQUIRED_FILES)
+    required.add(current_github_release_note_name())
+    for rel in sorted(required):
         if rel not in file_set or not (ROOT / rel).exists():
             add_message(messages, "ERROR", "required_file_missing",
                         f"Required publication file is missing: {rel}", ROOT / rel)
@@ -200,9 +200,7 @@ def check_history_blob_sizes(messages, max_bytes):
 def check_release_artifacts(messages):
     artifacts_path = ROOT / "RELEASE_ARTIFACTS.json"
     zip_path = ROOT / ZIP_NAME
-    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
-    release_prefix = version.split("-", 1)[0]
-    note_path = ROOT / f"GITHUB_RELEASE_{release_prefix}.md"
+    note_path = ROOT / current_github_release_note_name()
     if not artifacts_path.exists() or not zip_path.exists():
         return
     try:
@@ -290,16 +288,6 @@ def check_workflow(messages):
                         f"CI workflow does not run expected check: {marker}", path)
 
 
-def write_json_report(path, report):
-    out_path = Path(path)
-    if not out_path.is_absolute():
-        out_path = ROOT / out_path
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n",
-                        encoding="utf-8")
-    print(f"[publication-audit] wrote {out_path}")
-
-
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--max-tracked-mb", type=int, default=25)
@@ -332,7 +320,7 @@ def main(argv=None):
     print(f"[publication-audit] tracked files: {len(files)}")
     print(f"[publication-audit] status={report['status']}")
     if args.output:
-        write_json_report(args.output, report)
+        write_json_report(args.output, report, root=ROOT, prefix="publication-audit")
     return 1 if errors else 0
 
 

@@ -9,6 +9,14 @@ import sys
 import zipfile
 from pathlib import Path, PurePosixPath
 
+from release_tools.common import (
+    FORBIDDEN_NAMES,
+    RELEASE_BUNDLE_NAME,
+    RELEASE_FILES,
+    RELEASE_ZIP_NAME,
+    sha256_file,
+)
+
 
 REQUIRED_FALLBACK = {
     "audit_cli_entrypoints.py",
@@ -48,28 +56,15 @@ REQUIRED_FALLBACK = {
     "VERSION",
     "validate_zip_bundle.py",
 }
-
-FORBIDDEN_NAMES = {
-    "deployable_pipeline.pkl",
-    "feature_selection.pkl",
-    "final_model_results.pkl",
-    "gene_id_to_name.pkl",
-    "groups_full.pkl",
-    "model_lr.pkl",
-    "model_rf.pkl",
-    "model_xgb.pkl",
-    "projects_full.pkl",
-    "sample_metadata.pkl",
-    "selected_files.csv",
-    "train_classifier.py",
-    "train_idx.npy",
-    "test_idx.npy",
-    "X_full_filtered.pkl",
-    "y_full.pkl",
-}
+# SHA256SUMS.txt is generated at build time (not copied from the source tree,
+# so it is not itself a RELEASE_FILES entry); every other fallback-required
+# name must be one of the files build_release_lite.py actually ships.
+assert REQUIRED_FALLBACK - {"SHA256SUMS.txt"} <= set(RELEASE_FILES), (
+    "REQUIRED_FALLBACK has entries release_tools.common.RELEASE_FILES does not ship"
+)
 
 EXPECTED_MANIFEST_SCHEMA_VERSION = "1.0"
-EXPECTED_BUNDLE_NAME = "tcga-tumor-normal-release-lite"
+EXPECTED_BUNDLE_NAME = RELEASE_BUNDLE_NAME
 TRANSIENT_NAMES = {"__pycache__"}
 TRANSIENT_PREFIXES = ("_smoke_", "_acceptance_")
 TRANSIENT_SUFFIXES = (".pyc",)
@@ -79,14 +74,6 @@ TEXT_NAMES = {"LICENSE", "VERSION"}
 
 def sha256_bytes(data):
     return hashlib.sha256(data).hexdigest()
-
-
-def sha256_file(path):
-    digest = hashlib.sha256()
-    with open(path, "rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def normalize_release_path(rel):
@@ -495,8 +482,7 @@ def run_smoke(release_dir, timeout_seconds):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Validate release-lite and optional zip.")
     parser.add_argument("--release-dir", default="release-lite")
-    parser.add_argument("--zip", dest="zip_path",
-                        default="tcga-tumor-normal-release-lite.zip")
+    parser.add_argument("--zip", dest="zip_path", default=RELEASE_ZIP_NAME)
     parser.add_argument("--no-zip", action="store_true")
     parser.add_argument("--smoke", action="store_true",
                         help="run run_smoke_tests.py inside the release directory")
