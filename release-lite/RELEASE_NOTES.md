@@ -1,5 +1,28 @@
 # Release notes
 
+## v1.1.16-gdc-starcounts — 2026-07-10
+
+Pickle expression input rejection release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.15; this release removes
+public CLI support for user-supplied pickled expression matrices while keeping
+trusted internal pickle cache loading explicit in development scripts.
+
+### Fixed
+
+- `tcga_rnaseq.read_matrix()` now rejects `.pkl` expression matrices by default
+  because unpickling user-controlled files can execute code.
+- Public CLIs now surface the `.pkl` rejection through normal argument errors
+  instead of loading the file.
+- Internal cross-platform benchmark code that reads trusted local pickle caches
+  now opts in with `allow_pickle=True`.
+
+### Tests
+
+- Added core unit coverage for default pickle rejection and explicit trusted
+  opt-in.
+- Added release safety coverage that verifies `score_tumor_normal.py` refuses a
+  pickled expression input without writing scores.
+
 ## v1.1.15-gdc-starcounts — 2026-07-10
 
 Release validation malformed-input hardening release. Model weights, training

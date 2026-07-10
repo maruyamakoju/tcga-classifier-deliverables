@@ -1,6 +1,6 @@
 # Reproducibility notes
 
-Release: `v1.1.15-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.16-gdc-starcounts` (`2026-07-10`)
 
 ## Recommended scoring environment
 
@@ -147,7 +147,8 @@ prefer the pinned `requirements.txt` / `environment.yml`.
 - rows = samples, columns = genes
 - Ensembl gene IDs, with or without version suffixes
 - values = log2(TPM+1) on the GDC STAR-Counts scale
-- `.csv`, `.tsv`, `.txt`, `.parquet`, or pickled pandas DataFrame input
+- `.csv`, `.tsv`, `.txt`, or `.parquet` input; pickled expression matrices are
+  intentionally rejected by the public CLIs
 
 Missing model genes are filled with the training mean, which is neutral after
 standardization for logistic regression. If fewer than half of the 2,000 model

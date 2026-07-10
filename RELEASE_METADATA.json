@@ -1,8 +1,13 @@
 {
   "release_date": "2026-07-10",
-  "release_name": "GDC STAR-Counts release validation malformed input hardening release",
+  "release_name": "GDC STAR-Counts pickle expression input rejection release",
   "schema_version": "1.0",
-  "version": "v1.1.15-gdc-starcounts",
+  "version": "v1.1.16-gdc-starcounts",
+  "changes_since_v1_1_15": [
+    "Made tcga_rnaseq.read_matrix reject pickled expression matrices by default because unpickling user-controlled files can execute code.",
+    "Kept trusted internal pickle cache loading available only through an explicit allow_pickle=True code path.",
+    "Updated public CLI documentation and safety tests so collaborator-provided expression matrices must use CSV, TSV, TXT, or Parquet."
+  ],
   "changes_since_v1_1_14": [
     "Hardened validate_release_lite.py so malformed release_manifest.json content is reported as validation errors instead of crashing validation.",
     "Hardened validate_release_lite.py and validate_zip_bundle.py so corrupt or mislabeled zip files return explicit FAIL diagnostics instead of raw zip exceptions.",

@@ -1,6 +1,6 @@
 # User guide
 
-Release: `v1.1.15-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.16-gdc-starcounts` (`2026-07-10`)
 
 This guide is for people who want to run the lightweight classifier on a new
 expression matrix. For a short project-level handoff, read
@@ -46,7 +46,10 @@ Accepted file types:
 - `.csv`
 - `.tsv` / `.txt`
 - `.parquet`
-- `.pkl` containing a pandas DataFrame
+
+Pickled pandas DataFrames are intentionally rejected by the public CLIs because
+unpickling user-controlled files can execute code. Convert collaborator-provided
+matrices to CSV, TSV, or Parquet before scoring.
 
 Ensembl version suffixes are accepted. For example, both `ENSG00000123456` and
 `ENSG00000123456.7` can match model genes.

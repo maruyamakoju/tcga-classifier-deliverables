@@ -8,7 +8,7 @@ import pytest
 
 from tcga_rnaseq import score as S
 from tcga_rnaseq import metrics as M
-from tcga_rnaseq import load_lr_model
+from tcga_rnaseq import load_lr_model, read_matrix
 from tcga_rnaseq.align import align_to_genes, align_to_genes_with_report
 from calibrate_threshold import (
     choose_youden_threshold,
@@ -338,6 +338,18 @@ def test_load_lr_model_rejects_inconsistent_shapes(tmp_path):
     )
     with pytest.raises(ValueError, match="one value per selected gene"):
         load_lr_model(bad)
+
+
+def test_read_matrix_rejects_pickle_by_default(tmp_path):
+    path = tmp_path / "input.pkl"
+    expected = pd.DataFrame({"g1": [1.0]}, index=["s1"])
+    expected.to_pickle(path)
+
+    with pytest.raises(ValueError, match="Pickle expression inputs are disabled"):
+        read_matrix(path)
+
+    observed = read_matrix(path, allow_pickle=True)
+    pd.testing.assert_frame_equal(observed, expected)
 
 
 def test_binary_cli_rejects_multiclass_weights(root, cancer_type_model):

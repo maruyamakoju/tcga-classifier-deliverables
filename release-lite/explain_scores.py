@@ -104,7 +104,10 @@ def main(argv=None):
         parser.error("--max-invalid-cell-fraction must be between 0 and 1")
 
     weights = load_lr_weights(args.lr_weights)
-    df = read_matrix(args.input, transpose=args.transpose)
+    try:
+        df = read_matrix(args.input, transpose=args.transpose)
+    except ValueError as exc:
+        parser.error(str(exc))
     gene_names = load_gene_metadata(args.gene_metadata)
     explanations, n_matched, missing, alignment_report = explain_dataframe(
         df,

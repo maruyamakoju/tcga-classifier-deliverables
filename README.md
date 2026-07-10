@@ -1,11 +1,11 @@
 # TCGA tumor-vs-normal classifier — deliverables
 
 [![CI](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml/badge.svg)](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.15-gdc-starcounts)
+[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.16-gdc-starcounts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Citation](https://img.shields.io/badge/citation-CITATION.cff-blue.svg)](CITATION.cff)
 
-Release: `v1.1.15-gdc-starcounts` (`2026-07-10`). For a single guided path
+Release: `v1.1.16-gdc-starcounts` (`2026-07-10`). For a single guided path
 through the public lightweight bundle, start with `INDEX.md`. Otherwise start
 with `EXECUTIVE_SUMMARY.md` if you need a short
 handoff/readout, or `USER_GUIDE.md` if you are preparing a new input matrix.
@@ -42,9 +42,11 @@ python explain_scores.py expr.csv --top-n 10             # per-sample LR gene co
 ```
 
 - **Input:** rows = samples, columns = genes (Ensembl IDs, with or without the `.version`
-  suffix), values = **log2(TPM+1)** on the GDC STAR-Counts scale. Formats: `.csv .tsv
-  .parquet .pkl`. Add `--transpose` if genes are rows. Genes missing from the input are
-  filled with the training mean (neutral after standardization) and reported.
+  suffix), values = **log2(TPM+1)** on the GDC STAR-Counts scale. Formats:
+  `.csv .tsv .txt .parquet`. Pickled expression matrices are intentionally
+  rejected by the public CLIs. Add `--transpose` if genes are rows. Genes
+  missing from the input are filled with the training mean (neutral after
+  standardization) and reported.
 - **Output CSV:** `sample, tumor_probability, call`.
 - **One-command workflow:** `run_tumor_normal_workflow.py` writes `qc.json`,
   `scores.csv`, optional `thresholds.csv` / `calibration.json`,

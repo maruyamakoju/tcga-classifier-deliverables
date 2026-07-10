@@ -7,8 +7,8 @@ scoring (2,000 genes; test AUC 0.997, leave-one-cancer-out AUC 0.994).
 INPUT
   A table of expression values, rows = samples, columns = genes (Ensembl gene IDs,
   e.g. ENSG00000000005 or ENSG00000000005.6). Values must be **log2(TPM+1)** on the
-  GDC STAR-Counts scale, the same as training. Accepted: .csv .tsv .parquet .pkl
-  (a pickled pandas DataFrame). Use --transpose if your genes are rows.
+  GDC STAR-Counts scale, the same as training. Accepted: .csv .tsv .txt .parquet.
+  Use --transpose if your genes are rows.
 
 USAGE
   python score_tumor_normal.py expr.csv                     # -> expr.scored.csv
@@ -167,7 +167,10 @@ def main(argv=None):
     if not args.input:
         ap.error("input is required unless --self-test is used")
 
-    df = read_matrix(args.input, transpose=args.transpose)
+    try:
+        df = read_matrix(args.input, transpose=args.transpose)
+    except ValueError as exc:
+        ap.error(str(exc))
     if not os.path.exists(args.lr_weights):
         ap.error(f"LR weights file not found: {args.lr_weights}")
     model = load_lr_model(args.lr_weights)

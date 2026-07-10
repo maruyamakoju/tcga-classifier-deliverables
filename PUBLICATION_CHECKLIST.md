@@ -2,7 +2,7 @@
 
 Use this checklist before making the repository or a release public.
 
-Status for `v1.1.15-gdc-starcounts`: completed for the public GitHub release on
+Status for `v1.1.16-gdc-starcounts`: completed for the public GitHub release on
 2026-07-10. Re-run this checklist before any future public release.
 
 ## Repository

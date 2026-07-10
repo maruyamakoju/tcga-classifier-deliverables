@@ -53,7 +53,10 @@ def main(argv=None):
         ap.error("--topk must be >= 1")
     if not 0 <= args.max_invalid_cell_fraction <= 1:
         ap.error("--max-invalid-cell-fraction must be between 0 and 1")
-    X = read_matrix(args.input_csv)
+    try:
+        X = read_matrix(args.input_csv)
+    except ValueError as exc:
+        ap.error(str(exc))
     values, alignment_report = align_to_genes_with_report(
         X, model["genes"], impute_mean=model["mean"]
     )

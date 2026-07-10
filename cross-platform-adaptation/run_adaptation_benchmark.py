@@ -58,7 +58,7 @@ def _labels(model, X, lp, key, all_normal):
 def benchmark(model):
     rows = []
     for name, mp, lp, key, all_normal in COHORTS:
-        X = read_matrix(os.path.join(EV, mp))
+    X = read_matrix(os.path.join(EV, mp), allow_pickle=True)
         y = _labels(model, X, lp, key, all_normal)
         for mode in MODES:
             p = predict_proba(model, X, adapt=mode)
@@ -76,7 +76,10 @@ def benchmark(model):
 
 
 def imbalance_curve(model):
-    X = read_matrix(os.path.join(EV, "tcga_toil_xena/tcga_toil_selected_genes_model_scale.pkl"))
+X = read_matrix(
+    os.path.join(EV, "tcga_toil_xena/tcga_toil_selected_genes_model_scale.pkl"),
+    allow_pickle=True,
+)
     lab = pd.read_csv(os.path.join(EV, "tcga_toil_xena/tcga_toil_predictions.csv"))
     y = lab.set_index(lab["sample"].astype(str))["label"].reindex(X.index.astype(str)).astype(int).values
     V, report = align_to_genes_with_report(X, model["genes"], impute_mean=model["mean"])
