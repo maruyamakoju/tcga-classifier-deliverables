@@ -779,6 +779,52 @@ def test_binary_cli_rejects_multiclass_weights(root, cancer_type_model):
         score_dataframe_lr_weights(pd.DataFrame({"g1": [1.0]}), cancer_type_model)
 
 
+def test_cancer_type_cli_rejects_missing_weights_file(tmp_path, root):
+    result = subprocess.run(
+        [
+            sys.executable,
+            "cancer-type-classifier/predict_cancer_type.py",
+            f"{root}/example_input.csv",
+            "--weights",
+            str(tmp_path / "does_not_exist.npz"),
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode != 0
+    assert "weights file not found" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
+def test_cancer_type_cli_rejects_malformed_weights_file(tmp_path, root):
+    weights_path = tmp_path / "malformed.npz"
+    np.savez(
+        weights_path,
+        selected_genes=np.array(["a", "b"]),
+        scaler_mean=np.array([0.0]),
+        scaler_scale=np.array([1.0, 1.0]),
+        coef=np.array([[1.0, 1.0], [1.0, 1.0]]),
+        intercept=np.array([0.0, 0.0]),
+        classes=np.array(["x", "y"]),
+    )
+    result = subprocess.run(
+        [
+            sys.executable,
+            "cancer-type-classifier/predict_cancer_type.py",
+            f"{root}/example_input.csv",
+            "--weights",
+            str(weights_path),
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode != 0
+    assert "must have one value per selected gene" in result.stderr
+    assert "Traceback" not in result.stderr
+
+
 def test_cancer_type_cli_rejects_invalid_matched_values(tmp_path, root, cancer_type_model):
     genes = [str(gene) for gene in cancer_type_model["genes"][:600]]
     input_path = tmp_path / "invalid_cancer_type.csv"
@@ -818,6 +864,64 @@ def test_cancer_type_cli_rejects_invalid_matched_values(tmp_path, root, cancer_t
     )
     assert result.returncode == 0
     assert output_path.exists()
+
+
+def test_cancer_type_cli_rejects_low_gene_coverage_unless_allowed(tmp_path, root):
+    input_path = tmp_path / "no_model_genes.csv"
+    output_path = tmp_path / "predictions.csv"
+    pd.DataFrame({"NOT_A_MODEL_GENE": [1.0]}, index=["s1"]).to_csv(input_path, index_label="sample")
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "cancer-type-classifier/predict_cancer_type.py",
+            str(input_path),
+            "--out",
+            str(output_path),
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode != 0
+    assert "low model-gene coverage" in result.stderr
+    assert "Refusing to write predictions" in result.stderr
+    assert not output_path.exists()
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            "cancer-type-classifier/predict_cancer_type.py",
+            str(input_path),
+            "--out",
+            str(output_path),
+            "--allow-low-gene-coverage",
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+    )
+    assert result.returncode == 0
+    assert output_path.exists()
+
+
+def test_cancer_type_cli_validates_topk_bounds(root, cancer_type_model):
+    n_classes = len(cancer_type_model["classes"])
+    result = subprocess.run(
+        [sys.executable, "cancer-type-classifier/predict_cancer_type.py",
+         f"{root}/example_input.csv", "--topk", "0"],
+        cwd=root, text=True, capture_output=True,
+    )
+    assert result.returncode != 0
+    assert "--topk must be >= 1" in result.stderr
+
+    result = subprocess.run(
+        [sys.executable, "cancer-type-classifier/predict_cancer_type.py",
+         f"{root}/example_input.csv", "--topk", str(n_classes + 1)],
+        cwd=root, text=True, capture_output=True,
+    )
+    assert result.returncode != 0
+    assert f"--topk must be <= number of classes ({n_classes})" in result.stderr
 
 
 def test_workflow_qc_fail_report_does_not_claim_zero_scored_samples():

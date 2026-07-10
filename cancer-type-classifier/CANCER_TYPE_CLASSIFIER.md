@@ -68,7 +68,7 @@ tissues (dominant off-diagonal confusions, true -> predicted):
 - **ESCA <-> STAD** (6 / 5): esophageal and gastric, the gastro-esophageal junction.
 - **KIRC <-> KIRP <-> KICH** (5 / 5 / ...): the three kidney subtypes.
 - **LUAD <-> LUSC**, **LUSC <-> HNSC** (7 / 4 / 6): lung and squamous histologies.
-- **CHOL -> LIHC** (4 of 18): bile-duct vs hepatocellular, both hepatobiliary.
+- **CHOL -> LIHC** (2 of 18): bile-duct vs hepatocellular, both hepatobiliary.
 
 Tissues with unique, strongly expressed markers (thyroid, prostate) are classified
 perfectly.

@@ -54,11 +54,18 @@ def main(argv=None):
                           "only after reviewing gene IDs and imputation"))
     args = ap.parse_args(argv)
 
-    model = load_lr_model(args.weights)
+    if not os.path.exists(args.weights):
+        ap.error(f"weights file not found: {args.weights}")
+    try:
+        model = load_lr_model(args.weights)
+    except ValueError as exc:
+        ap.error(str(exc))
     if model["kind"] != "multiclass":
         ap.error("weights file is not a multi-class cancer-type model")
     if args.topk < 1:
         ap.error("--topk must be >= 1")
+    if args.topk > len(model["classes"]):
+        ap.error(f"--topk must be <= number of classes ({len(model['classes'])})")
     try:
         validate_threshold(args.max_invalid_cell_fraction, "--max-invalid-cell-fraction")
         validate_threshold(args.min_model_gene_match_rate, "--min-model-gene-match-rate")
@@ -114,8 +121,6 @@ def main(argv=None):
             print(f"[cancer-type] WARNING: {issue}", file=sys.stderr)
     P = predict_proba_from_aligned(model, values)
     classes = model["classes"]
-    if args.topk > len(classes):
-        ap.error(f"--topk must be <= number of classes ({len(classes)})")
     order = np.argsort(-P, axis=1)
 
     rows = []
