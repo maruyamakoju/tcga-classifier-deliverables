@@ -1,6 +1,6 @@
 # Model card: TCGA/GDC tumor-vs-normal RNA-seq classifier
 
-Release: `v1.1.21-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.22-gdc-starcounts` (`2026-07-10`)
 
 ## Intended use
 

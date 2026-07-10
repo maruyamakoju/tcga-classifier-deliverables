@@ -104,21 +104,30 @@ def read_matrix(path, transpose=False, allow_pickle=False):
     allow_pickle=True because unpickling user-controlled files can execute code.
     """
     path = os.fspath(path)
+    if not os.path.exists(path):
+        raise ValueError(f"expression matrix file not found: {path}")
+    if os.path.isdir(path):
+        raise ValueError(f"expression matrix path is a directory: {path}")
     ext = os.path.splitext(path)[1].lower()
-    if ext == ".pkl":
-        if not allow_pickle:
-            raise ValueError(
-                "Pickle expression inputs are disabled by default because unpickling "
-                "user-controlled files can execute code; convert the matrix to CSV, "
-                "TSV, or Parquet instead."
-            )
-        df = pd.read_pickle(path)
-    elif ext == ".parquet":
-        df = pd.read_parquet(path)
-    elif ext in (".tsv", ".txt"):
-        df = pd.read_csv(path, sep="\t", index_col=0)
-    else:
-        df = pd.read_csv(path, index_col=0)
+    try:
+        if ext == ".pkl":
+            if not allow_pickle:
+                raise ValueError(
+                    "Pickle expression inputs are disabled by default because unpickling "
+                    "user-controlled files can execute code; convert the matrix to CSV, "
+                    "TSV, or Parquet instead."
+                )
+            df = pd.read_pickle(path)
+        elif ext == ".parquet":
+            df = pd.read_parquet(path)
+        elif ext in (".tsv", ".txt"):
+            df = pd.read_csv(path, sep="\t", index_col=0)
+        else:
+            df = pd.read_csv(path, index_col=0)
+    except ValueError:
+        raise
+    except (OSError, pd.errors.ParserError, ImportError) as exc:
+        raise ValueError(f"could not read expression matrix {path}: {exc}") from exc
     return df.T if transpose else df
 
 
