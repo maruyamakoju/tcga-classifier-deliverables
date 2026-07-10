@@ -177,6 +177,33 @@ def check_score_csv(rel, messages):
     return df
 
 
+def normalize_score_consistency_frame(rel, df, messages):
+    missing = [column for column in SCORE_COLUMNS if column not in df.columns]
+    if missing:
+        add_message(messages, "ERROR", "score_consistency_columns_missing",
+                    f"{rel} is missing columns required for score consistency: {missing}.",
+                    ROOT / rel)
+        return None
+
+    probabilities = pd.to_numeric(df["tumor_probability"], errors="coerce")
+    if probabilities.isna().any():
+        add_message(messages, "ERROR", "score_consistency_non_numeric_probability",
+                    f"{rel}:tumor_probability must be numeric for score consistency.",
+                    ROOT / rel)
+        return None
+    if not ((probabilities >= 0) & (probabilities <= 1)).all():
+        add_message(messages, "ERROR", "score_consistency_probability_out_of_range",
+                    f"{rel}:tumor_probability must be in [0, 1] for score consistency.",
+                    ROOT / rel)
+        return None
+
+    return pd.DataFrame({
+        "sample": df["sample"].astype(str),
+        "tumor_probability": probabilities.astype(float),
+        "call": df["call"].astype(str),
+    })
+
+
 def check_labels(messages):
     df = read_csv("example_labels.csv", messages)
     if df is None:
@@ -349,10 +376,24 @@ def check_score_consistency(messages):
     workflow = check_score_csv("example_workflow_output/scores.csv", messages)
     if expected is None or workflow is None:
         return
+    expected = normalize_score_consistency_frame("example_output.csv", expected, messages)
+    workflow = normalize_score_consistency_frame(
+        "example_workflow_output/scores.csv",
+        workflow,
+        messages,
+    )
+    if expected is None or workflow is None:
+        return
+    if len(expected) != len(workflow):
+        add_message(messages, "ERROR", "example_score_row_count_changed",
+                    "example_output.csv and workflow scores.csv row counts differ.",
+                    ROOT / "example_workflow_output/scores.csv")
+        return
     if expected["sample"].tolist() != workflow["sample"].tolist():
         add_message(messages, "ERROR", "example_score_sample_order_changed",
                     "example_output.csv and workflow scores.csv sample order differs.",
                     ROOT / "example_workflow_output/scores.csv")
+        return
     delta = (expected["tumor_probability"] - workflow["tumor_probability"]).abs().max()
     if float(delta) > 1e-6:
         add_message(messages, "ERROR", "example_score_probability_changed",

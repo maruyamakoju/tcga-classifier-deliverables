@@ -22,6 +22,29 @@ def write_thresholds(path, metric_value="1.0", youden_default=""):
     )
 
 
+def write_scores(path, rows, columns=("sample", "tumor_probability", "call")):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines = [",".join(columns)]
+    lines.extend(",".join(str(value) for value in row) for row in rows)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def score_consistency_codes(tmp_path, monkeypatch, expected_rows, workflow_rows,
+                            expected_columns=("sample", "tumor_probability", "call"),
+                            workflow_columns=("sample", "tumor_probability", "call")):
+    monkeypatch.setattr(contracts, "ROOT", tmp_path)
+    write_scores(tmp_path / "example_output.csv", expected_rows, expected_columns)
+    write_scores(
+        tmp_path / "example_workflow_output" / "scores.csv",
+        workflow_rows,
+        workflow_columns,
+    )
+
+    messages = []
+    contracts.check_score_consistency(messages)
+    return {message["code"] for message in messages}
+
+
 def test_json_contracts_report_non_object_top_levels_without_crashing(tmp_path, monkeypatch):
     monkeypatch.setattr(contracts, "ROOT", tmp_path)
     out = tmp_path / "example_workflow_output"
@@ -99,3 +122,64 @@ def test_threshold_contracts_allow_blank_optional_youden_j(tmp_path, monkeypatch
     contracts.check_thresholds(messages)
 
     assert messages == []
+
+
+def test_score_consistency_rejects_missing_probability_without_crashing(tmp_path, monkeypatch):
+    codes = score_consistency_codes(
+        tmp_path,
+        monkeypatch,
+        expected_rows=[("S1", "tumor")],
+        workflow_rows=[("S1", "0.25", "tumor")],
+        expected_columns=("sample", "call"),
+    )
+
+    assert "score_consistency_columns_missing" in codes
+    assert "example_score_probability_changed" not in codes
+
+
+def test_score_consistency_rejects_non_numeric_probability_without_crashing(tmp_path, monkeypatch):
+    codes = score_consistency_codes(
+        tmp_path,
+        monkeypatch,
+        expected_rows=[("S1", "not-a-number", "tumor")],
+        workflow_rows=[("S1", "0.25", "tumor")],
+    )
+
+    assert "score_consistency_non_numeric_probability" in codes
+    assert "example_score_probability_changed" not in codes
+
+
+def test_score_consistency_rejects_out_of_range_probability_without_crashing(tmp_path, monkeypatch):
+    codes = score_consistency_codes(
+        tmp_path,
+        monkeypatch,
+        expected_rows=[("S1", "1.5", "tumor")],
+        workflow_rows=[("S1", "0.25", "tumor")],
+    )
+
+    assert "score_consistency_probability_out_of_range" in codes
+    assert "example_score_probability_changed" not in codes
+
+
+def test_score_consistency_rejects_row_count_mismatch_without_crashing(tmp_path, monkeypatch):
+    codes = score_consistency_codes(
+        tmp_path,
+        monkeypatch,
+        expected_rows=[("S1", "0.25", "tumor"), ("S2", "0.75", "tumor")],
+        workflow_rows=[("S1", "0.25", "tumor")],
+    )
+
+    assert "example_score_row_count_changed" in codes
+    assert "example_score_probability_changed" not in codes
+
+
+def test_score_consistency_rejects_sample_order_mismatch_without_crashing(tmp_path, monkeypatch):
+    codes = score_consistency_codes(
+        tmp_path,
+        monkeypatch,
+        expected_rows=[("S1", "0.25", "normal"), ("S2", "0.75", "tumor")],
+        workflow_rows=[("S2", "0.75", "tumor"), ("S1", "0.25", "normal")],
+    )
+
+    assert "example_score_sample_order_changed" in codes
+    assert "example_score_probability_changed" not in codes

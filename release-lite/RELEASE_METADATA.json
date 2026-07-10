@@ -1,8 +1,13 @@
 {
   "release_date": "2026-07-10",
-  "release_name": "GDC STAR-Counts pickle expression input rejection release",
+  "release_name": "GDC STAR-Counts score consistency contract hardening release",
   "schema_version": "1.0",
-  "version": "v1.1.16-gdc-starcounts",
+  "version": "v1.1.17-gdc-starcounts",
+  "changes_since_v1_1_16": [
+    "Hardened validate_output_contracts.py so malformed score CSVs cannot crash the example score consistency check.",
+    "Made missing score columns, non-numeric probabilities, row-count mismatches, and sample-order mismatches report explicit contract errors before probability or call comparisons run.",
+    "Added unit coverage for malformed score consistency inputs."
+  ],
   "changes_since_v1_1_15": [
     "Made tcga_rnaseq.read_matrix reject pickled expression matrices by default because unpickling user-controlled files can execute code.",
     "Kept trusted internal pickle cache loading available only through an explicit allow_pickle=True code path.",

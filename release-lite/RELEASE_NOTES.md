@@ -1,5 +1,28 @@
 # Release notes
 
+## v1.1.17-gdc-starcounts — 2026-07-10
+
+Score consistency contract hardening release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.16; this release tightens
+the bundled output-contract validator so malformed score CSVs report contract
+errors instead of crashing during example score consistency checks.
+
+### Fixed
+
+- `validate_output_contracts.py` now stops score consistency comparison when
+  either score CSV is missing required score columns.
+- Non-numeric or out-of-range `tumor_probability` values now produce explicit
+  score-consistency contract errors before probability deltas are computed.
+- Row-count and sample-order mismatches between `example_output.csv` and
+  `example_workflow_output/scores.csv` now fail with targeted diagnostics
+  instead of continuing into misleading probability or call comparisons.
+
+### Tests
+
+- Added unit coverage for missing probability columns, non-numeric
+  probabilities, row-count mismatches, and sample-order mismatches in the score
+  consistency path.
+
 ## v1.1.16-gdc-starcounts — 2026-07-10
 
 Pickle expression input rejection release. Model weights, training data, and
