@@ -1,4 +1,5 @@
 """Unit tests for the tcga_rnaseq core primitives."""
+import json
 import subprocess
 import sys
 
@@ -8,10 +9,16 @@ import pytest
 
 from tcga_rnaseq import score as S
 from tcga_rnaseq import metrics as M
-from tcga_rnaseq import load_lr_model, read_matrix
+from tcga_rnaseq import load_lr_model, read_matrix, write_json
+from tcga_rnaseq.io import load_pipeline, _XgbStub
 from tcga_rnaseq.align import (
     align_to_genes,
     align_to_genes_with_report,
+    build_gene_column_lookups,
+    format_alignment_issues,
+    format_gene_match_issues,
+    print_invalid_alignment_summary,
+    validate_alignment_report,
     validate_gene_match_report,
 )
 from calibrate_threshold import (
@@ -133,6 +140,10 @@ def test_align_report_counts_invalid_matched_values():
     assert report["first_genes_with_all_invalid_values"] == ["g1"]
     assert report["n_samples_with_invalid_values"] == 2
     assert report["max_invalid_matched_cell_fraction_per_sample"] == pytest.approx(1.0)
+    # s2 is invalid across every matched gene (g1="also_bad", g2=NaN); s1 only
+    # has one of its two matched genes invalid, so it isn't "all invalid".
+    assert report["n_samples_with_all_invalid_values"] == 1
+    assert report["first_samples_with_all_invalid_values"] == ["s2"]
 
 
 def test_align_rejects_duplicate_and_version_colliding_columns():
@@ -150,6 +161,128 @@ def test_align_rejects_duplicate_and_version_colliding_columns():
         )
 
 
+def test_build_gene_column_lookups_returns_exact_and_stripped():
+    exact, stripped = build_gene_column_lookups(["g1", "g2.3", "g3"])
+    assert exact == {"g1": "g1", "g2.3": "g2.3", "g3": "g3"}
+    assert stripped == {"g1": "g1", "g2": "g2.3", "g3": "g3"}
+
+
+def test_build_gene_column_lookups_rejects_exact_duplicates():
+    with pytest.raises(ValueError, match="Duplicate gene columns"):
+        build_gene_column_lookups(["g1", "g2", "g1"])
+
+
+def test_build_gene_column_lookups_rejects_version_suffix_collisions():
+    with pytest.raises(ValueError, match="Ambiguous gene columns"):
+        build_gene_column_lookups(["g1.1", "g1.2"])
+
+
+def test_validate_alignment_report_flags_all_invalid_genes():
+    report = {
+        "invalid_matched_cells": 5,
+        "n_genes_with_all_invalid_values": 2,
+        "n_samples_with_all_invalid_values": 0,
+        "invalid_matched_fraction": 0.0,
+        "max_invalid_matched_cell_fraction_per_sample": 0.0,
+        "first_genes_with_all_invalid_values": ["g1", "g2"],
+        "first_samples_with_all_invalid_values": [],
+    }
+    issues = validate_alignment_report(report, max_invalid_cell_fraction=0.0)
+    assert issues == ["2 matched model genes have no finite values. Examples: g1, g2."]
+
+
+def test_validate_alignment_report_flags_all_invalid_samples():
+    report = {
+        "invalid_matched_cells": 5,
+        "n_genes_with_all_invalid_values": 0,
+        "n_samples_with_all_invalid_values": 1,
+        "invalid_matched_fraction": 0.0,
+        "max_invalid_matched_cell_fraction_per_sample": 0.0,
+        "first_genes_with_all_invalid_values": [],
+        "first_samples_with_all_invalid_values": ["s2"],
+    }
+    issues = validate_alignment_report(report, max_invalid_cell_fraction=0.0)
+    assert issues == ["1 samples have no finite matched model-gene values. Examples: s2."]
+
+
+def test_validate_alignment_report_flags_overall_fraction_exceeded():
+    report = {
+        "invalid_matched_cells": 3,
+        "n_genes_with_all_invalid_values": 0,
+        "n_samples_with_all_invalid_values": 0,
+        "invalid_matched_fraction": 0.02,
+        "max_invalid_matched_cell_fraction_per_sample": 0.0,
+        "first_genes_with_all_invalid_values": [],
+        "first_samples_with_all_invalid_values": [],
+    }
+    issues = validate_alignment_report(report, max_invalid_cell_fraction=0.01)
+    assert issues == [
+        "Invalid matched-value fraction 2.000% exceeds --max-invalid-cell-fraction 1.000%."
+    ]
+
+
+def test_validate_alignment_report_flags_worst_sample_fraction_exceeded():
+    report = {
+        "invalid_matched_cells": 3,
+        "n_genes_with_all_invalid_values": 0,
+        "n_samples_with_all_invalid_values": 0,
+        "invalid_matched_fraction": 0.0,
+        "max_invalid_matched_cell_fraction_per_sample": 0.5,
+        "first_genes_with_all_invalid_values": [],
+        "first_samples_with_all_invalid_values": [],
+    }
+    issues = validate_alignment_report(report, max_invalid_cell_fraction=0.1)
+    assert issues == [
+        "Worst-sample invalid matched-value fraction 50.000% exceeds "
+        "--max-invalid-cell-fraction 10.000%."
+    ]
+
+
+def test_format_gene_match_issues_clean_and_low_coverage():
+    assert format_gene_match_issues({"n_model_genes": 4, "n_matched_genes": 4}) == ""
+    message = format_gene_match_issues(
+        {"n_model_genes": 4, "n_matched_genes": 1}, min_match_rate=0.5
+    )
+    assert message.startswith("low model-gene coverage: ")
+    assert "25.0%" in message
+
+
+def test_format_alignment_issues_clean_and_invalid():
+    assert format_alignment_issues({"invalid_matched_cells": 0}) == ""
+    bad_report = {
+        "invalid_matched_cells": 5,
+        "n_genes_with_all_invalid_values": 1,
+        "n_samples_with_all_invalid_values": 0,
+        "invalid_matched_fraction": 0.0,
+        "max_invalid_matched_cell_fraction_per_sample": 0.0,
+        "first_genes_with_all_invalid_values": ["g1"],
+        "first_samples_with_all_invalid_values": [],
+    }
+    message = format_alignment_issues(bad_report)
+    assert message.startswith("invalid matched values: ")
+    assert "g1" in message
+
+
+def test_print_invalid_alignment_summary_includes_gene_and_sample_examples(capsys):
+    report = {
+        "invalid_matched_cells": 4,
+        "matched_cells": 10,
+        "invalid_matched_fraction": 0.4,
+        "n_genes_with_invalid_values": 2,
+        "n_samples_with_invalid_values": 2,
+        "first_genes_with_invalid_values": [
+            {"gene": "g1", "invalid_cells": 2, "total_cells": 5},
+        ],
+        "first_samples_with_invalid_values": [
+            {"sample": "s1", "invalid_cells": 2, "matched_genes": 2},
+        ],
+    }
+    print_invalid_alignment_summary(report, sys.stdout)
+    out = capsys.readouterr().out
+    assert "g1:2/5" in out
+    assert "s1:2/2" in out
+
+
 def test_standardize_modes_differ():
     model = {"mean": np.array([0.0, 0.0]), "scale": np.array([1.0, 1.0])}
     v = np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
@@ -160,6 +293,12 @@ def test_standardize_modes_differ():
     assert np.allclose(z_cohort.std(axis=0), 1, atol=1e-9)   # cohort unit-variance
     with pytest.raises(ValueError):
         S.standardize(v, model, "bogus")
+
+    # cohort_center: location-only adaptation -> (x - cohort_mean) / train_scale
+    scaled_model = {"mean": np.array([0.0, 0.0]), "scale": np.array([2.0, 4.0])}
+    z_center = S.standardize(v, scaled_model, "cohort_center")
+    cohort_mean = v.mean(axis=0)
+    assert np.allclose(z_center, (v - cohort_mean) / scaled_model["scale"])
 
 
 def test_roc_auc_matches_sklearn():
@@ -271,6 +410,47 @@ def test_accuracy_balanced_and_prf():
     assert M.balanced_accuracy(y, p) == pytest.approx((0.5 + 2 / 3) / 2)
     prf = {r["label"]: r for r in M.per_class_prf(y, p)}
     assert prf["a"]["support"] == 2 and prf["b"]["support"] == 3
+    # confusion: true a -> {a:1, b:1}; true b -> {a:1, b:2}
+    # class a: tp=1, fp=1 (one "a" prediction was actually b), fn=1 -> prec=rec=f1=0.5
+    assert prf["a"]["precision"] == pytest.approx(0.5)
+    assert prf["a"]["recall"] == pytest.approx(0.5)
+    assert prf["a"]["f1"] == pytest.approx(0.5)
+    # class b: tp=2, fp=1, fn=1 -> prec=rec=f1=2/3
+    assert prf["b"]["precision"] == pytest.approx(2 / 3)
+    assert prf["b"]["recall"] == pytest.approx(2 / 3)
+    assert prf["b"]["f1"] == pytest.approx(2 / 3)
+
+
+def test_confusion_matrix_explicit_labels_ordering():
+    y = np.array(["a", "b", "a", "c"])
+    p = np.array(["a", "a", "b", "c"])
+    m, labels = M.confusion_matrix(y, p, labels=["c", "b", "a"])
+    assert labels == ["c", "b", "a"]
+    # rows/cols follow the explicit ["c","b","a"] order, not sorted order
+    assert m.tolist() == [
+        [1, 0, 0],  # true=c: predicted c once
+        [0, 0, 1],  # true=b: predicted a once
+        [0, 1, 1],  # true=a: predicted b once, predicted a once
+    ]
+
+
+def test_macro_f1_matches_hand_computed_value():
+    y = np.array(["a", "a", "b", "b", "b"])
+    p = np.array(["a", "b", "b", "b", "a"])
+    # per-class f1: a=0.5, b=2/3 (see test_accuracy_balanced_and_prf)
+    assert M.macro_f1(y, p) == pytest.approx((0.5 + 2 / 3) / 2)
+
+
+def test_threshold_sweep_returns_metrics_per_threshold():
+    y = np.array([0, 0, 1, 1])
+    s = np.array([0.1, 0.4, 0.6, 0.9])
+    thresholds = [0.2, 0.5, 0.8]
+    results = M.threshold_sweep(y, s, thresholds)
+    assert len(results) == len(thresholds)
+    assert [r["threshold"] for r in results] == thresholds
+    expected_keys = set(M.classification_metrics(y, s, thresholds[0]).keys())
+    for r in results:
+        assert set(r.keys()) == expected_keys
 
 
 def test_model_loading_shapes(binary_model, cancer_type_model):
@@ -352,6 +532,41 @@ def test_predict_proba_from_aligned_validates_shape_and_finiteness():
         S.predict_proba_from_aligned(model, np.array([[1.0, np.nan]]))
 
 
+def test_predict_returns_binary_class_labels():
+    model = {
+        "genes": np.array(["g1", "g2"]),
+        "mean": np.array([0.0, 0.0]),
+        "scale": np.array([1.0, 1.0]),
+        "coef": np.array([1.0, -1.0]),
+        "intercept": 0.0,
+        "classes": np.array([0, 1]),
+        "kind": "binary",
+    }
+    # s1: g1=2,g2=0 -> logit=2  -> proba~0.88 -> class 1
+    # s2: g1=0,g2=2 -> logit=-2 -> proba~0.12 -> class 0
+    X = pd.DataFrame({"g1": [2.0, 0.0], "g2": [0.0, 2.0]}, index=["s1", "s2"])
+    calls = S.predict(model, X, threshold=0.5)
+    assert calls.tolist() == [1, 0]
+
+
+def test_predict_returns_multiclass_class_labels():
+    model = {
+        "genes": np.array(["g1", "g2"]),
+        "mean": np.array([0.0, 0.0]),
+        "scale": np.array([1.0, 1.0]),
+        "coef": np.array([[1.0, 0.0], [0.0, 1.0], [-1.0, -1.0]]),
+        "intercept": np.array([0.0, 0.0, 0.0]),
+        "classes": np.array(["A", "B", "C"]),
+        "kind": "multiclass",
+    }
+    # s1 favors class A, s2 favors class B, s3 favors class C
+    X = pd.DataFrame(
+        {"g1": [5.0, 0.0, -5.0], "g2": [0.0, 5.0, -5.0]}, index=["s1", "s2", "s3"]
+    )
+    calls = S.predict(model, X)
+    assert calls.tolist() == ["A", "B", "C"]
+
+
 def test_load_lr_model_rejects_inconsistent_shapes(tmp_path):
     bad = tmp_path / "bad_model.npz"
     np.savez(
@@ -364,6 +579,121 @@ def test_load_lr_model_rejects_inconsistent_shapes(tmp_path):
     )
     with pytest.raises(ValueError, match="one value per selected gene"):
         load_lr_model(bad)
+
+
+def _binary_npz_kwargs(n_genes=3):
+    return dict(
+        selected_genes=np.array([f"g{i}" for i in range(n_genes)]),
+        scaler_mean=np.zeros(n_genes),
+        scaler_scale=np.ones(n_genes),
+        coef=np.ones(n_genes),
+        intercept=np.array(0.0),
+    )
+
+
+def _multiclass_npz_kwargs(n_genes=3, n_classes=2):
+    return dict(
+        selected_genes=np.array([f"g{i}" for i in range(n_genes)]),
+        scaler_mean=np.zeros(n_genes),
+        scaler_scale=np.ones(n_genes),
+        coef=np.zeros((n_classes, n_genes)),
+        intercept=np.zeros(n_classes),
+        classes=np.array([f"c{i}" for i in range(n_classes)]),
+    )
+
+
+def test_load_lr_model_rejects_nonfinite_scaler_values(tmp_path):
+    nan_mean = tmp_path / "nan_mean.npz"
+    kwargs = _binary_npz_kwargs()
+    kwargs["scaler_mean"] = np.array([0.0, np.nan, 1.0])
+    np.savez(nan_mean, **kwargs)
+    with pytest.raises(ValueError, match="must be finite"):
+        load_lr_model(nan_mean)
+
+    inf_scale = tmp_path / "inf_scale.npz"
+    kwargs = _binary_npz_kwargs()
+    kwargs["scaler_scale"] = np.array([1.0, np.inf, 1.0])
+    np.savez(inf_scale, **kwargs)
+    with pytest.raises(ValueError, match="must be finite"):
+        load_lr_model(inf_scale)
+
+
+def test_load_lr_model_rejects_nonpositive_scale(tmp_path):
+    bad = tmp_path / "nonpositive_scale.npz"
+    kwargs = _binary_npz_kwargs()
+    kwargs["scaler_scale"] = np.array([1.0, 0.0, 1.0])
+    np.savez(bad, **kwargs)
+    with pytest.raises(ValueError, match="must be positive"):
+        load_lr_model(bad)
+
+
+def test_load_lr_model_rejects_binary_coef_shape_mismatch(tmp_path):
+    bad = tmp_path / "binary_coef_mismatch.npz"
+    kwargs = _binary_npz_kwargs(n_genes=3)
+    kwargs["coef"] = np.array([1.0, 2.0])  # length 2, but 3 genes
+    np.savez(bad, **kwargs)
+    with pytest.raises(ValueError, match="does not match genes="):
+        load_lr_model(bad)
+
+
+def test_load_lr_model_rejects_multiclass_coef_gene_mismatch(tmp_path):
+    bad = tmp_path / "multiclass_coef_mismatch.npz"
+    kwargs = _multiclass_npz_kwargs(n_genes=3, n_classes=2)
+    kwargs["coef"] = np.zeros((2, 4))  # coef.shape[1]=4 != n_genes=3
+    np.savez(bad, **kwargs)
+    with pytest.raises(ValueError, match="does not match genes="):
+        load_lr_model(bad)
+
+
+def test_load_lr_model_rejects_multiclass_intercept_length_mismatch(tmp_path):
+    bad = tmp_path / "multiclass_intercept_mismatch.npz"
+    kwargs = _multiclass_npz_kwargs(n_genes=3, n_classes=2)
+    kwargs["intercept"] = np.zeros(3)  # coef.shape[0]=2, intercept length 3
+    np.savez(bad, **kwargs)
+    with pytest.raises(
+        ValueError, match="Multiclass intercept length must match number of coefficient rows"
+    ):
+        load_lr_model(bad)
+
+
+def test_load_lr_model_rejects_multiclass_class_count_mismatch(tmp_path):
+    bad = tmp_path / "multiclass_class_count_mismatch.npz"
+    kwargs = _multiclass_npz_kwargs(n_genes=3, n_classes=2)
+    kwargs["classes"] = np.array(["c0", "c1", "c2"])  # coef.shape[0]=2, 3 classes
+    np.savez(bad, **kwargs)
+    with pytest.raises(
+        ValueError, match="Class label count must match number of coefficient rows"
+    ):
+        load_lr_model(bad)
+
+
+def test_load_pipeline_stubs_xgboost_objects_without_importing(tmp_path):
+    """A legacy pickle that references an xgboost.* class must unpickle as
+    _XgbStub via _SafeUnpickler.find_class, without ever importing xgboost
+    (importing it segfaults in the project's conda env). Hand-crafted at the
+    pickle-opcode level (not pickle.dump) because the real Pickler refuses to
+    reference a class from a module it can't actually import."""
+    payload = b"".join([
+        b"(",                            # MARK (outer dict)
+        b"S'model'\n",                   # key "model"
+        b"cxgboost.sklearn\n",           # GLOBAL module
+        b"XGBClassifier\n",              # GLOBAL qualname
+        b"(t",                           # EMPTY_TUPLE (mark + TUPLE)
+        b"R",                            # REDUCE -> calls stubbed class() -> instance
+        b"(S'note'\nS'stub-state'\nd",   # build state dict {"note": "stub-state"}
+        b"b",                            # BUILD -> instance.__setstate__(state)
+        b"d",                            # DICT -> {"model": instance}
+        b".",                            # STOP
+    ])
+    path = tmp_path / "legacy_pipeline.pkl"
+    path.write_bytes(payload)
+
+    loaded = load_pipeline(path)
+
+    assert "xgboost" not in sys.modules
+    assert isinstance(loaded, dict)
+    assert isinstance(loaded["model"], _XgbStub)
+    assert loaded["model"]._state == {"note": "stub-state"}
 
 
 def test_read_matrix_rejects_pickle_by_default(tmp_path):
@@ -382,6 +712,43 @@ def test_read_matrix_reports_missing_file_as_valueerror(tmp_path):
     missing = tmp_path / "missing.csv"
     with pytest.raises(ValueError, match="expression matrix file not found"):
         read_matrix(missing)
+
+
+def test_read_matrix_rejects_directory_path(tmp_path):
+    with pytest.raises(ValueError, match="path is a directory"):
+        read_matrix(tmp_path)
+
+
+def test_read_matrix_tsv_and_txt_round_trip(tmp_path):
+    df = pd.DataFrame({"g1": [1.0, 2.0], "g2": [3.0, 4.0]}, index=["s1", "s2"])
+
+    tsv_path = tmp_path / "matrix.tsv"
+    df.to_csv(tsv_path, sep="\t")
+    pd.testing.assert_frame_equal(read_matrix(tsv_path), df)
+
+    txt_path = tmp_path / "matrix.txt"
+    df.to_csv(txt_path, sep="\t")
+    pd.testing.assert_frame_equal(read_matrix(txt_path), df)
+
+
+def test_read_matrix_parquet_round_trip(tmp_path):
+    pytest.importorskip("pyarrow")
+    df = pd.DataFrame({"g1": [1.0, 2.0], "g2": [3.0, 4.0]}, index=["s1", "s2"])
+    path = tmp_path / "matrix.parquet"
+    df.to_parquet(path)
+    pd.testing.assert_frame_equal(read_matrix(path), df)
+
+
+def test_write_json_creates_parent_dirs_and_trailing_newline(tmp_path):
+    path = tmp_path / "nested" / "deep" / "report.json"
+    payload = {"a": 1, "b": [1, 2, 3]}
+    result = write_json(payload, path)
+
+    assert result == path
+    assert path.parent.is_dir()
+    content = path.read_text(encoding="utf-8")
+    assert content.endswith("\n")
+    assert json.loads(content) == payload
 
 
 def test_scoring_cli_reports_missing_input_without_traceback(tmp_path, root):
