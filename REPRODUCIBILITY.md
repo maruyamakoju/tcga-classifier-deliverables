@@ -1,6 +1,6 @@
 # Reproducibility notes
 
-Release: `v1.1.13-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.14-gdc-starcounts` (`2026-07-10`)
 
 ## Recommended scoring environment
 

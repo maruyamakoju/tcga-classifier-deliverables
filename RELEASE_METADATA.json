@@ -1,8 +1,13 @@
 {
   "release_date": "2026-07-10",
-  "release_name": "GDC STAR-Counts output contract JSON hardening release",
+  "release_name": "GDC STAR-Counts threshold contract metric hardening release",
   "schema_version": "1.0",
-  "version": "v1.1.13-gdc-starcounts",
+  "version": "v1.1.14-gdc-starcounts",
+  "changes_since_v1_1_13": [
+    "Hardened validate_output_contracts.py so non-empty threshold metric fields must be numeric instead of being silently ignored as NaN.",
+    "Kept blank optional youden_j values valid for rows where the metric is intentionally absent.",
+    "Added unit coverage for non-numeric threshold metrics and blank optional youden_j handling."
+  ],
   "changes_since_v1_1_12": [
     "Hardened validate_output_contracts.py so malformed JSON top-level values are reported as contract errors instead of crashing validation.",
     "Made calibration metric validation reject non-numeric, boolean, and out-of-range values with explicit diagnostics.",
