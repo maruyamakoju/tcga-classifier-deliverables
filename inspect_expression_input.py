@@ -11,11 +11,12 @@ import os
 import sys
 
 import numpy as np
-import pandas as pd
 
+from calibrate_threshold import validate_threshold
 from score_tumor_normal import load_lr_weights
-from tcga_rnaseq import read_matrix, sigmoid
-from tcga_rnaseq.align import build_gene_column_lookups, strip_version
+from tcga_rnaseq import read_matrix, write_json
+from tcga_rnaseq.align import align_to_genes_with_report
+from tcga_rnaseq.score import predict_proba_from_aligned, standardize
 
 
 DEFAULT_RULES = {
@@ -67,25 +68,6 @@ def load_reference(path):
     return ref
 
 
-def align_raw_to_genes(df, selected_genes):
-    cols, stripped = build_gene_column_lookups(df.columns)
-
-    out = np.empty((df.shape[0], len(selected_genes)), dtype=float)
-    out[:] = np.nan
-    missing = []
-    matched_sources = []
-    for j, gene in enumerate(selected_genes):
-        src = cols.get(str(gene))
-        if src is None:
-            src = stripped.get(strip_version(gene))
-        if src is None:
-            missing.append(gene)
-            continue
-        out[:, j] = pd.to_numeric(df[src], errors="coerce").to_numpy(dtype=float)
-        matched_sources.append(str(src))
-    return out, matched_sources, missing
-
-
 def add_message(messages, level, code, text):
     messages.append({"level": level, "code": code, "message": text})
 
@@ -93,17 +75,20 @@ def add_message(messages, level, code, text):
 def inspect_dataframe(df, weights, threshold=0.5, expected_class="unknown",
                       reference=None):
     selected_genes = weights["selected_genes"]
-    mean = weights["scaler_mean"]
-    scale = weights["scaler_scale"]
+    mean = np.asarray(weights["scaler_mean"], dtype=float)
+    scale = np.asarray(weights["scaler_scale"], dtype=float)
     coef = weights["coef"]
     intercept = weights["intercept"]
+    model = {"genes": selected_genes, "mean": mean, "scale": scale,
+             "coef": coef, "intercept": intercept, "kind": "binary"}
     reference = reference or {"rules": DEFAULT_RULES}
     rules = reference.get("rules", DEFAULT_RULES)
     messages = []
 
-    X_raw, matched_sources, missing = align_raw_to_genes(df, selected_genes)
-    n_model_genes = len(selected_genes)
-    n_matched = n_model_genes - len(missing)
+    X_raw, align_report = align_to_genes_with_report(df, selected_genes, impute_mean=None)
+    n_model_genes = align_report["n_model_genes"]
+    n_matched = align_report["n_matched_genes"]
+    missing = align_report["missing_genes"]
     match_rate = n_matched / n_model_genes if n_model_genes else 0.0
 
     if n_matched == 0:
@@ -149,7 +134,7 @@ def inspect_dataframe(df, weights, threshold=0.5, expected_class="unknown",
         negative_fraction = None
 
     X = np.where(finite_mask, X_raw, mean)
-    X_scaled = (X - mean) / scale
+    X_scaled = standardize(X, model, adapt="none")
     abs_z = np.abs(X_scaled)
     sample_median_abs_z = np.median(abs_z, axis=1) if df.shape[0] else np.array([])
     sample_p95_abs_z = np.percentile(abs_z, 95, axis=1) if df.shape[0] else np.array([])
@@ -175,8 +160,7 @@ def inspect_dataframe(df, weights, threshold=0.5, expected_class="unknown",
             add_message(messages, "WARNING", "large_cohort_gene_shift",
                         f"Maximum cohort gene-mean |z|={max_shift:.3g}; check normalization and gene annotation.")
 
-    logits = X_scaled @ coef + intercept
-    probabilities = sigmoid(logits)
+    probabilities = predict_proba_from_aligned(model, X, adapt="none")
     calls = probabilities >= threshold
     tumor_fraction = float(np.mean(calls)) if calls.size else None
     normal_fraction = None if tumor_fraction is None else 1.0 - tumor_fraction
@@ -282,8 +266,10 @@ def main(argv=None):
                         help="return non-zero on warnings as well as errors")
     args = parser.parse_args(argv)
 
-    if not 0 <= args.threshold <= 1:
-        parser.error("--threshold must be between 0 and 1")
+    try:
+        validate_threshold(args.threshold, "--threshold")
+    except ValueError as exc:
+        parser.error(str(exc))
 
     weights = load_lr_weights(args.lr_weights)
     reference = load_reference(args.qc_reference)
@@ -294,9 +280,7 @@ def main(argv=None):
     report = inspect_dataframe(df, weights, args.threshold, args.expected_class, reference)
 
     out = args.output or (os.path.splitext(args.input)[0] + ".qc.json")
-    with open(out, "w", encoding="utf-8") as handle:
-        json.dump(report, handle, indent=2, sort_keys=True)
-        handle.write("\n")
+    write_json(report, out, sort_keys=True)
     print_human_summary(report, out)
 
     if report["status"] == "FAIL" or (args.strict and report["status"] == "WARN"):
