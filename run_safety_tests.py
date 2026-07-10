@@ -79,12 +79,18 @@ def main():
         expected_normal_qc = temp_root / "expected_normal.qc.json"
         invalid_input = temp_root / "invalid_matched_values.csv"
         invalid_workflow = temp_root / "invalid_matched_workflow"
+        bad_labels = temp_root / "bad_labels.csv"
+        bad_labels_workflow = temp_root / "bad_labels_workflow"
         pickle_input = temp_root / "untrusted_expression.pkl"
         pickle_output = temp_root / "untrusted_expression.scored.csv"
 
         write_no_gene_match_input(example, no_match_input)
         write_raw_count_like_input(example, raw_like_input)
         write_invalid_matched_input(example, invalid_input)
+        bad_labels.write_text(
+            f"sample,label\n{example.index[0]},tumor\n",
+            encoding="utf-8",
+        )
         example.to_pickle(pickle_input)
 
         result = run([sys.executable, "score_tumor_normal.py", "example_input.csv",
@@ -218,6 +224,26 @@ def main():
                 "workflow did not stop after invalid matched values")
         require(not (invalid_workflow / "scores.csv").exists(),
                 "workflow wrote scores.csv after invalid matched values")
+
+        result = run([sys.executable, "run_tumor_normal_workflow.py",
+                      "example_input.csv", "--labels", str(bad_labels),
+                      "--output-dir", str(bad_labels_workflow)])
+        require_fail(result, "workflow bad calibration labels")
+        require("calibration failed" in result.stderr,
+                "workflow calibration failure message missing")
+        manifest = json.loads((bad_labels_workflow / "manifest.json").read_text(encoding="utf-8"))
+        require(manifest["status"] == "stopped_after_calibration_error",
+                "workflow did not record calibration failure status")
+        require("calibration_error" in manifest,
+                "workflow calibration failure did not record error")
+        require((bad_labels_workflow / "scores.csv").exists(),
+                "workflow did not preserve scores after calibration failure")
+        require(not (bad_labels_workflow / "thresholds.csv").exists(),
+                "workflow wrote thresholds.csv after calibration failure")
+        require(not (bad_labels_workflow / "calibration.json").exists(),
+                "workflow wrote calibration.json after calibration failure")
+        require(not (bad_labels_workflow / "explanations.csv").exists(),
+                "workflow wrote explanations.csv after calibration failure")
 
         result = run([sys.executable, "inspect_expression_input.py",
                       str(raw_like_input), "-o", str(raw_like_qc)])
