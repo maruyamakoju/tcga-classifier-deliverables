@@ -32,6 +32,12 @@ from .score import (
     standardize,
     ADAPT_MODES,
 )
+from .validation import (
+    normalize_label,
+    require_unique_samples,
+    sample_key,
+    validate_threshold,
+)
 
 __all__ = [
     "load_lr_model", "load_pipeline", "read_matrix",
@@ -43,6 +49,7 @@ __all__ = [
     "predict_proba", "predict_proba_from_aligned",
     "score_binary_dataframe", "predict", "sigmoid", "softmax",
     "standardize", "ADAPT_MODES",
+    "validate_threshold", "normalize_label", "sample_key", "require_unique_samples",
 ]
 
 # tcga_rnaseq's own library version, independent of the release VERSION file

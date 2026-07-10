@@ -12,9 +12,8 @@ import sys
 
 import numpy as np
 
-from calibrate_threshold import validate_threshold
 from score_tumor_normal import load_lr_weights
-from tcga_rnaseq import read_matrix, write_json
+from tcga_rnaseq import read_matrix, validate_threshold, write_json
 from tcga_rnaseq.align import align_to_genes_with_report
 from tcga_rnaseq.score import predict_proba_from_aligned, standardize
 

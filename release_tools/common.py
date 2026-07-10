@@ -47,6 +47,7 @@ RELEASE_FILES = [
     "tcga_rnaseq/align.py",
     "tcga_rnaseq/score.py",
     "tcga_rnaseq/metrics.py",
+    "tcga_rnaseq/validation.py",
     "example_input.csv",
     "example_labels.csv",
     "example_output.csv",

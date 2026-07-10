@@ -28,6 +28,7 @@ from tcga_rnaseq import (  # noqa: E402
     read_matrix,
     validate_alignment_report,
     validate_gene_match_report,
+    validate_threshold,
 )
 from tcga_rnaseq.align import align_to_genes_with_report  # noqa: E402
 from tcga_rnaseq.score import predict_proba_from_aligned  # noqa: E402
@@ -58,10 +59,11 @@ def main(argv=None):
         ap.error("weights file is not a multi-class cancer-type model")
     if args.topk < 1:
         ap.error("--topk must be >= 1")
-    if not 0 <= args.max_invalid_cell_fraction <= 1:
-        ap.error("--max-invalid-cell-fraction must be between 0 and 1")
-    if not 0 <= args.min_model_gene_match_rate <= 1:
-        ap.error("--min-model-gene-match-rate must be between 0 and 1")
+    try:
+        validate_threshold(args.max_invalid_cell_fraction, "--max-invalid-cell-fraction")
+        validate_threshold(args.min_model_gene_match_rate, "--min-model-gene-match-rate")
+    except ValueError as exc:
+        ap.error(str(exc))
     try:
         X = read_matrix(args.input_csv)
     except ValueError as exc:

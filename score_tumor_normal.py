@@ -31,7 +31,6 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from calibrate_threshold import validate_threshold  # noqa: E402
 from tcga_rnaseq import (  # noqa: E402
     load_lr_model,
     print_invalid_alignment_summary,
@@ -39,6 +38,7 @@ from tcga_rnaseq import (  # noqa: E402
     score_binary_dataframe,
     validate_alignment_report,
     validate_gene_match_report,
+    validate_threshold,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))

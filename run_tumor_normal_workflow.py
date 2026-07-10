@@ -12,7 +12,6 @@ from calibrate_threshold import (
     load_scores_and_labels,
     metrics_at_threshold,
     rank_auc,
-    validate_threshold,
 )
 from explain_scores import explain_dataframe, load_gene_metadata
 from inspect_expression_input import inspect_dataframe, load_reference
@@ -23,7 +22,7 @@ from score_tumor_normal import (
     score_dataframe_lr_weights,
     validate_alignment_report,
 )
-from tcga_rnaseq import write_json
+from tcga_rnaseq import validate_threshold, write_json
 
 
 def remove_if_exists(path):

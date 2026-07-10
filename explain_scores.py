@@ -7,7 +7,6 @@ import sys
 import numpy as np
 import pandas as pd
 
-from calibrate_threshold import validate_threshold
 from score_tumor_normal import load_lr_weights
 from tcga_rnaseq import (
     align_to_genes_with_report,
@@ -18,6 +17,7 @@ from tcga_rnaseq import (
     strip_version,
     validate_alignment_report,
     validate_gene_match_report,
+    validate_threshold,
 )
 
 
