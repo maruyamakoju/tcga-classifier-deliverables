@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Run the complete lightweight tumor-vs-normal scoring workflow."""
 import argparse
-import json
 import os
 import sys
 from pathlib import Path
@@ -24,17 +23,7 @@ from score_tumor_normal import (
     score_dataframe_lr_weights,
     validate_alignment_report,
 )
-
-
-def write_json(path, data):
-    with open(path, "w", encoding="utf-8") as handle:
-        json.dump(data, handle, indent=2, sort_keys=True)
-        handle.write("\n")
-
-
-def read_json(path):
-    with open(path, "r", encoding="utf-8") as handle:
-        return json.load(handle)
+from tcga_rnaseq import write_json
 
 
 def remove_if_exists(path):
@@ -231,15 +220,13 @@ def main(argv=None):
         os.path.dirname(os.path.abspath(__file__)), "model_gene_metadata.csv"))
     args = parser.parse_args(argv)
 
-    if not 0 <= args.threshold <= 1:
-        parser.error("--threshold must be between 0 and 1")
-    if not 0 <= args.max_invalid_cell_fraction <= 1:
-        parser.error("--max-invalid-cell-fraction must be between 0 and 1")
-    for threshold in args.extra_threshold:
-        try:
+    try:
+        validate_threshold(args.threshold, "--threshold")
+        validate_threshold(args.max_invalid_cell_fraction, "--max-invalid-cell-fraction")
+        for threshold in args.extra_threshold:
             validate_threshold(threshold, "--extra-threshold")
-        except ValueError as exc:
-            parser.error(str(exc))
+    except ValueError as exc:
+        parser.error(str(exc))
     if args.top_n < 1 and not args.skip_explanations:
         parser.error("--top-n must be >= 1 unless --skip-explanations is used")
 
@@ -267,7 +254,7 @@ def main(argv=None):
 
     qc = inspect_dataframe(df, weights, threshold=args.threshold,
                            expected_class=args.expected_class, reference=reference)
-    write_json(paths["qc_json"], qc)
+    write_json(qc, paths["qc_json"], sort_keys=True)
 
     if qc["status"] == "FAIL" and not args.allow_qc_fail:
         manifest = {
@@ -276,7 +263,7 @@ def main(argv=None):
             "outputs": {"qc_json": paths["qc_json"].name},
             "qc_status": qc["status"],
         }
-        write_json(paths["manifest_json"], manifest)
+        write_json(manifest, paths["manifest_json"], sort_keys=True)
         report = build_report(args.input, qc, None,
                               {"qc_json": paths["qc_json"].name,
                                "manifest_json": paths["manifest_json"].name})
@@ -321,7 +308,7 @@ def main(argv=None):
                 ],
             },
         }
-        write_json(paths["manifest_json"], manifest)
+        write_json(manifest, paths["manifest_json"], sort_keys=True)
         report = build_report(
             args.input,
             qc,
@@ -367,7 +354,7 @@ def main(argv=None):
                 "qc_status": qc["status"],
                 "calibration_error": calibration_error,
             }
-            write_json(paths["manifest_json"], manifest)
+            write_json(manifest, paths["manifest_json"], sort_keys=True)
             report = build_report(
                 args.input,
                 qc,
@@ -382,7 +369,7 @@ def main(argv=None):
             print("[workflow] stopped after writing scores; fix labels and rerun", file=sys.stderr)
             return 1
         threshold_metrics.to_csv(paths["thresholds_csv"], index=False)
-        write_json(paths["calibration_json"], calibration_summary)
+        write_json(calibration_summary, paths["calibration_json"], sort_keys=True)
 
     explanations_rows = None
     if not args.skip_explanations:
@@ -411,7 +398,7 @@ def main(argv=None):
         "calibration": calibration_summary,
         "outputs": out_files,
     }
-    write_json(paths["manifest_json"], manifest)
+    write_json(manifest, paths["manifest_json"], sort_keys=True)
 
     print(f"[workflow] QC status={qc['status']}; matched {n_matched}/{len(weights['selected_genes'])} model genes")
     print(f"[workflow] wrote {paths['scores_csv']} ({manifest['tumor_calls']} tumor / {manifest['normal_calls']} normal)")

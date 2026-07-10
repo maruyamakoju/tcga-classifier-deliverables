@@ -7,12 +7,14 @@ import sys
 import numpy as np
 import pandas as pd
 
+from calibrate_threshold import validate_threshold
 from score_tumor_normal import load_lr_weights
 from tcga_rnaseq import (
     align_to_genes_with_report,
     print_invalid_alignment_summary,
     read_matrix,
     sigmoid,
+    strip_version,
     validate_alignment_report,
     validate_gene_match_report,
 )
@@ -68,7 +70,7 @@ def explain_dataframe(df, weights, top_n, gene_names=None, return_alignment_repo
                     "direction": direction,
                     "rank": rank,
                     "gene_id": gene,
-                    "gene_name": gene_names.get(gene, gene_names.get(gene.split(".")[0], "")),
+                    "gene_name": gene_names.get(gene, gene_names.get(strip_version(gene), "")),
                     "contribution_logit": float(contrib[j]),
                     "expression_log2_tpm1": float(X[i, j]),
                     "training_mean": float(mean[j]),
@@ -107,10 +109,11 @@ def main(argv=None):
 
     if args.top_n < 1:
         parser.error("--top-n must be >= 1")
-    if not 0 <= args.max_invalid_cell_fraction <= 1:
-        parser.error("--max-invalid-cell-fraction must be between 0 and 1")
-    if not 0 <= args.min_model_gene_match_rate <= 1:
-        parser.error("--min-model-gene-match-rate must be between 0 and 1")
+    try:
+        validate_threshold(args.max_invalid_cell_fraction, "--max-invalid-cell-fraction")
+        validate_threshold(args.min_model_gene_match_rate, "--min-model-gene-match-rate")
+    except ValueError as exc:
+        parser.error(str(exc))
 
     weights = load_lr_weights(args.lr_weights)
     try:

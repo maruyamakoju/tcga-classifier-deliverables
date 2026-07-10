@@ -31,6 +31,7 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from calibrate_threshold import validate_threshold  # noqa: E402
 from tcga_rnaseq import (  # noqa: E402
     load_lr_model,
     print_invalid_alignment_summary,
@@ -161,12 +162,12 @@ def main(argv=None):
     ap.add_argument("--use-pickle-lr", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args(argv)
 
-    if not 0 <= args.threshold <= 1:
-        ap.error("--threshold must be between 0 and 1")
-    if not 0 <= args.max_invalid_cell_fraction <= 1:
-        ap.error("--max-invalid-cell-fraction must be between 0 and 1")
-    if not 0 <= args.min_model_gene_match_rate <= 1:
-        ap.error("--min-model-gene-match-rate must be between 0 and 1")
+    try:
+        validate_threshold(args.threshold, "--threshold")
+        validate_threshold(args.max_invalid_cell_fraction, "--max-invalid-cell-fraction")
+        validate_threshold(args.min_model_gene_match_rate, "--min-model-gene-match-rate")
+    except ValueError as exc:
+        ap.error(str(exc))
     if args.pipeline or args.use_pickle_lr:
         ap.error(
             "legacy pickle/RF scoring is not available in the public lightweight release; "
@@ -192,7 +193,9 @@ def main(argv=None):
         return_alignment_report=True,
     )
     n_genes = len(model["genes"])
-    scorer = "lr-numpy"
+    # --model is kept for CLI compatibility (TROUBLESHOOTING.md documents that
+    # --model rf is rejected); choices=["lr"] means this can only ever be "lr".
+    scorer = f"{args.model}-numpy"
 
     print(f"[score] scorer={scorer}; {df.shape[0]} samples; matched {n_matched}/{n_genes} "
           f"model genes ({len(missing)} filled with training mean)", file=sys.stderr)
