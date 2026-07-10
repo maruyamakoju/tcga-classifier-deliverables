@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """Generate a self-contained, JS-free HTML summary (inline SVG) from the
 benchmark CSVs. ASCII-only output so it renders identically from file://."""
-import os, csv, html
+import os
+import csv
+import html
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 def read_csv(name):

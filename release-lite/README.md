@@ -12,7 +12,7 @@ handoff/readout, or `USER_GUIDE.md` if you are preparing a new input matrix.
 
 A pan-cancer RNA-seq classifier that calls a sample **tumor** vs **normal**, trained on
 2,160 TCGA samples across 17 cancer types. Best model: logistic regression on 2,000
-genes. Validated three ways: patient-held-out AUC 0.997, 5-fold grouped CV 0.997±0.003,
+genes. Validated three ways: patient-held-out AUC 0.997, 5-fold grouped CV 0.996±0.003,
 leave-one-**cancer-type**-out macro-mean AUC 0.994 (pooled 0.988) (generalizes to cancer types never trained on),
 and an external CPTAC-3/GDC STAR-Counts smoke test with AUC 0.989.
 
@@ -39,14 +39,22 @@ python inspect_expression_input.py example_input.csv     # QC gene coverage, sca
 python score_tumor_normal.py expr.csv -o calls.csv --threshold 0.5
 python calibrate_threshold.py calls.csv labels.csv       # choose a threshold from labeled samples
 python explain_scores.py expr.csv --top-n 10             # per-sample LR gene contributions
+python cohort_adapt_score.py expr.csv --adapt cohort_zscore  # re-threshold a foreign-pipeline cohort
 ```
 
 - **Input:** rows = samples, columns = genes (Ensembl IDs, with or without the `.version`
   suffix), values = **log2(TPM+1)** on the GDC STAR-Counts scale. Formats:
   `.csv .tsv .txt .parquet`. Pickled expression matrices are intentionally
-  rejected by the public CLIs. Add `--transpose` if genes are rows. Genes
-  missing from the input are filled with the training mean (neutral after
-  standardization) and reported.
+  rejected by the public CLIs. Add `--transpose` if genes are rows (accepted by
+  `score_tumor_normal.py`, `explain_scores.py`, `inspect_expression_input.py`, and
+  `run_tumor_normal_workflow.py`; `cohort_adapt_score.py` currently expects
+  samples as rows). Genes missing from the input are filled with the training
+  mean (neutral after standardization) and reported.
+- **Cross-platform cohorts:** `cohort_adapt_score.py` re-centers a batch on its
+  own mean/variance (`--adapt cohort_zscore` / `cohort_center`) before scoring,
+  restoring the default 0.5 threshold on foreign-pipeline inputs where the
+  deployed model's ranking (AUC) still holds but its calibration doesn't; see
+  `cross-platform-adaptation/CROSS_PLATFORM_ADAPTATION.md`.
 - **Output CSV:** `sample, tumor_probability, call`.
 - **One-command workflow:** `run_tumor_normal_workflow.py` writes `qc.json`,
   `scores.csv`, optional `thresholds.csv` / `calibration.json`,

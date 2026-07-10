@@ -208,7 +208,7 @@ contains all model genes, LR coefficients, and scaling parameters.
 Internal validation is complete:
 
 - patient-held-out test AUC: 0.997
-- grouped 5-fold CV AUC: 0.997 +/- 0.003
+- grouped 5-fold CV AUC: 0.996 +/- 0.003
 - leave-one-cancer-type-out macro-mean AUC: 0.994 (pooled 0.988)
 
 External non-TCGA smoke validation is also available:

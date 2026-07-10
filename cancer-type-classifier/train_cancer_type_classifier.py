@@ -22,8 +22,12 @@ Outputs (this folder):
   cancer_type_top_genes.csv         top marker genes per type (final model)
   cancer_type_lr_weights.npz        pure-numpy deployable model
 """
-import argparse, json, os, warnings
-import numpy as np, pandas as pd
+import argparse
+import json
+import os
+import warnings
+import numpy as np
+import pandas as pd
 warnings.filterwarnings("ignore")
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler

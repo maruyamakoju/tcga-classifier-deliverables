@@ -1,89 +1,31 @@
 #!/usr/bin/env python3
 """Extract the release zip into a clean temp directory and run acceptance checks."""
 import argparse
-import json
-import os
 import shutil
-import subprocess
+import subprocess  # noqa: F401 -- re-exported: tests monkeypatch subprocess.run via this module
 import sys
 import tempfile
-import time
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from release_tools.common import (
+    RELEASE_ZIP_NAME,
+    append_timeout_message,  # noqa: F401 -- re-exported for tests/test_subprocess_reporting.py
+    run_subprocess_step,
+    sha256_file as sha256,
+    subprocess_output_text,  # noqa: F401 -- re-exported for tests/test_subprocess_reporting.py
+    write_json_report,
+)
+
 
 ROOT = Path(__file__).resolve().parent
-ZIP_NAME = "tcga-tumor-normal-release-lite.zip"
+ZIP_NAME = RELEASE_ZIP_NAME
 
 
-def subprocess_output_text(value):
-    if value is None:
-        return ""
-    if isinstance(value, bytes):
-        return value.decode("utf-8", errors="replace")
-    return str(value)
-
-
-def append_timeout_message(stderr, timeout_seconds):
-    message = f"Timed out after {timeout_seconds}s"
-    if stderr:
-        return stderr.rstrip("\n") + "\n" + message
-    return message
-
-
-def sha256(path):
-    import hashlib
-
-    digest = hashlib.sha256()
-    with open(path, "rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def run_step(label, cmd, cwd, timeout_seconds=300):
-    print(f"[zip-bundle] {label}: {' '.join(str(x) for x in cmd)}")
-    started = time.perf_counter()
-    env = dict(os.environ)
-    env["PYTHONDONTWRITEBYTECODE"] = "1"
-    try:
-        result = subprocess.run(
-            cmd, cwd=cwd, text=True, capture_output=True, env=env,
-            timeout=timeout_seconds,
-        )
-    except subprocess.TimeoutExpired as exc:
-        duration = time.perf_counter() - started
-        stdout = subprocess_output_text(exc.stdout)
-        stderr = subprocess_output_text(exc.stderr)
-        print(f"[zip-bundle] {label}: FAIL timeout after {duration:.1f}s", file=sys.stderr)
-        return {
-            "label": label,
-            "command": [str(x) for x in cmd],
-            "cwd": str(cwd),
-            "returncode": 124,
-            "status": "FAIL",
-            "duration_seconds": round(duration, 3),
-            "stdout": stdout,
-            "stderr": append_timeout_message(stderr, timeout_seconds),
-        }
-    duration = time.perf_counter() - started
-    if result.stdout:
-        print(result.stdout.rstrip())
-    if result.stderr:
-        print(result.stderr.rstrip(), file=sys.stderr)
-    status = "PASS" if result.returncode == 0 else "FAIL"
-    print(f"[zip-bundle] {label}: {status} ({duration:.1f}s)")
-    return {
-        "label": label,
-        "command": [str(x) for x in cmd],
-        "cwd": str(cwd),
-        "returncode": result.returncode,
-        "status": status,
-        "duration_seconds": round(duration, 3),
-        "stdout": result.stdout,
-        "stderr": result.stderr,
-    }
+def run_step(label, cmd, cwd, required=True, timeout_seconds=300):
+    return run_subprocess_step(label, cmd, cwd, timeout_seconds=timeout_seconds,
+                               required=required, prefix="zip-bundle")
 
 
 def validate_zip_members(zip_path):
@@ -137,13 +79,7 @@ def cleanup_temp(temp_root):
 
 
 def write_report(path, report):
-    out_path = Path(path)
-    if not out_path.is_absolute():
-        out_path = ROOT / out_path
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n",
-                        encoding="utf-8")
-    print(f"[zip-bundle] wrote {out_path}")
+    write_json_report(path, report, root=ROOT, prefix="zip-bundle")
 
 
 def resolve_zip_path(path_arg):

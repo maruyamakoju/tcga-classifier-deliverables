@@ -27,7 +27,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from tcga_rnaseq import load_lr_model, score_binary_dataframe  # noqa: E402
-from validate_gtex_xena import (PHENOTYPE_URL, extract_matrix_from_xena,  # noqa: E402
+from validate_gtex_xena import (extract_matrix_from_xena,  # noqa: E402
                                 load_or_download_phenotype)
 
 TCGA_TPM_URL = "https://toil.xenahubs.net/download/tcga_RSEM_gene_tpm.gz"

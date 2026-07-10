@@ -13,6 +13,35 @@ validation metrics are unchanged from v1.1.21.
 - The scorer safety suite now verifies that missing expression inputs do not
   write partial score outputs.
 - Added unit coverage for missing expression input handling.
+- Fixed a real `IndentationError` in `cross-platform-adaptation/run_adaptation_benchmark.py`
+  (an internal, non-CI-tested analysis script) introduced by an earlier commit;
+  it now runs and reproduces its previously committed benchmark numbers exactly.
+- `cohort_adapt_score.py`, `calibrate_threshold.py`, and `inspect_expression_input.py`
+  now call the shared `tcga_rnaseq` core (alignment, standardization, scoring,
+  Youden threshold) instead of partially reimplementing it; fixed an output-ordering
+  bug where a malformed `--labels` file could discard an already-successful
+  `cohort_adapt_score.py` scoring run.
+- `export_lr_weights.py` and `export_model_gene_metadata.py` now validate/load
+  through the same shape-checked path as the shipped scorer.
+- Consolidated the audit/validate/build script family's duplicated boilerplate
+  (issue collection, JSON report writing, subprocess step running) into a new
+  `release_tools/common.py`, shipped alongside the scripts that use it.
+- Added a `ruff` lint step to CI and 41 new unit tests (`tcga_rnaseq` edge
+  cases, `release_tools.common`).
+- Fixed several docs-vs-code inconsistencies, including an undocumented CLI
+  and a rounding error in a reported metric (0.9963 shown as "0.997" in
+  README.md/MODEL_CARD.md/EXECUTIVE_SUMMARY.md/INDEX.md/REPORT.md/REPRODUCIBILITY.md).
+- Independent review pass caught and fixed: `cohort_adapt_score.py` computed
+  its reported metrics from the *rounded* `tumor_probability` column instead
+  of the raw probability, which could disagree with the CSV's own `call`
+  column for a sample whose probability rounds across the threshold; added
+  regression coverage. `run_safety_tests.py`/`run_smoke_tests.py` gained a
+  subprocess timeout without catching it, so a hung step would crash with a
+  raw traceback instead of failing cleanly. `audit_publication_readiness.py`
+  could crash instead of reporting a clean error if `VERSION` were missing.
+  `explain_scores.py` still hand-rolled the standardization formula the rest
+  of this pass moved into `tcga_rnaseq`. `cohort_adapt_score.py` was missing
+  from the release-lite required-file lists despite being shipped/documented.
 
 ## Validation
 
@@ -30,6 +59,6 @@ validation metrics are unchanged from v1.1.21.
 ## Release asset
 
 - Asset: `tcga-tumor-normal-release-lite.zip`
-- SHA256: `86ccea066043fadb6932d98e00274a2cdd945ed2ca8f0c409db52ffa09bc5128`
-- Size: `318271` bytes
-- Zip entries: `72`
+- SHA256: `7ba0489cce97d80d5e56b967e9b70142d51e246e39bf32f19946f238926d74ec`
+- Size: `321902` bytes
+- Zip entries: `74`

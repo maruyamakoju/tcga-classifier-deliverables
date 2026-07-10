@@ -95,6 +95,12 @@ When the workflow stops before scoring, `status` can be
 case includes an `alignment` object summarizing invalid matched model-gene
 cells and example affected genes/samples.
 
+When scoring succeeds but a `--labels` file provided for calibration is
+malformed, `status` is `stopped_after_calibration_error` instead: `scores.csv`
+is written and kept, but `thresholds.csv`, `calibration.json`, and
+`explanations.csv` are not, and the manifest includes a `calibration_error`
+message. See `TROUBLESHOOTING.md`.
+
 ## Model Gene Metadata
 
 `model_gene_metadata.csv` contains one row per model gene:

@@ -50,8 +50,13 @@ Default LR scoring does not need scikit-learn or pickle loading. Use:
 python score_tumor_normal.py input.csv
 ```
 
-`--use-pickle-lr` and `--model rf` are rejected in the public lightweight
-release because the pickle/RF artifacts are intentionally not included.
+`--use-pickle-lr` and `--model rf` are both rejected in the public lightweight
+release because the pickle/RF artifacts are intentionally not included, but
+with different error text: `--use-pickle-lr` reaches
+`score_tumor_normal.py` and fails with an explanatory
+`legacy pickle/RF scoring is not available` message; `--model` only accepts
+`lr` in this release, so `--model rf` is rejected by argument parsing itself
+with a generic `invalid choice: 'rf'` message before the script runs.
 
 ## Input orientation and gene IDs
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Choose a tumor-probability threshold from labeled scored samples."""
 import argparse
-import json
 import os
 import sys
 
@@ -9,12 +8,18 @@ import numpy as np
 import pandas as pd
 
 from tcga_rnaseq import metrics as M
+from tcga_rnaseq import write_json
 
 
 def validate_threshold(value, name="threshold"):
+    """Validate a 0-1 probability/fraction argument shared by the scoring CLIs.
+
+    Used for --threshold, --max-invalid-cell-fraction, --min-model-gene-match-rate,
+    and similar 0-1 range arguments across the CLI suite.
+    """
     value = float(value)
     if not np.isfinite(value) or not 0 <= value <= 1:
-        raise ValueError(f"{name} must be finite and between 0 and 1")
+        raise ValueError(f"{name} must be between 0 and 1")
     return value
 
 
@@ -128,18 +133,23 @@ def choose_youden_threshold(y_true, scores):
     scores = np.asarray(scores, dtype=float)
     if not np.all(np.isfinite(scores)) or not np.all((scores >= 0) & (scores <= 1)):
         raise ValueError("scores must be finite probabilities in [0, 1]")
-    candidates = np.unique(scores)
-    best = None
-    for threshold in candidates:
-        row = metrics_at_threshold(y_true, scores, threshold, "youden_j")
-        row["youden_j"] = row["recall"] + row["specificity"] - 1.0
-        if best is None or (row["youden_j"], row["accuracy"], -row["threshold"]) > (
-            best["youden_j"], best["accuracy"], -best["threshold"]
-        ):
-            best = row
-    if best is None:
+    if scores.size == 0:
         raise ValueError("Need at least one scored sample")
-    return best
+    best = M.youden_threshold(y_true, scores)
+    return {
+        "threshold_name": "youden_j",
+        "threshold": best["threshold"],
+        "accuracy": best["accuracy"],
+        "f1": best["f1"],
+        "precision": best["precision"],
+        "recall": best["recall"],
+        "specificity": best["specificity"],
+        "tn": best["tn"],
+        "fp": best["fp"],
+        "fn": best["fn"],
+        "tp": best["tp"],
+        "youden_j": best["sensitivity"] + best["specificity"] - 1.0,
+    }
 
 
 def main(argv=None):
@@ -199,8 +209,7 @@ def main(argv=None):
     output = args.output or os.path.splitext(args.scores)[0] + ".thresholds.csv"
     metrics.to_csv(output, index=False)
     if args.json_output:
-        with open(args.json_output, "w", encoding="utf-8") as f:
-            json.dump(summary, f, indent=2)
+        write_json(summary, args.json_output, sort_keys=True)
 
     print(f"[calibrate] n={summary['n']} tumor={summary['n_tumor']} normal={summary['n_normal']}")
     print(f"[calibrate] AUC={summary['auc']:.4f}")

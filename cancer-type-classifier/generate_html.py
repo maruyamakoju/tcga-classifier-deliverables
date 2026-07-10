@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 """Self-contained, JS-free HTML summary (inline SVG) for the cancer-type
 classifier. ASCII-only so it renders identically from file://."""
-import os, csv, json, html
+import os
+import csv
+import json
+import html
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
