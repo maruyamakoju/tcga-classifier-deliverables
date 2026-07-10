@@ -142,6 +142,13 @@ def load_manifest(release_dir):
         return json.load(handle)
 
 
+def load_manifest_for_validation(release_dir):
+    try:
+        return load_manifest(release_dir), []
+    except (OSError, json.JSONDecodeError) as exc:
+        return None, [f"Could not parse release_manifest.json: {exc}"]
+
+
 def validate_manifest_metadata(release_dir, manifest, manifest_files):
     errors = []
     if not isinstance(manifest, dict):
@@ -238,12 +245,15 @@ def validate_release_dir(release_dir, max_file_bytes):
 
     files = release_files(release_dir)
     manifest_present = (release_dir / "release_manifest.json").exists()
-    manifest = load_manifest(release_dir)
+    manifest, manifest_errors = load_manifest_for_validation(release_dir)
+    errors.extend(manifest_errors)
     required = set(REQUIRED_FALLBACK)
     manifest_files = {}
     if manifest_present:
         seen_manifest_paths = set()
-        if not isinstance(manifest, dict):
+        if manifest_errors:
+            pass
+        elif not isinstance(manifest, dict):
             errors.append("release_manifest.json top-level value must be an object")
         else:
             manifest_items = manifest.get("files", [])
@@ -386,7 +396,11 @@ def validate_zip(zip_path, release_dir):
     if not zip_path.exists():
         return [f"Zip archive not found: {zip_path}"], None
     release = release_files(release_dir.resolve())
-    with zipfile.ZipFile(zip_path) as zf:
+    try:
+        zf = zipfile.ZipFile(zip_path)
+    except (OSError, zipfile.BadZipFile) as exc:
+        return [f"Could not read zip archive: {exc}"], None
+    with zf:
         bad = zf.testzip()
         if bad is not None:
             errors.append(f"Zip archive is corrupt at {bad}")
@@ -497,7 +511,10 @@ def main(argv=None):
 
     release_dir = Path(args.release_dir)
     errors, warnings, release_summary = validate_release_dir(release_dir, args.max_file_bytes)
-    manifest = load_manifest(release_dir.resolve()) if release_dir.exists() else None
+    manifest = None
+    if release_dir.exists() and not errors:
+        manifest, manifest_errors = load_manifest_for_validation(release_dir.resolve())
+        errors.extend(manifest_errors)
     if args.source_root and not errors:
         errors.extend(validate_source_parity(release_dir.resolve(), Path(args.source_root), manifest))
     zip_summary = None
