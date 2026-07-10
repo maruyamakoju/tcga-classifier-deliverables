@@ -36,17 +36,17 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from calibrate_threshold import normalize_label  # noqa: E402
+from calibrate_threshold import normalize_label, validate_threshold  # noqa: E402
 from tcga_rnaseq import (  # noqa: E402
     load_lr_model,
     print_invalid_alignment_summary,
     read_matrix,
+    score_binary_dataframe,
     validate_alignment_report,
     validate_gene_match_report,
 )
-from tcga_rnaseq.align import align_to_genes_with_report  # noqa: E402
 from tcga_rnaseq import metrics as M  # noqa: E402
-from tcga_rnaseq.score import ADAPT_MODES, predict_proba_from_aligned  # noqa: E402
+from tcga_rnaseq.score import ADAPT_MODES  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -109,12 +109,12 @@ def main(argv=None):
                           "only after reviewing gene IDs and imputation"))
     args = ap.parse_args(argv)
 
-    if not 0.0 <= args.threshold <= 1.0:
-        ap.error("--threshold must be between 0 and 1")
-    if not 0 <= args.max_invalid_cell_fraction <= 1:
-        ap.error("--max-invalid-cell-fraction must be between 0 and 1")
-    if not 0 <= args.min_model_gene_match_rate <= 1:
-        ap.error("--min-model-gene-match-rate must be between 0 and 1")
+    try:
+        validate_threshold(args.threshold, "--threshold")
+        validate_threshold(args.max_invalid_cell_fraction, "--max-invalid-cell-fraction")
+        validate_threshold(args.min_model_gene_match_rate, "--min-model-gene-match-rate")
+    except ValueError as exc:
+        ap.error(str(exc))
 
     model = load_lr_model(args.weights)
     try:
@@ -122,15 +122,20 @@ def main(argv=None):
     except ValueError as exc:
         ap.error(str(exc))
     n = X.shape[0]
-    values, alignment_report = align_to_genes_with_report(
-        X, model["genes"], impute_mean=model["mean"]
+    n_genes = len(model["genes"])
+    out_df, n_matched, missing, alignment_report = score_binary_dataframe(
+        model,
+        X,
+        threshold=args.threshold,
+        adapt=args.adapt,
+        allow_invalid_values=True,
+        return_alignment_report=True,
     )
 
     warnings = []
     print(
-        f"[adapt] {n} samples; matched "
-        f"{alignment_report['n_matched_genes']}/{alignment_report['n_model_genes']} "
-        f"model genes ({alignment_report['n_missing_genes']} filled with training mean)",
+        f"[adapt] {n} samples; matched {n_matched}/{n_genes} model genes "
+        f"({len(missing)} filled with training mean)",
         file=sys.stderr,
     )
     print_invalid_alignment_summary(alignment_report, sys.stderr, prefix="[adapt]")
@@ -177,10 +182,10 @@ def main(argv=None):
         warnings.append("cohort standardization assumes an internal tumor/normal mix; "
                         "a near-single-class cohort is only partially corrected")
 
-    p = predict_proba_from_aligned(model, values, adapt=args.adapt)
-    calls = np.where(p >= args.threshold, "tumor", "normal")
-    out_df = pd.DataFrame({"sample": X.index.astype(str),
-                           "tumor_probability": p.round(6), "call": calls})
+    p = out_df["tumor_probability"].to_numpy(dtype=float)
+
+    out_path = args.out or (os.path.splitext(args.input_csv)[0] + ".adapted_scores.csv")
+    out_df.to_csv(out_path, index=False)
 
     metrics = None
     if args.labels:
@@ -189,38 +194,39 @@ def main(argv=None):
                 args.labels, X.index, args.sample_column, args.label_column
             )
         except ValueError as exc:
-            ap.error(str(exc))
-        if label_stats["n_labeled"] == 0:
-            ap.error("labels CSV did not match any input samples")
-        if label_stats["n_unmatched_samples"]:
-            warnings.append(
-                f"labels matched {label_stats['n_labeled']}/{n} input samples; "
-                "metrics use matched samples only"
-            )
-        if label_stats["n_extra_labels"]:
-            warnings.append(
-                f"labels CSV contains {label_stats['n_extra_labels']} rows not present in input"
-            )
-        if len(set(y[m])) > 1:
-            cm = M.classification_metrics(y[m].astype(int), p[m], args.threshold)
-            metrics = {**label_stats, "auc": round(cm["auc"], 4),
-                       "accuracy": round(cm["accuracy"], 4),
-                       "balanced_accuracy": round(cm["balanced_accuracy"], 4),
-                       "sensitivity": round(cm["sensitivity"], 4),
-                       "specificity": round(cm["specificity"], 4)}
-        else:
-            warnings.append("matched labels contain only one class; metrics were not computed")
-
-    out_path = args.out or (os.path.splitext(args.input_csv)[0] + ".adapted_scores.csv")
-    out_df.to_csv(out_path, index=False)
+            label_stats = None
+            warnings.append(f"labels CSV could not be used: {exc}; metrics were not computed")
+            print(f"[adapt] WARNING: labels CSV could not be used: {exc}", file=sys.stderr)
+        if label_stats is not None and label_stats["n_labeled"] == 0:
+            warnings.append("labels CSV did not match any input samples; metrics were not computed")
+            label_stats = None
+        if label_stats is not None:
+            if label_stats["n_unmatched_samples"]:
+                warnings.append(
+                    f"labels matched {label_stats['n_labeled']}/{n} input samples; "
+                    "metrics use matched samples only"
+                )
+            if label_stats["n_extra_labels"]:
+                warnings.append(
+                    f"labels CSV contains {label_stats['n_extra_labels']} rows not present in input"
+                )
+            if len(set(y[m])) > 1:
+                cm = M.classification_metrics(y[m].astype(int), p[m], args.threshold)
+                metrics = {**label_stats, "auc": round(cm["auc"], 4),
+                           "accuracy": round(cm["accuracy"], 4),
+                           "balanced_accuracy": round(cm["balanced_accuracy"], 4),
+                           "sensitivity": round(cm["sensitivity"], 4),
+                           "specificity": round(cm["specificity"], 4)}
+            else:
+                warnings.append("matched labels contain only one class; metrics were not computed")
 
     report = {"n_samples": int(n), "adapt": args.adapt, "threshold": args.threshold,
               "matched_model_genes": int(alignment_report["n_matched_genes"]),
               "missing_model_genes": int(alignment_report["n_missing_genes"]),
               "invalid_matched_cells": int(alignment_report["invalid_matched_cells"]),
               "invalid_matched_fraction": float(alignment_report["invalid_matched_fraction"]),
-              "tumor_calls": int((p >= args.threshold).sum()),
-              "normal_calls": int((p < args.threshold).sum()),
+              "tumor_calls": int((out_df["call"] == "tumor").sum()),
+              "normal_calls": int((out_df["call"] == "normal").sum()),
               "median_tumor_probability": float(np.median(p)),
               "scores_csv": out_path, "warnings": warnings, "metrics": metrics}
     print(__import__("json").dumps(report, indent=2))
