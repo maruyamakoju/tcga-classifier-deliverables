@@ -22,13 +22,35 @@ def main(argv=None):
     if list(getattr(lr, "classes_", [])) != [0, 1]:
         raise ValueError(f"Unexpected LR classes: {getattr(lr, 'classes_', None)}")
 
+    selected_genes = np.array(pipe["selected_genes"], dtype=str)
+    scaler_mean = np.asarray(scaler.mean_, dtype=np.float64)
+    scaler_scale = np.asarray(scaler.scale_, dtype=np.float64)
+    coef = np.asarray(lr.coef_[0], dtype=np.float64)
+    intercept = np.asarray(lr.intercept_[0], dtype=np.float64)
+
+    n_genes = len(selected_genes)
+    if scaler_mean.shape != (n_genes,):
+        raise ValueError(
+            f"scaler.mean_ shape {scaler_mean.shape} does not match "
+            f"selected_genes count {n_genes}"
+        )
+    if scaler_scale.shape != (n_genes,):
+        raise ValueError(
+            f"scaler.scale_ shape {scaler_scale.shape} does not match "
+            f"selected_genes count {n_genes}"
+        )
+    if coef.shape != (n_genes,):
+        raise ValueError(
+            f"lr.coef_[0] shape {coef.shape} does not match selected_genes count {n_genes}"
+        )
+
     np.savez_compressed(
         args.output,
-        selected_genes=np.array(pipe["selected_genes"], dtype=str),
-        scaler_mean=np.asarray(scaler.mean_, dtype=np.float64),
-        scaler_scale=np.asarray(scaler.scale_, dtype=np.float64),
-        coef=np.asarray(lr.coef_[0], dtype=np.float64),
-        intercept=np.asarray(lr.intercept_[0], dtype=np.float64),
+        selected_genes=selected_genes,
+        scaler_mean=scaler_mean,
+        scaler_scale=scaler_scale,
+        coef=coef,
+        intercept=intercept,
         class_order=np.array(lr.classes_, dtype=np.int64),
         source_pipeline=os.path.basename(args.pipeline),
         notes=np.array(
