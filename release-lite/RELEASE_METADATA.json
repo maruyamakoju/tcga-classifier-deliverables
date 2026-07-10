@@ -1,8 +1,13 @@
 {
   "release_date": "2026-07-10",
-  "release_name": "GDC STAR-Counts workflow calibration failure handling release",
+  "release_name": "GDC STAR-Counts output sample ID contract hardening release",
   "schema_version": "1.0",
-  "version": "v1.1.20-gdc-starcounts",
+  "version": "v1.1.21-gdc-starcounts",
+  "changes_since_v1_1_20": [
+    "Hardened validate_output_contracts.py so score and label sample identifiers are checked with the same non-empty, trimmed uniqueness contract used by calibration.",
+    "Added contract errors for leading or trailing whitespace in sample identifiers and duplicate sample IDs after trimming whitespace.",
+    "Expanded output contract unit tests for whitespace-only, padded, and trim-colliding sample identifiers."
+  ],
   "changes_since_v1_1_19": [
     "Hardened run_tumor_normal_workflow.py so calibration label errors write a stopped_after_calibration_error manifest instead of surfacing an uncaught exception.",
     "Preserved valid qc.json and scores.csv outputs on calibration failure while removing downstream threshold, calibration, and explanation outputs.",

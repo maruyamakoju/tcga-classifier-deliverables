@@ -1,5 +1,24 @@
 # Release notes
 
+## v1.1.21-gdc-starcounts — 2026-07-10
+
+Output sample ID contract hardening release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.20; this release makes the
+bundled output contract validator stricter about invisible sample identifier
+formatting problems.
+
+### Fixed
+
+- `validate_output_contracts.py` now checks score and label sample identifiers
+  with the same trimmed, non-empty uniqueness contract used by calibration.
+- Output contract validation now reports leading/trailing whitespace in sample
+  IDs and duplicate sample IDs after trimming whitespace.
+
+### Tests
+
+- Expanded output contract unit coverage for whitespace-only, padded, and
+  trim-colliding sample identifiers.
+
 ## v1.1.20-gdc-starcounts — 2026-07-10
 
 Workflow calibration failure handling release. Model weights, training data, and

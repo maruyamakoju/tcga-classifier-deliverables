@@ -101,6 +101,43 @@ def test_json_contracts_validate_manifest_outputs_shape(tmp_path, monkeypatch):
     assert "manifest_output_path_not_string" in {message["code"] for message in messages}
 
 
+def test_score_contracts_reject_whitespace_sample_ids(tmp_path, monkeypatch):
+    monkeypatch.setattr(contracts, "ROOT", tmp_path)
+    write_scores(
+        tmp_path / "example_output.csv",
+        [
+            ("S1", "0.1", "normal"),
+            (" S1 ", "0.2", "normal"),
+            (" ", "0.9", "tumor"),
+        ],
+    )
+
+    messages = []
+    contracts.check_score_csv("example_output.csv", messages)
+
+    codes = {message["code"] for message in messages}
+    assert "empty_sample_id" in codes
+    assert "sample_id_has_whitespace" in codes
+    assert "duplicate_sample_id" in codes
+
+
+def test_label_contracts_validate_sample_ids(tmp_path, monkeypatch):
+    monkeypatch.setattr(contracts, "ROOT", tmp_path)
+    labels = tmp_path / "example_labels.csv"
+    labels.write_text(
+        "sample,label\nS1,tumor\n S1 ,normal\n,normal\n",
+        encoding="utf-8",
+    )
+
+    messages = []
+    contracts.check_labels(messages)
+
+    codes = {message["code"] for message in messages}
+    assert "empty_sample_id" in codes
+    assert "sample_id_has_whitespace" in codes
+    assert "duplicate_sample_id" in codes
+
+
 def test_threshold_contracts_reject_non_numeric_metrics(tmp_path, monkeypatch):
     monkeypatch.setattr(contracts, "ROOT", tmp_path)
     write_thresholds(
