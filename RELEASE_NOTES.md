@@ -1,5 +1,21 @@
 # Release notes
 
+## v1.1.19-gdc-starcounts — 2026-07-10
+
+Cohort label sample validation release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.18; this release tightens
+label CSV validation in the cohort-adaptation CLI.
+
+### Fixed
+
+- `cohort_adapt_score.py` now rejects missing or blank label sample IDs before
+  metric alignment.
+- Numeric string labels and unmatched input-sample reporting remain unchanged.
+
+### Tests
+
+- Added unit coverage for missing label sample identifiers in cohort adaptation.
+
 ## v1.1.18-gdc-starcounts — 2026-07-10
 
 Low gene coverage scoring guardrail release. Model weights, training data, and

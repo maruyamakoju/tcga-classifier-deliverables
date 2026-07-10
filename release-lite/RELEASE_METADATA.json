@@ -1,8 +1,13 @@
 {
   "release_date": "2026-07-10",
-  "release_name": "GDC STAR-Counts low gene coverage scoring guardrail release",
+  "release_name": "GDC STAR-Counts cohort label sample validation release",
   "schema_version": "1.0",
-  "version": "v1.1.18-gdc-starcounts",
+  "version": "v1.1.19-gdc-starcounts",
+  "changes_since_v1_1_18": [
+    "Hardened cohort_adapt_score.py label loading so missing or blank label sample IDs are rejected before metric alignment.",
+    "Kept numeric string labels and unmatched input samples behavior unchanged.",
+    "Added unit coverage for missing label sample identifiers in cohort adaptation."
+  ],
   "changes_since_v1_1_17": [
     "Made public direct scoring, explanation, cohort-adaptation, and cancer-type prediction CLIs refuse low model-gene coverage by default before writing outputs.",
     "Added shared gene-match validation helpers and explicit --allow-low-gene-coverage / --min-model-gene-match-rate CLI controls for reviewed override cases.",
