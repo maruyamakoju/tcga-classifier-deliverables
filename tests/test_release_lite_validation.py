@@ -8,12 +8,13 @@ from validate_release_lite import (
     EXPECTED_BUNDLE_NAME,
     EXPECTED_MANIFEST_SCHEMA_VERSION,
     FORBIDDEN_NAMES,
+    main as validate_release_lite_main,
     validate_manifest_metadata,
     validate_release_dir,
     validate_source_parity,
     validate_zip,
 )
-from validate_zip_bundle import validate_zip_members
+from validate_zip_bundle import main as validate_zip_bundle_main, validate_zip_members
 
 
 def write_release_metadata(path, version="v-test", release_date="2026-07-09"):
@@ -101,6 +102,30 @@ def test_validate_release_dir_rejects_null_manifest_without_fallback(tmp_path):
     assert summary["has_manifest"] is True
 
 
+def test_validate_release_dir_rejects_malformed_manifest_without_crashing(tmp_path):
+    (tmp_path / "release_manifest.json").write_text("{not json\n", encoding="utf-8")
+
+    errors, warnings, summary = validate_release_dir(tmp_path, max_file_bytes=5_000_000)
+
+    assert any(error.startswith("Could not parse release_manifest.json:") for error in errors)
+    assert warnings == []
+    assert summary["has_manifest"] is True
+
+
+def test_validate_release_lite_main_reports_malformed_manifest_without_crashing(tmp_path):
+    release_dir = tmp_path / "release-lite"
+    release_dir.mkdir()
+    (release_dir / "release_manifest.json").write_text("{not json\n", encoding="utf-8")
+
+    code = validate_release_lite_main([
+        "--release-dir",
+        str(release_dir),
+        "--no-zip",
+    ])
+
+    assert code == 1
+
+
 def test_validate_release_dir_rejects_non_integer_manifest_bytes(tmp_path):
     payload = tmp_path / "payload.txt"
     payload.write_text("payload\n", encoding="utf-8")
@@ -140,6 +165,18 @@ def test_validate_zip_rejects_duplicate_file_entries(tmp_path):
     assert summary["zip_entries"] == 2
 
 
+def test_validate_zip_reports_bad_zip_without_crashing(tmp_path):
+    release_dir = tmp_path / "release-lite"
+    release_dir.mkdir()
+    zip_path = tmp_path / "bad.zip"
+    zip_path.write_text("not a zip\n", encoding="utf-8")
+
+    errors, summary = validate_zip(zip_path, release_dir)
+
+    assert any(error.startswith("Could not read zip archive:") for error in errors)
+    assert summary is None
+
+
 def test_validate_zip_bundle_members_rejects_duplicate_file_entries(tmp_path):
     zip_path = tmp_path / "bundle.zip"
     with zipfile.ZipFile(zip_path, "w") as zf:
@@ -150,3 +187,21 @@ def test_validate_zip_bundle_members_rejects_duplicate_file_entries(tmp_path):
     errors = validate_zip_members(zip_path)
 
     assert errors == ["Zip contains duplicate member path: payload.txt"]
+
+
+def test_validate_zip_bundle_members_reports_bad_zip_without_crashing(tmp_path):
+    zip_path = tmp_path / "bad.zip"
+    zip_path.write_text("not a zip\n", encoding="utf-8")
+
+    errors = validate_zip_members(zip_path)
+
+    assert any(error.startswith("Could not read zip archive:") for error in errors)
+
+
+def test_validate_zip_bundle_main_reports_bad_zip_without_crashing(tmp_path):
+    zip_path = tmp_path / "bad.zip"
+    zip_path.write_text("not a zip\n", encoding="utf-8")
+
+    code = validate_zip_bundle_main([str(zip_path), "--skip-acceptance"])
+
+    assert code == 1

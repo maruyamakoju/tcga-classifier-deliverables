@@ -88,7 +88,11 @@ def run_step(label, cmd, cwd, timeout_seconds=300):
 
 def validate_zip_members(zip_path):
     errors = []
-    with zipfile.ZipFile(zip_path) as zf:
+    try:
+        zf = zipfile.ZipFile(zip_path)
+    except (OSError, zipfile.BadZipFile) as exc:
+        return [f"Could not read zip archive: {exc}"]
+    with zf:
         bad = zf.testzip()
         if bad is not None:
             errors.append(f"Zip archive is corrupt at {bad}")
@@ -113,12 +117,15 @@ def validate_zip_members(zip_path):
 def safe_extract(zip_path, extract_dir):
     extract_root = extract_dir.resolve()
     extract_dir.mkdir(parents=True)
-    with zipfile.ZipFile(zip_path) as zf:
-        for info in zf.infolist():
-            target = (extract_dir / info.filename).resolve()
-            if target != extract_root and extract_root not in target.parents:
-                raise RuntimeError(f"Refusing to extract outside target: {info.filename}")
-        zf.extractall(extract_dir)
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            for info in zf.infolist():
+                target = (extract_dir / info.filename).resolve()
+                if target != extract_root and extract_root not in target.parents:
+                    raise RuntimeError(f"Refusing to extract outside target: {info.filename}")
+            zf.extractall(extract_dir)
+    except (OSError, zipfile.BadZipFile) as exc:
+        raise RuntimeError(f"Could not extract zip archive: {exc}") from exc
 
 
 def cleanup_temp(temp_root):
@@ -181,22 +188,26 @@ def main(argv=None):
             extract_dir = temp_root / "release-lite"
             zip_copy = temp_root / ZIP_NAME
             shutil.copy2(zip_path, zip_copy)
-            safe_extract(zip_copy, extract_dir)
-            steps.append(run_step(
-                "release_validation",
-                [
-                    sys.executable,
-                    str(extract_dir / "validate_release_lite.py"),
-                    "--release-dir",
-                    str(extract_dir),
-                    "--zip",
-                    str(zip_copy),
-                ],
-                cwd=temp_root,
-                timeout_seconds=args.timeout_seconds,
-            ))
-            if steps[-1]["returncode"] != 0:
-                errors.append("Release validation failed after zip extraction.")
+            try:
+                safe_extract(zip_copy, extract_dir)
+            except RuntimeError as exc:
+                errors.append(str(exc))
+            if not errors:
+                steps.append(run_step(
+                    "release_validation",
+                    [
+                        sys.executable,
+                        str(extract_dir / "validate_release_lite.py"),
+                        "--release-dir",
+                        str(extract_dir),
+                        "--zip",
+                        str(zip_copy),
+                    ],
+                    cwd=temp_root,
+                    timeout_seconds=args.timeout_seconds,
+                ))
+                if steps[-1]["returncode"] != 0:
+                    errors.append("Release validation failed after zip extraction.")
             if not args.skip_acceptance and not errors:
                 steps.append(run_step(
                     "extracted_acceptance",

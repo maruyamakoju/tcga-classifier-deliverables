@@ -1,8 +1,13 @@
 {
   "release_date": "2026-07-10",
-  "release_name": "GDC STAR-Counts threshold contract metric hardening release",
+  "release_name": "GDC STAR-Counts release validation malformed input hardening release",
   "schema_version": "1.0",
-  "version": "v1.1.14-gdc-starcounts",
+  "version": "v1.1.15-gdc-starcounts",
+  "changes_since_v1_1_14": [
+    "Hardened validate_release_lite.py so malformed release_manifest.json content is reported as validation errors instead of crashing validation.",
+    "Hardened validate_release_lite.py and validate_zip_bundle.py so corrupt or mislabeled zip files return explicit FAIL diagnostics instead of raw zip exceptions.",
+    "Added unit coverage for malformed release manifests and bad zip archives in both release validation paths."
+  ],
   "changes_since_v1_1_13": [
     "Hardened validate_output_contracts.py so non-empty threshold metric fields must be numeric instead of being silently ignored as NaN.",
     "Kept blank optional youden_j values valid for rows where the metric is intentionally absent.",

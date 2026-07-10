@@ -1,5 +1,27 @@
 # Release notes
 
+## v1.1.15-gdc-starcounts — 2026-07-10
+
+Release validation malformed-input hardening release. Model weights, training
+data, and headline validation metrics are unchanged from v1.1.14; this release
+makes the bundled release validators report malformed manifests and bad zip
+archives cleanly instead of surfacing raw exceptions.
+
+### Fixed
+
+- `validate_release_lite.py` now reports malformed `release_manifest.json`
+  content as validation errors instead of crashing during release directory or
+  source-parity validation.
+- `validate_release_lite.py` now reports corrupt or mislabeled zip files as
+  explicit validation failures.
+- `validate_zip_bundle.py` now reports corrupt or mislabeled zip files before
+  extraction instead of raising raw zip exceptions.
+
+### Tests
+
+- Added unit coverage for malformed release manifests and bad zip archives in
+  both release validation paths.
+
 ## v1.1.14-gdc-starcounts — 2026-07-10
 
 Threshold contract metric hardening release. Model weights, training data, and
