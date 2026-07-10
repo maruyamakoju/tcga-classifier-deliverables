@@ -42,6 +42,7 @@ from tcga_rnaseq import (  # noqa: E402
     print_invalid_alignment_summary,
     read_matrix,
     validate_alignment_report,
+    validate_gene_match_report,
 )
 from tcga_rnaseq.align import align_to_genes_with_report  # noqa: E402
 from tcga_rnaseq import metrics as M  # noqa: E402
@@ -99,12 +100,20 @@ def main(argv=None):
     ap.add_argument("--allow-invalid-values", action="store_true",
                     help=("warn instead of failing when matched model-gene cells are "
                           "missing, non-numeric, NaN, or infinite"))
+    ap.add_argument("--min-model-gene-match-rate", type=float, default=0.5,
+                    help=("minimum fraction of model genes that must match input columns "
+                          "before scoring (default 0.5)"))
+    ap.add_argument("--allow-low-gene-coverage", action="store_true",
+                    help=("warn instead of failing when too few model genes match; use "
+                          "only after reviewing gene IDs and imputation"))
     args = ap.parse_args(argv)
 
     if not 0.0 <= args.threshold <= 1.0:
         ap.error("--threshold must be between 0 and 1")
     if not 0 <= args.max_invalid_cell_fraction <= 1:
         ap.error("--max-invalid-cell-fraction must be between 0 and 1")
+    if not 0 <= args.min_model_gene_match_rate <= 1:
+        ap.error("--min-model-gene-match-rate must be between 0 and 1")
 
     model = load_lr_model(args.weights)
     try:
@@ -124,6 +133,24 @@ def main(argv=None):
         file=sys.stderr,
     )
     print_invalid_alignment_summary(alignment_report, sys.stderr, prefix="[adapt]")
+    gene_match_issues = validate_gene_match_report(
+        alignment_report,
+        min_match_rate=args.min_model_gene_match_rate,
+    )
+    if gene_match_issues and not args.allow_low_gene_coverage:
+        for issue in gene_match_issues:
+            print(f"[adapt] ERROR: {issue}", file=sys.stderr)
+        print(
+            "[adapt] Refusing to write adapted scores with low model-gene coverage; "
+            "fix the gene IDs/orientation or pass --allow-low-gene-coverage after "
+            "reviewing the imputation.",
+            file=sys.stderr,
+        )
+        return 1
+    if gene_match_issues:
+        for issue in gene_match_issues:
+            warnings.append(issue)
+            print(f"[adapt] WARNING: {issue}", file=sys.stderr)
     alignment_issues = validate_alignment_report(
         alignment_report,
         max_invalid_cell_fraction=args.max_invalid_cell_fraction,

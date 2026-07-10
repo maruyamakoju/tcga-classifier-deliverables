@@ -1,6 +1,6 @@
 # User guide
 
-Release: `v1.1.17-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.18-gdc-starcounts` (`2026-07-10`)
 
 This guide is for people who want to run the lightweight classifier on a new
 expression matrix. For a short project-level handoff, read
@@ -124,6 +124,12 @@ Common messages:
 
 A `PASS` result does not validate a new RNA-seq pipeline. It only says the
 input did not trip the current guardrails.
+
+The direct scoring, explanation, adaptation, and cancer-type prediction CLIs
+also enforce the severe gene-coverage boundary by default. If fewer than 50% of
+model genes match, they stop before writing outputs. Fix gene IDs, transpose
+orientation, or matrix export first; use `--allow-low-gene-coverage` or a lower
+`--min-model-gene-match-rate` only after reviewing the missing-gene imputation.
 
 Matched model-gene cells that are missing, non-numeric, `NaN`, or infinite are
 not silently accepted by the scorer, workflow, explainer, or adaptation scorer.

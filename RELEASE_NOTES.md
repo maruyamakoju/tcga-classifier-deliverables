@@ -1,5 +1,28 @@
 # Release notes
 
+## v1.1.18-gdc-starcounts — 2026-07-10
+
+Low gene coverage scoring guardrail release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.17; this release prevents
+direct public CLIs from writing outputs when too few model genes match the input
+matrix.
+
+### Fixed
+
+- `score_tumor_normal.py`, `explain_scores.py`, `cohort_adapt_score.py`, and
+  `cancer-type-classifier/predict_cancer_type.py` now refuse low model-gene
+  coverage by default before writing outputs.
+- Added shared gene-match validation helpers so direct CLI behavior matches the
+  workflow QC FAIL boundary for very low model-gene match rates.
+- Added `--min-model-gene-match-rate` and `--allow-low-gene-coverage` controls
+  for reviewed override cases where mean imputation is intentional.
+
+### Tests
+
+- Added unit coverage for low gene coverage validation.
+- Expanded safety tests so no-model-gene inputs cannot silently produce score,
+  explanation, or adapted-score outputs.
+
 ## v1.1.17-gdc-starcounts — 2026-07-10
 
 Score consistency contract hardening release. Model weights, training data, and

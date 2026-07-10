@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Release: `v1.1.17-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.18-gdc-starcounts` (`2026-07-10`)
 
 Start with:
 
@@ -69,6 +69,12 @@ If that fixes gene matching, run the workflow with `--transpose`.
 Check that gene IDs are Ensembl IDs and that the matrix contains most of the
 2,000 model genes in `model_gene_metadata.csv`. Version suffixes are fine.
 
+Direct scoring, explanation, adaptation, and cancer-type prediction CLIs refuse
+to write outputs when fewer than 50% of model genes match by default. This is
+usually an orientation or identifier problem, not a condition to override. Use
+`--allow-low-gene-coverage` or lower `--min-model-gene-match-rate` only after
+reviewing the missing-gene imputation.
+
 ## Expression-scale problems
 
 ### QC says `expression_values_high` or `expression_values_too_large`
@@ -119,6 +125,13 @@ The input has at least one matched model-gene cell that cannot be used as a
 finite number. Common causes are blank cells, `NA` strings, spreadsheet export
 markers, or infinite values from an upstream transform. The CLI reports example
 genes and samples before refusing to write outputs.
+
+### Scorer, explainer, or adaptation CLI says `low model-gene coverage`
+
+The input matched too few model genes for direct output writing. Check that
+genes are columns, use `--transpose` where supported, and verify that identifiers
+are Ensembl gene IDs rather than gene symbols. Review `inspect_expression_input.py`
+before using any override.
 
 ### Many normal samples are called tumor
 

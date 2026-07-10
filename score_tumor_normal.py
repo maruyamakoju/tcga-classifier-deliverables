@@ -8,7 +8,8 @@ INPUT
   A table of expression values, rows = samples, columns = genes (Ensembl gene IDs,
   e.g. ENSG00000000005 or ENSG00000000005.6). Values must be **log2(TPM+1)** on the
   GDC STAR-Counts scale, the same as training. Accepted: .csv .tsv .txt .parquet.
-  Use --transpose if your genes are rows.
+  Use --transpose if your genes are rows. Very low model-gene coverage is refused
+  by default before scores are written.
 
 USAGE
   python score_tumor_normal.py expr.csv                     # -> expr.scored.csv
@@ -36,6 +37,7 @@ from tcga_rnaseq import (  # noqa: E402
     read_matrix,
     score_binary_dataframe,
     validate_alignment_report,
+    validate_gene_match_report,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -145,6 +147,12 @@ def main(argv=None):
     ap.add_argument("--allow-invalid-values", action="store_true",
                     help=("warn instead of failing when matched model-gene cells are "
                           "missing, non-numeric, NaN, or infinite"))
+    ap.add_argument("--min-model-gene-match-rate", type=float, default=0.5,
+                    help=("minimum fraction of model genes that must match input columns "
+                          "before scoring (default 0.5)"))
+    ap.add_argument("--allow-low-gene-coverage", action="store_true",
+                    help=("warn instead of failing when too few model genes match; use "
+                          "only after reviewing gene IDs and imputation"))
     ap.add_argument("--transpose", action="store_true",
                     help="input has genes as rows, samples as columns")
     ap.add_argument("--self-test", action="store_true",
@@ -157,6 +165,8 @@ def main(argv=None):
         ap.error("--threshold must be between 0 and 1")
     if not 0 <= args.max_invalid_cell_fraction <= 1:
         ap.error("--max-invalid-cell-fraction must be between 0 and 1")
+    if not 0 <= args.min_model_gene_match_rate <= 1:
+        ap.error("--min-model-gene-match-rate must be between 0 and 1")
     if args.pipeline or args.use_pickle_lr:
         ap.error(
             "legacy pickle/RF scoring is not available in the public lightweight release; "
@@ -186,10 +196,24 @@ def main(argv=None):
 
     print(f"[score] scorer={scorer}; {df.shape[0]} samples; matched {n_matched}/{n_genes} "
           f"model genes ({len(missing)} filled with training mean)", file=sys.stderr)
-    if n_matched < 0.5 * n_genes:
-        print("[score] WARNING: <50% of model genes found - check gene IDs and that "
-              "values are log2(TPM+1). Results may be unreliable.", file=sys.stderr)
     print_invalid_alignment_summary(alignment_report, sys.stderr)
+    gene_match_issues = validate_gene_match_report(
+        alignment_report,
+        min_match_rate=args.min_model_gene_match_rate,
+    )
+    if gene_match_issues and not args.allow_low_gene_coverage:
+        for issue in gene_match_issues:
+            print(f"[score] ERROR: {issue}", file=sys.stderr)
+        print(
+            "[score] Refusing to write scores with low model-gene coverage; fix the "
+            "gene IDs/orientation or pass --allow-low-gene-coverage after reviewing "
+            "the imputation.",
+            file=sys.stderr,
+        )
+        return 1
+    if gene_match_issues:
+        for issue in gene_match_issues:
+            print(f"[score] WARNING: {issue}", file=sys.stderr)
     alignment_issues = validate_alignment_report(
         alignment_report,
         max_invalid_cell_fraction=args.max_invalid_cell_fraction,
