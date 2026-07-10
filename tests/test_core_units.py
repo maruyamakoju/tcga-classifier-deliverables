@@ -252,6 +252,17 @@ def test_cohort_adapt_labels_preserve_numeric_strings_and_missing(tmp_path):
     }
 
 
+def test_cohort_adapt_labels_reject_missing_sample_ids(tmp_path):
+    labels = tmp_path / "labels.csv"
+    labels.write_text(
+        "sample,label\n,normal\ns2,tumor\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="sample identifiers must be non-empty"):
+        load_label_vector(labels, pd.Index(["s1", "s2"]))
+
+
 def test_accuracy_balanced_and_prf():
     y = np.array(["a", "a", "b", "b", "b"])
     p = np.array(["a", "b", "b", "b", "a"])

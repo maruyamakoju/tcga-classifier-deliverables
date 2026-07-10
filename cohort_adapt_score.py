@@ -59,8 +59,9 @@ def load_label_vector(labels_path, sample_index, sample_col="sample", label_col=
         raise ValueError(f"labels CSV must contain {label_col!r}")
 
     labels = labels.copy()
-    labels["_sample_key"] = labels[sample_col].astype(str).str.strip()
-    if labels["_sample_key"].isna().any() or (labels["_sample_key"] == "").any():
+    sample_values = labels[sample_col]
+    labels["_sample_key"] = sample_values.astype(str).str.strip()
+    if sample_values.isna().any() or (labels["_sample_key"] == "").any():
         raise ValueError("labels CSV sample identifiers must be non-empty")
     duplicated = sorted(labels.loc[labels["_sample_key"].duplicated(), "_sample_key"].unique())
     if duplicated:
