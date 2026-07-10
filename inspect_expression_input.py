@@ -287,7 +287,10 @@ def main(argv=None):
 
     weights = load_lr_weights(args.lr_weights)
     reference = load_reference(args.qc_reference)
-    df = read_matrix(args.input, transpose=args.transpose)
+    try:
+        df = read_matrix(args.input, transpose=args.transpose)
+    except ValueError as exc:
+        parser.error(str(exc))
     report = inspect_dataframe(df, weights, args.threshold, args.expected_class, reference)
 
     out = args.output or (os.path.splitext(args.input)[0] + ".qc.json")

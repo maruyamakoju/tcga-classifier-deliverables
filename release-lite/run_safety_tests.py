@@ -76,10 +76,13 @@ def main():
         expected_normal_qc = temp_root / "expected_normal.qc.json"
         invalid_input = temp_root / "invalid_matched_values.csv"
         invalid_workflow = temp_root / "invalid_matched_workflow"
+        pickle_input = temp_root / "untrusted_expression.pkl"
+        pickle_output = temp_root / "untrusted_expression.scored.csv"
 
         write_no_gene_match_input(example, no_match_input)
         write_raw_count_like_input(example, raw_like_input)
         write_invalid_matched_input(example, invalid_input)
+        example.to_pickle(pickle_input)
 
         result = run([sys.executable, "score_tumor_normal.py", "example_input.csv",
                       "--threshold", "1.5"])
@@ -98,6 +101,14 @@ def main():
         require_fail(result, "legacy RF scorer")
         require("invalid choice" in result.stderr and "'rf'" in result.stderr,
                 "legacy RF rejection message missing")
+
+        result = run([sys.executable, "score_tumor_normal.py", str(pickle_input),
+                      "-o", str(pickle_output)])
+        require_fail(result, "pickle expression input")
+        require("Pickle expression inputs are disabled by default" in result.stderr,
+                "pickle expression input rejection message missing")
+        require(not pickle_output.exists(),
+                "score_tumor_normal.py wrote scores after pickle input rejection")
 
         result = run([sys.executable, "score_tumor_normal.py", str(invalid_input)])
         require_fail(result, "invalid matched values scorer")

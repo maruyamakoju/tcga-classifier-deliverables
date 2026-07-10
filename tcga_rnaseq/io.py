@@ -96,10 +96,22 @@ def load_pipeline(path):
         return _SafeUnpickler(f).load()
 
 
-def read_matrix(path, transpose=False):
-    """Read an expression matrix by extension (.csv/.tsv/.txt/.parquet/.pkl)."""
+def read_matrix(path, transpose=False, allow_pickle=False):
+    """Read an expression matrix by extension.
+
+    Supported public input formats are .csv, .tsv, .txt, and .parquet. Pickled
+    pandas DataFrames are only allowed for trusted internal artifacts when
+    allow_pickle=True because unpickling user-controlled files can execute code.
+    """
+    path = os.fspath(path)
     ext = os.path.splitext(path)[1].lower()
     if ext == ".pkl":
+        if not allow_pickle:
+            raise ValueError(
+                "Pickle expression inputs are disabled by default because unpickling "
+                "user-controlled files can execute code; convert the matrix to CSV, "
+                "TSV, or Parquet instead."
+            )
         df = pd.read_pickle(path)
     elif ext == ".parquet":
         df = pd.read_parquet(path)

@@ -2,7 +2,7 @@
 
 This folder is the lightweight deployment bundle for the TCGA/GDC tumor-vs-normal classifier.
 
-Release: `v1.1.15-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.16-gdc-starcounts` (`2026-07-10`)
 
 ## Contents
 
