@@ -36,15 +36,17 @@ import numpy as np
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from calibrate_threshold import normalize_label, validate_threshold  # noqa: E402
 from tcga_rnaseq import (  # noqa: E402
     load_lr_model,
+    normalize_label,
     predict_proba,
     print_invalid_alignment_summary,
     read_matrix,
+    require_unique_samples,
     score_binary_dataframe,
     validate_alignment_report,
     validate_gene_match_report,
+    validate_threshold,
 )
 from tcga_rnaseq import metrics as M  # noqa: E402
 from tcga_rnaseq.score import ADAPT_MODES  # noqa: E402
@@ -60,14 +62,7 @@ def load_label_vector(labels_path, sample_index, sample_col="sample", label_col=
         raise ValueError(f"labels CSV must contain {label_col!r}")
 
     labels = labels.copy()
-    sample_values = labels[sample_col]
-    labels["_sample_key"] = sample_values.astype(str).str.strip()
-    if sample_values.isna().any() or (labels["_sample_key"] == "").any():
-        raise ValueError("labels CSV sample identifiers must be non-empty")
-    duplicated = sorted(labels.loc[labels["_sample_key"].duplicated(), "_sample_key"].unique())
-    if duplicated:
-        raise ValueError("labels CSV contains duplicate sample IDs: " + ", ".join(duplicated[:5]))
-
+    labels["_sample_key"] = require_unique_samples(labels, sample_col, "labels CSV")
     labels["label_binary"] = labels[label_col].map(normalize_label)
     sample_keys = pd.Index(sample_index.astype(str), name="_sample_key")
     label_series = labels.set_index("_sample_key")["label_binary"]

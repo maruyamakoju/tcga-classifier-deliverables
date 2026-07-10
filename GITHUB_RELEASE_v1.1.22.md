@@ -42,6 +42,21 @@ validation metrics are unchanged from v1.1.21.
   `explain_scores.py` still hand-rolled the standardization formula the rest
   of this pass moved into `tcga_rnaseq`. `cohort_adapt_score.py` was missing
   from the release-lite required-file lists despite being shipped/documented.
+- Moved `validate_threshold`/`normalize_label`/sample-key helpers (previously
+  cross-imported from `calibrate_threshold.py` by five other CLIs, or
+  duplicated between it and `cohort_adapt_score.py`) into a new
+  `tcga_rnaseq/validation.py`.
+- Fixed a real crash in `cancer-type-classifier/predict_cancer_type.py`: a
+  missing or malformed `--weights` file raised a raw traceback instead of a
+  clean error, unlike its sibling `score_tumor_normal.py`.
+- Fixed a real data-integrity bug in `external-validation/`: the GDC/Xena
+  matrix cache was keyed only on a fixed output path with no fingerprint of
+  sampling parameters, so a rerun with different arguments could silently
+  reuse a cache built for a different cohort. Also fixed a silently-cached
+  empty download, silent gene-ID collisions, non-atomic cache writes, and
+  added post-merge integrity checks. Added 16 tests (mocked, no live network
+  calls -- `external-validation/` is not part of the lightweight release).
+- Added 61 total new unit tests this pass (86 -> 150 passing).
 
 ## Validation
 
@@ -59,6 +74,6 @@ validation metrics are unchanged from v1.1.21.
 ## Release asset
 
 - Asset: `tcga-tumor-normal-release-lite.zip`
-- SHA256: `7ba0489cce97d80d5e56b967e9b70142d51e246e39bf32f19946f238926d74ec`
-- Size: `321902` bytes
-- Zip entries: `74`
+- SHA256: `dc7e3acf32f8c11b0de262094fd9d16b35b5bcb48a8f37c3988cc4f21c2f782b`
+- Size: `322431` bytes
+- Zip entries: `75`

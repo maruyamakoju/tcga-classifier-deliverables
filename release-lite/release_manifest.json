@@ -1,7 +1,7 @@
 {
   "builder": "build_release_lite.py",
   "bundle_name": "tcga-tumor-normal-release-lite",
-  "file_count_excluding_manifest_and_checksums": 72,
+  "file_count_excluding_manifest_and_checksums": 73,
   "files": [
     {
       "bytes": 1118,
@@ -109,9 +109,9 @@
       "sha256": "98fd422268a6f11ab6012b4cb659d09a8ff29f5df4d58c00dbe6aa19365cd5fa"
     },
     {
-      "bytes": 8823,
+      "bytes": 7599,
       "path": "calibrate_threshold.py",
-      "sha256": "44d73407acc77c829fade1501b1fb8f0f0a9ce159cf52add3d8b161ff229089d"
+      "sha256": "f641ec50d125bbff39708cb31896bc6e3f16ce1e01aae64c623fca84afcbbb14"
     },
     {
       "bytes": 6184,
@@ -124,9 +124,9 @@
       "sha256": "136127727f585496a7f6b4fa5609f484277487013790bd2e46b6105f1b1c8891"
     },
     {
-      "bytes": 11586,
+      "bytes": 11192,
       "path": "cohort_adapt_score.py",
-      "sha256": "6ff1a30be966b70c65de1c4fb13cec65be6074e8d0b31cdb287cfac7a951885c"
+      "sha256": "760dada51b444b652a42214839af21ce48402aab85985fb7f155f678a1b6ce62"
     },
     {
       "bytes": 58716,
@@ -189,9 +189,9 @@
       "sha256": "8faeb768c253934647c557b0c6f4635de0ca7703fb7d3c5688bb2006a9428576"
     },
     {
-      "bytes": 7347,
+      "bytes": 7320,
       "path": "explain_scores.py",
-      "sha256": "9e2706fa6d9503efac961304987991b5a25cf7decbe9bdb9d31b2deb8bbc8b8f"
+      "sha256": "5256b9701de447f060fc67b6cbe7a6d5486aa7c54dd2810dcc242c038ed4a3fb"
     },
     {
       "bytes": 2042,
@@ -239,9 +239,9 @@
       "sha256": "60848700eec589aacde933729318c86cffbc30f9cf8c7c224beafb60b266d2f9"
     },
     {
-      "bytes": 13722,
+      "bytes": 13691,
       "path": "inspect_expression_input.py",
-      "sha256": "60a2e81646e9671f088ade4aba5cc085f639e266bc0defbbd5be06035eab4610"
+      "sha256": "9c68fdd6d037f96f131ee17b037c322dd5b57d345b4634f6a28b13683f946046"
     },
     {
       "bytes": 251625,
@@ -264,9 +264,9 @@
       "sha256": "9272d0c14ddb05ae899dd6f3b0c682f63f5a1f7193a90d6da8271b4c5630902a"
     },
     {
-      "bytes": 10304,
+      "bytes": 10337,
       "path": "release_tools/common.py",
-      "sha256": "69b0cbdd05cc987296ef5295e54717e74cd17a7930261c4f5a3fc27de6c17130"
+      "sha256": "45952257a8ea9cca2d7b3179dfab9b27ebcbcd58d9b54432d358421746761963"
     },
     {
       "bytes": 101,
@@ -289,19 +289,19 @@
       "sha256": "29df0e0aa4aba1492b4b4e0a31bec903cb4f751e57ca6bb31e095a9330c05a51"
     },
     {
-      "bytes": 17167,
+      "bytes": 17163,
       "path": "run_tumor_normal_workflow.py",
-      "sha256": "66cb11d0030506a56b1f8542752ceecdc0c025e0a8ef0318253abda0fc512725"
+      "sha256": "703d7536ab508c69a892d823fc2eba043a0568cfc4d3b23d77dd68eeb3b701ad"
     },
     {
-      "bytes": 11029,
+      "bytes": 10988,
       "path": "score_tumor_normal.py",
-      "sha256": "97860f4ebd66a88451b29706b277f8c91d36adc674f9c3191aa0976e1e8bf7d1"
+      "sha256": "95e3c53274956c6d536302a68ef31b7e706b8bd7bb672d5355bd2f57951f62b1"
     },
     {
-      "bytes": 1803,
+      "bytes": 2005,
       "path": "tcga_rnaseq/__init__.py",
-      "sha256": "35651d5bbf0703512c6de40cfed3b41ed561617ebe5f45f3e19b602d915bb3ab"
+      "sha256": "9854a73011e67f21eedafaa48f09bd95a3c44c9bc7d21f54d0680f31130ff56c"
     },
     {
       "bytes": 12037,
@@ -322,6 +322,11 @@
       "bytes": 6051,
       "path": "tcga_rnaseq/score.py",
       "sha256": "38520af0b963c579428c2a6a01dd509b971e8f7e523684bbb9b05ba792a7d7f2"
+    },
+    {
+      "bytes": 1753,
+      "path": "tcga_rnaseq/validation.py",
+      "sha256": "bdcbc59abe7e3e31f6cdc34b788e1c1c7a43bf48bee92cf03b13e844f7d96812"
     },
     {
       "bytes": 109,

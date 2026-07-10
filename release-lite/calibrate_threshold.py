@@ -8,35 +8,12 @@ import numpy as np
 import pandas as pd
 
 from tcga_rnaseq import metrics as M
-from tcga_rnaseq import write_json
-
-
-def validate_threshold(value, name="threshold"):
-    """Validate a 0-1 probability/fraction argument shared by the scoring CLIs.
-
-    Used for --threshold, --max-invalid-cell-fraction, --min-model-gene-match-rate,
-    and similar 0-1 range arguments across the CLI suite.
-    """
-    value = float(value)
-    if not np.isfinite(value) or not 0 <= value <= 1:
-        raise ValueError(f"{name} must be between 0 and 1")
-    return value
-
-
-def _sample_key(series):
-    keys = series.astype(str).str.strip()
-    if series.isna().any() or (keys == "").any():
-        raise ValueError("sample identifiers must be non-empty")
-    return keys
-
-
-def _require_unique_samples(df, sample_col, source_name):
-    keys = _sample_key(df[sample_col])
-    duplicated = sorted(keys[keys.duplicated()].unique())
-    if duplicated:
-        preview = ", ".join(duplicated[:5])
-        raise ValueError(f"{source_name} contains duplicate sample IDs: {preview}")
-    return keys
+from tcga_rnaseq import (
+    normalize_label,
+    require_unique_samples,
+    validate_threshold,
+    write_json,
+)
 
 
 def _validated_probabilities(series):
@@ -47,15 +24,6 @@ def _validated_probabilities(series):
     if not np.all((arr >= 0) & (arr <= 1)):
         raise ValueError("tumor_probability values must be between 0 and 1")
     return values
-
-
-def normalize_label(value):
-    text = str(value).strip().lower()
-    if text in {"1", "tumor", "tumour", "primary tumor", "cancer", "positive", "pos", "true"}:
-        return 1
-    if text in {"0", "normal", "solid tissue normal", "healthy", "negative", "neg", "false"}:
-        return 0
-    raise ValueError(f"Unrecognized label: {value!r}")
 
 
 def load_scores_and_labels(scores_path, labels_path, sample_col, label_col,
@@ -69,7 +37,7 @@ def load_scores_and_labels(scores_path, labels_path, sample_col, label_col,
     if sample_col not in scores.columns:
         raise ValueError(f"scores CSV must contain {sample_col!r}")
     scores = scores.copy()
-    scores["_sample_key"] = _require_unique_samples(scores, sample_col, "scores CSV")
+    scores["_sample_key"] = require_unique_samples(scores, sample_col, "scores CSV")
     scores["tumor_probability"] = _validated_probabilities(scores["tumor_probability"])
 
     if labels_path:
@@ -79,7 +47,7 @@ def load_scores_and_labels(scores_path, labels_path, sample_col, label_col,
         if label_col not in labels.columns:
             raise ValueError(f"labels CSV must contain {label_col!r}")
         labels = labels.copy()
-        labels["_sample_key"] = _require_unique_samples(labels, sample_col, "labels CSV")
+        labels["_sample_key"] = require_unique_samples(labels, sample_col, "labels CSV")
         merged = scores.merge(
             labels[["_sample_key", label_col]], on="_sample_key", how="inner",
             validate="one_to_one"
