@@ -1,0 +1,9 @@
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+# Bug-catching rules only: syntax errors, undefined names, unused imports/vars.
+# Pycodestyle style rules (E4/E7 multi-statement lines, import order) are
+# intentionally excluded: several one-off report/plot generators use dense
+# multi-statement lines by design and are not worth reformatting for style.
+select = ["E9", "F"]

@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 """Regenerate model_qc_reference.json from bundled validation matrices."""
 import json
-import os
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from inspect_expression_input import DEFAULT_RULES, inspect_dataframe

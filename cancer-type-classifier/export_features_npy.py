@@ -13,7 +13,8 @@ Writes, next to this script:
   X_genes.npy     (n_genes,)  Ensembl gene IDs
   X_samples.npy   (n_samples,) GDC file_id (matches ../selected_files.csv)
 """
-import os, pickle
+import os
+import pickle
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))

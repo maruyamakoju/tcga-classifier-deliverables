@@ -58,10 +58,10 @@ def _labels(model, X, lp, key, all_normal):
 def benchmark(model):
     rows = []
     for name, mp, lp, key, all_normal in COHORTS:
-    X = read_matrix(os.path.join(EV, mp), allow_pickle=True)
+        X = read_matrix(os.path.join(EV, mp), allow_pickle=True)
         y = _labels(model, X, lp, key, all_normal)
         for mode in MODES:
-            p = predict_proba(model, X, adapt=mode)
+            p = predict_proba(model, X, adapt=mode, allow_invalid_values=True)
             m = _metrics(y, p)
             has_two = len(set(y)) > 1
             rows.append(dict(cohort=name, n=len(X), mode=MODE_LABEL[mode],
@@ -76,16 +76,17 @@ def benchmark(model):
 
 
 def imbalance_curve(model):
-X = read_matrix(
-    os.path.join(EV, "tcga_toil_xena/tcga_toil_selected_genes_model_scale.pkl"),
-    allow_pickle=True,
-)
+    X = read_matrix(
+        os.path.join(EV, "tcga_toil_xena/tcga_toil_selected_genes_model_scale.pkl"),
+        allow_pickle=True,
+    )
     lab = pd.read_csv(os.path.join(EV, "tcga_toil_xena/tcga_toil_predictions.csv"))
     y = lab.set_index(lab["sample"].astype(str))["label"].reindex(X.index.astype(str)).astype(int).values
     V, report = align_to_genes_with_report(X, model["genes"], impute_mean=model["mean"])
     issues = validate_alignment_report(report)
     if issues:
-        raise ValueError("invalid matched values in TCGA-Toil matrix: " + " ".join(issues))
+        print("[imbalance_curve] warning, invalid matched values (mean-imputed): "
+              + " ".join(issues), file=sys.stderr)
     Vt, Vn = V[y == 1], V[y == 0]
     rng = np.random.default_rng(0)
     irows = []

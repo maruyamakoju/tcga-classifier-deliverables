@@ -274,9 +274,9 @@
       "sha256": "bf77151efa19c18a6d103605eef0fe1596a08ffee5ce959938f68c2a7dd302e9"
     },
     {
-      "bytes": 4636,
+      "bytes": 4626,
       "path": "run_smoke_tests.py",
-      "sha256": "2077c95c7a934c875d364a344269c3eb066e919dc5ba7f04f94294084c36f2dd"
+      "sha256": "3dd693ec34fbe0be5cc3957c26197a667bc7cf175213a5a3421dfe6156a7a177"
     },
     {
       "bytes": 17413,

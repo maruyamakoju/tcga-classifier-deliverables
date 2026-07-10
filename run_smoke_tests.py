@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """Run lightweight release smoke tests."""
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
