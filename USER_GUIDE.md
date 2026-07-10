@@ -165,7 +165,13 @@ Do not use this release for direct hard calls on:
 - spatial transcriptomics
 - clinical diagnosis or patient management
 
-These require additional validation, recalibration, or refitting.
+These require additional validation, recalibration, or refitting. For a
+foreign-pipeline cohort where the model's ranking (AUC) still holds but the
+default 0.5 threshold does not, `cohort_adapt_score.py --adapt cohort_zscore`
+re-centers the batch on its own mean/variance before scoring; see
+`cross-platform-adaptation/CROSS_PLATFORM_ADAPTATION.md` for when this
+applies and its limits (it needs an internal tumor/normal contrast in the
+cohort, so it does not help an all-normal or all-tumor batch).
 
 ## 8. Quick reference
 
@@ -182,4 +188,5 @@ python inspect_expression_input.py input.csv -o input.qc.json
 python score_tumor_normal.py input.csv -o scores.csv --threshold 0.5
 python calibrate_threshold.py scores.csv labels.csv
 python explain_scores.py input.csv --top-n 10
+python cohort_adapt_score.py input.csv --adapt cohort_zscore
 ```

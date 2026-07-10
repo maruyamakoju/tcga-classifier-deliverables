@@ -56,7 +56,7 @@ issues for ordinary scoring.
 | Setting | Key result |
 |---|---:|
 | TCGA patient-held-out test | AUC 0.997, accuracy 0.979 |
-| TCGA grouped 5-fold CV | AUC 0.997 +/- 0.003 |
+| TCGA grouped 5-fold CV | AUC 0.996 +/- 0.003 |
 | TCGA leave-one-cancer-type-out | macro AUC 0.994 |
 | CPTAC-3/GDC STAR-Counts smoke test | AUC 0.989, accuracy 0.955 |
 | TCGA Toil/RSEM pipeline check | AUC 0.992, but default-threshold accuracy 0.515 |
