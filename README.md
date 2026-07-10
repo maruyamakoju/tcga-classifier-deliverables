@@ -1,11 +1,11 @@
 # TCGA tumor-vs-normal classifier — deliverables
 
 [![CI](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml/badge.svg)](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.17-gdc-starcounts)
+[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.18-gdc-starcounts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Citation](https://img.shields.io/badge/citation-CITATION.cff-blue.svg)](CITATION.cff)
 
-Release: `v1.1.17-gdc-starcounts` (`2026-07-10`). For a single guided path
+Release: `v1.1.18-gdc-starcounts` (`2026-07-10`). For a single guided path
 through the public lightweight bundle, start with `INDEX.md`. Otherwise start
 with `EXECUTIVE_SUMMARY.md` if you need a short
 handoff/readout, or `USER_GUIDE.md` if you are preparing a new input matrix.
@@ -55,6 +55,10 @@ python explain_scores.py expr.csv --top-n 10             # per-sample LR gene co
 - **Input QC:** `inspect_expression_input.py` writes a JSON report with gene match rate,
   expression range, standardized distribution-shift metrics, and score summary. Run it
   before scoring when the matrix came from a new pipeline or collaborator.
+- **Low model-gene coverage:** direct scoring, explanation, adaptation, and
+  cancer-type prediction CLIs now refuse to write outputs when fewer than 50%
+  of model genes match by default. Fix gene IDs/orientation first; use
+  `--allow-low-gene-coverage` only after reviewing mean imputation.
 - **Invalid matched values:** matched model-gene cells that are missing, non-numeric,
   `NaN`, or infinite now stop scoring, workflow, explanation, adaptation, and
   cancer-type prediction CLIs by default before outputs are written.

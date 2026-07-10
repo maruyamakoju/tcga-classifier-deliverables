@@ -70,6 +70,9 @@ def main():
     try:
         no_match_input = temp_root / "no_model_genes.csv"
         no_match_qc = temp_root / "no_model_genes.qc.json"
+        no_match_scores = temp_root / "no_model_genes.scored.csv"
+        no_match_explanations = temp_root / "no_model_genes.explanations.csv"
+        no_match_adapted_scores = temp_root / "no_model_genes.adapted_scores.csv"
         no_match_workflow = temp_root / "no_model_genes_workflow"
         raw_like_input = temp_root / "raw_counts_like.csv"
         raw_like_qc = temp_root / "raw_counts_like.qc.json"
@@ -110,6 +113,20 @@ def main():
         require(not pickle_output.exists(),
                 "score_tumor_normal.py wrote scores after pickle input rejection")
 
+        result = run([sys.executable, "score_tumor_normal.py", str(no_match_input),
+                      "-o", str(no_match_scores)])
+        require_fail(result, "low gene coverage scorer")
+        require("low model-gene coverage" in result.stderr,
+                "low gene coverage scorer message missing")
+        require("Refusing to write scores" in result.stderr,
+                "low gene coverage scorer refusal missing")
+        require(not no_match_scores.exists(),
+                "score_tumor_normal.py wrote scores after low gene coverage")
+
+        result = run([sys.executable, "score_tumor_normal.py", str(no_match_input),
+                      "-o", str(no_match_scores), "--allow-low-gene-coverage"])
+        require_ok(result, "low gene coverage scorer explicit allow")
+
         result = run([sys.executable, "score_tumor_normal.py", str(invalid_input)])
         require_fail(result, "invalid matched values scorer")
         require("invalid matched values" in result.stderr,
@@ -135,6 +152,16 @@ def main():
                       "--allow-invalid-values"])
         require_ok(result, "invalid matched values explanations explicit allow")
 
+        result = run([sys.executable, "explain_scores.py", str(no_match_input),
+                      "-o", str(no_match_explanations)])
+        require_fail(result, "low gene coverage explanations")
+        require("low model-gene coverage" in result.stderr,
+                "low gene coverage explanation message missing")
+        require("Refusing to write explanations" in result.stderr,
+                "low gene coverage explanation refusal missing")
+        require(not no_match_explanations.exists(),
+                "explain_scores.py wrote explanations after low gene coverage")
+
         invalid_adapted_scores = invalid_input.with_suffix(".adapted_scores.csv")
         result = run([sys.executable, "cohort_adapt_score.py", str(invalid_input),
                       "--adapt", "none"])
@@ -149,6 +176,16 @@ def main():
         result = run([sys.executable, "cohort_adapt_score.py", str(invalid_input),
                       "--adapt", "none", "--allow-invalid-values"])
         require_ok(result, "invalid matched values cohort adaptation explicit allow")
+
+        result = run([sys.executable, "cohort_adapt_score.py", str(no_match_input),
+                      "--adapt", "none", "--out", str(no_match_adapted_scores)])
+        require_fail(result, "low gene coverage cohort adaptation")
+        require("low model-gene coverage" in result.stderr,
+                "low gene coverage adaptation message missing")
+        require("Refusing to write adapted scores" in result.stderr,
+                "low gene coverage adaptation refusal missing")
+        require(not no_match_adapted_scores.exists(),
+                "cohort_adapt_score.py wrote scores after low gene coverage")
 
         result = run([sys.executable, "explain_scores.py", "example_input.csv",
                       "--top-n", "0"])

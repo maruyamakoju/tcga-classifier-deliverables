@@ -14,6 +14,7 @@ from tcga_rnaseq import (
     read_matrix,
     sigmoid,
     validate_alignment_report,
+    validate_gene_match_report,
 )
 
 
@@ -95,6 +96,12 @@ def main(argv=None):
     parser.add_argument("--allow-invalid-values", action="store_true",
                         help=("warn instead of failing when matched model-gene cells are "
                               "missing, non-numeric, NaN, or infinite"))
+    parser.add_argument("--min-model-gene-match-rate", type=float, default=0.5,
+                        help=("minimum fraction of model genes that must match input columns "
+                              "before writing explanations (default 0.5)"))
+    parser.add_argument("--allow-low-gene-coverage", action="store_true",
+                        help=("warn instead of failing when too few model genes match; use "
+                              "only after reviewing gene IDs and imputation"))
     parser.add_argument("--transpose", action="store_true")
     args = parser.parse_args(argv)
 
@@ -102,6 +109,8 @@ def main(argv=None):
         parser.error("--top-n must be >= 1")
     if not 0 <= args.max_invalid_cell_fraction <= 1:
         parser.error("--max-invalid-cell-fraction must be between 0 and 1")
+    if not 0 <= args.min_model_gene_match_rate <= 1:
+        parser.error("--min-model-gene-match-rate must be between 0 and 1")
 
     weights = load_lr_weights(args.lr_weights)
     try:
@@ -120,6 +129,23 @@ def main(argv=None):
     print(f"[explain] {df.shape[0]} samples; matched {n_matched}/{len(weights['selected_genes'])} "
           f"model genes ({len(missing)} filled with training mean)", file=sys.stderr)
     print_invalid_alignment_summary(alignment_report, sys.stderr, prefix="[explain]")
+    gene_match_issues = validate_gene_match_report(
+        alignment_report,
+        min_match_rate=args.min_model_gene_match_rate,
+    )
+    if gene_match_issues and not args.allow_low_gene_coverage:
+        for issue in gene_match_issues:
+            print(f"[explain] ERROR: {issue}", file=sys.stderr)
+        print(
+            "[explain] Refusing to write explanations with low model-gene coverage; "
+            "fix the gene IDs/orientation or pass --allow-low-gene-coverage after "
+            "reviewing the imputation.",
+            file=sys.stderr,
+        )
+        return 1
+    if gene_match_issues:
+        for issue in gene_match_issues:
+            print(f"[explain] WARNING: {issue}", file=sys.stderr)
     alignment_issues = validate_alignment_report(
         alignment_report,
         max_invalid_cell_fraction=args.max_invalid_cell_fraction,

@@ -9,7 +9,11 @@ import pytest
 from tcga_rnaseq import score as S
 from tcga_rnaseq import metrics as M
 from tcga_rnaseq import load_lr_model, read_matrix
-from tcga_rnaseq.align import align_to_genes, align_to_genes_with_report
+from tcga_rnaseq.align import (
+    align_to_genes,
+    align_to_genes_with_report,
+    validate_gene_match_report,
+)
 from calibrate_threshold import (
     choose_youden_threshold,
     load_scores_and_labels,
@@ -64,6 +68,17 @@ def test_align_matches_across_version_suffix():
     v2, n2, _ = align_to_genes(
         pd.DataFrame({"ENSG0001.7": [5.0]}), np.array(["ENSG0001"]), impute_mean=np.array([0.0]))
     assert n2 == 1 and v2.tolist() == [[5.0]]
+
+
+def test_gene_match_report_flags_low_coverage():
+    assert validate_gene_match_report(
+        {"n_model_genes": 4, "n_matched_genes": 1},
+        min_match_rate=0.5,
+    )
+    assert validate_gene_match_report(
+        {"n_model_genes": 4, "n_matched_genes": 2},
+        min_match_rate=0.5,
+    ) == []
 
 
 def test_align_coerces_nonnumeric():
@@ -360,10 +375,12 @@ def test_binary_cli_rejects_multiclass_weights(root, cancer_type_model):
 
 
 def test_cancer_type_cli_rejects_invalid_matched_values(tmp_path, root, cancer_type_model):
-    gene = str(cancer_type_model["genes"][0])
+    genes = [str(gene) for gene in cancer_type_model["genes"][:600]]
     input_path = tmp_path / "invalid_cancer_type.csv"
     output_path = tmp_path / "predictions.csv"
-    input_path.write_text(f"sample,{gene}\ns1,not_numeric\n", encoding="utf-8")
+    values = {gene: [1.0] for gene in genes}
+    values[genes[0]] = ["not_numeric"]
+    pd.DataFrame(values, index=["s1"]).to_csv(input_path, index_label="sample")
     result = subprocess.run(
         [
             sys.executable,

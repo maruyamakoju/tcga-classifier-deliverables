@@ -1,6 +1,6 @@
 # Model card: TCGA/GDC tumor-vs-normal RNA-seq classifier
 
-Release: `v1.1.17-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.18-gdc-starcounts` (`2026-07-10`)
 
 ## Intended use
 
@@ -37,6 +37,9 @@ issues for ordinary scoring.
   standardized features.
 - Input genes: Ensembl IDs, with or without version suffixes.
 - Missing model genes: filled with the training mean.
+- Low model-gene coverage: direct scoring, explanation, adaptation, and
+  cancer-type prediction CLIs refuse to write outputs below the default 50%
+  model-gene match-rate guardrail unless explicitly overridden.
 - Invalid values in matched model-gene cells: reported and rejected by default
   before scoring, adaptation, prediction, or explanation outputs are written.
 - Default threshold: 0.5, but threshold calibration is recommended for new

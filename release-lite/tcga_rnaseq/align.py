@@ -206,6 +206,35 @@ def validate_alignment_report(report, max_invalid_cell_fraction=0.0):
     return issues
 
 
+def validate_gene_match_report(report, min_match_rate=0.5):
+    """Return blocking issues for low model-gene coverage."""
+    min_match_rate = float(min_match_rate)
+    n_model_genes = int(report.get("n_model_genes", 0))
+    n_matched_genes = int(report.get("n_matched_genes", 0))
+    match_rate = _fraction(n_matched_genes, n_model_genes)
+    if match_rate >= min_match_rate:
+        return []
+
+    if n_matched_genes == 0:
+        return [
+            "No model genes matched the input columns; check gene IDs and "
+            "row/column orientation."
+        ]
+    return [
+        f"Only {match_rate:.1%} of model genes matched "
+        f"({n_matched_genes}/{n_model_genes}); required at least "
+        f"{min_match_rate:.1%}. Check gene IDs and row/column orientation."
+    ]
+
+
+def format_gene_match_issues(report, min_match_rate=0.5):
+    """Return a single ValueError-ready message for low model-gene coverage."""
+    issues = validate_gene_match_report(report, min_match_rate=min_match_rate)
+    if not issues:
+        return ""
+    return "low model-gene coverage: " + " ".join(issues)
+
+
 def format_alignment_issues(report, max_invalid_cell_fraction=0.0):
     """Return a single ValueError-ready message for invalid matched values."""
     issues = validate_alignment_report(

@@ -16,9 +16,11 @@ from .align import (
     align_to_genes,
     align_to_genes_with_report,
     format_alignment_issues,
+    format_gene_match_issues,
     print_invalid_alignment_summary,
     strip_version,
     validate_alignment_report,
+    validate_gene_match_report,
 )
 from .score import (
     predict_proba,
@@ -36,6 +38,7 @@ __all__ = [
     "read_expression_csv", "write_json",
     "align_to_genes", "align_to_genes_with_report", "strip_version",
     "validate_alignment_report", "format_alignment_issues",
+    "validate_gene_match_report", "format_gene_match_issues",
     "print_invalid_alignment_summary",
     "predict_proba", "predict_proba_from_aligned",
     "score_binary_dataframe", "predict", "sigmoid", "softmax",
