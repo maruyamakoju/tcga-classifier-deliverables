@@ -1,8 +1,13 @@
 {
   "release_date": "2026-07-10",
-  "release_name": "GDC STAR-Counts cohort label sample validation release",
+  "release_name": "GDC STAR-Counts workflow calibration failure handling release",
   "schema_version": "1.0",
-  "version": "v1.1.19-gdc-starcounts",
+  "version": "v1.1.20-gdc-starcounts",
+  "changes_since_v1_1_19": [
+    "Hardened run_tumor_normal_workflow.py so calibration label errors write a stopped_after_calibration_error manifest instead of surfacing an uncaught exception.",
+    "Preserved valid qc.json and scores.csv outputs on calibration failure while removing downstream threshold, calibration, and explanation outputs.",
+    "Expanded release safety tests for bad workflow calibration labels."
+  ],
   "changes_since_v1_1_18": [
     "Hardened cohort_adapt_score.py label loading so missing or blank label sample IDs are rejected before metric alignment.",
     "Kept numeric string labels and unmatched input samples behavior unchanged.",

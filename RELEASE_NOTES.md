@@ -1,5 +1,26 @@
 # Release notes
 
+## v1.1.20-gdc-starcounts — 2026-07-10
+
+Workflow calibration failure handling release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.19; this release makes
+workflow label/calibration failures produce explicit workflow artifacts instead
+of uncaught exceptions.
+
+### Fixed
+
+- `run_tumor_normal_workflow.py` now records
+  `stopped_after_calibration_error` in `manifest.json` when label calibration
+  fails after scoring.
+- Valid `qc.json` and `scores.csv` are preserved on calibration failure, while
+  downstream `thresholds.csv`, `calibration.json`, and `explanations.csv`
+  outputs are not written.
+- `workflow_report.md` now records the calibration failure message.
+
+### Tests
+
+- Expanded release safety coverage for bad workflow calibration labels.
+
 ## v1.1.19-gdc-starcounts — 2026-07-10
 
 Cohort label sample validation release. Model weights, training data, and

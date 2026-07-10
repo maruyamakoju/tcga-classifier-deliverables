@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Release: `v1.1.19-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.20-gdc-starcounts` (`2026-07-10`)
 
 Start with:
 
@@ -118,6 +118,14 @@ You can force scoring with `--allow-qc-fail`, but that is only for debugging.
 For invalid matched expression values, fix the matrix first. If reviewed mean
 imputation is intentional, use `--max-invalid-cell-fraction` to set an explicit
 tolerance or `--allow-invalid-values` to downgrade the scorer stop to warnings.
+
+### Workflow stops with `stopped_after_calibration_error`
+
+Scoring finished, but the label CSV could not be used for threshold calibration.
+The workflow preserves `qc.json` and `scores.csv`, records the calibration error
+in `manifest.json` and `workflow_report.md`, and does not write threshold or
+calibration outputs. Check label sample IDs, duplicates, supported label values,
+and `--min-match-fraction`, then rerun.
 
 ### Scorer, explainer, or adaptation CLI says `invalid matched values`
 

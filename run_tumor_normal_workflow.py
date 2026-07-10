@@ -37,6 +37,13 @@ def read_json(path):
         return json.load(handle)
 
 
+def remove_if_exists(path):
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        pass
+
+
 def calibration_from_labels(scores_path, labels_path, sample_column, label_column,
                             default_threshold, extra_thresholds,
                             min_match_fraction):
@@ -87,7 +94,7 @@ def format_float(value, digits=4):
 
 
 def build_report(input_path, qc, scores, out_files, calibration_summary=None,
-                 explanations_rows=None, stop_reason="QC"):
+                 explanations_rows=None, stop_reason="QC", calibration_error=None):
     gene = qc["gene_match"]
     value = qc["value_summary"]
     dist = qc["distribution_summary"]
@@ -153,6 +160,13 @@ def build_report(input_path, qc, scores, out_files, calibration_summary=None,
             f"{format_float(calibration_summary['recommended_accuracy'])} / "
             f"{format_float(calibration_summary['recommended_recall'])} / "
             f"{format_float(calibration_summary['recommended_specificity'])}",
+            "",
+        ])
+    elif calibration_error:
+        lines.extend([
+            "## Calibration",
+            "",
+            f"- Calibration was not completed: {calibration_error}",
             "",
         ])
 
@@ -332,10 +346,41 @@ def main(argv=None):
 
     calibration_summary = None
     if args.labels:
-        threshold_metrics, calibration_summary = calibration_from_labels(
-            paths["scores_csv"], args.labels, args.sample_column, args.label_column,
-            args.threshold, args.extra_threshold, args.min_match_fraction
-        )
+        try:
+            threshold_metrics, calibration_summary = calibration_from_labels(
+                paths["scores_csv"], args.labels, args.sample_column, args.label_column,
+                args.threshold, args.extra_threshold, args.min_match_fraction
+            )
+        except ValueError as exc:
+            calibration_error = str(exc)
+            for rel in ["thresholds_csv", "calibration_json", "explanations_csv"]:
+                if rel in paths:
+                    remove_if_exists(paths[rel])
+            manifest = {
+                "status": "stopped_after_calibration_error",
+                "input": args.input,
+                "labels": args.labels,
+                "outputs": {
+                    "qc_json": paths["qc_json"].name,
+                    "scores_csv": paths["scores_csv"].name,
+                },
+                "qc_status": qc["status"],
+                "calibration_error": calibration_error,
+            }
+            write_json(paths["manifest_json"], manifest)
+            report = build_report(
+                args.input,
+                qc,
+                scores,
+                {"qc_json": paths["qc_json"].name,
+                 "scores_csv": paths["scores_csv"].name,
+                 "manifest_json": paths["manifest_json"].name},
+                calibration_error=calibration_error,
+            )
+            paths["report_md"].write_text(report, encoding="utf-8")
+            print(f"[workflow] ERROR: calibration failed: {calibration_error}", file=sys.stderr)
+            print("[workflow] stopped after writing scores; fix labels and rerun", file=sys.stderr)
+            return 1
         threshold_metrics.to_csv(paths["thresholds_csv"], index=False)
         write_json(paths["calibration_json"], calibration_summary)
 

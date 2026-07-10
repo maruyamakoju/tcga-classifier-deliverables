@@ -1,6 +1,6 @@
 # User guide
 
-Release: `v1.1.19-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.20-gdc-starcounts` (`2026-07-10`)
 
 This guide is for people who want to run the lightweight classifier on a new
 expression matrix. For a short project-level handoff, read
@@ -145,6 +145,11 @@ TCGA/CPTAC-like data, but it may not transfer to new tissues or pipelines.
 If you have labeled samples, use the workflow with `--labels` and review the
 recommended Youden's-J threshold. If the recommended threshold is extreme or QC
 is `WARN`, treat that as evidence of domain or platform shift.
+
+If label calibration fails after scoring, the workflow keeps `qc.json` and
+`scores.csv`, writes `manifest.json` with
+`status: stopped_after_calibration_error`, and records the label error in
+`workflow_report.md`. Fix the labels and rerun before using threshold metrics.
 
 ## 7. Strong do-not-use cases
 
