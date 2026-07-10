@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """Regenerate model_qc_reference.json from bundled validation matrices."""
-import json
-import os
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from inspect_expression_input import DEFAULT_RULES, inspect_dataframe
 from score_tumor_normal import load_lr_weights, read_matrix
+from tcga_rnaseq import write_json
 
 
 ROOT = Path(__file__).resolve().parent
@@ -75,9 +73,7 @@ def main():
         "reference_reports": reports,
     }
     out = ROOT / "model_qc_reference.json"
-    with open(out, "w", encoding="utf-8") as handle:
-        json.dump(reference, handle, indent=2, sort_keys=True)
-        handle.write("\n")
+    write_json(reference, out, sort_keys=True)
     print(f"wrote {out}")
 
 

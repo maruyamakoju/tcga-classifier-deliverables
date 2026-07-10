@@ -3,11 +3,11 @@
 import argparse
 import importlib
 import importlib.metadata
-import json
 import subprocess
 import sys
 from pathlib import Path
 
+from tcga_rnaseq import write_json
 
 ROOT = Path(__file__).resolve().parent
 
@@ -33,12 +33,14 @@ REQUIRED_FILES = [
     "DATA_DICTIONARY.md",
     "TROUBLESHOOTING.md",
     "USER_GUIDE.md",
+    "tcga_rnaseq/__init__.py",
 ]
 
 PACKAGE_RULES = {
     "numpy": {"required": True, "min": (1, 26), "max_major": 3},
     "pandas": {"required": True, "min": (2, 3), "max_major": 4},
     "pyarrow": {"required": False, "min": (16,), "max_major": None},
+    "tcga_rnaseq": {"required": True, "min": None, "max_major": None},
 }
 
 
@@ -170,9 +172,7 @@ def main(argv=None):
 
     report = build_report(run_test=args.self_test)
     if args.output:
-        with open(args.output, "w", encoding="utf-8") as handle:
-            json.dump(report, handle, indent=2, sort_keys=True)
-            handle.write("\n")
+        write_json(report, args.output, sort_keys=True)
     print_summary(report, args.output)
 
     if report["status"] == "FAIL" or (args.strict and report["status"] == "WARN"):
