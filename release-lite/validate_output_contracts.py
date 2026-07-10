@@ -147,6 +147,28 @@ def check_columns(df, expected, rel, messages):
                     f"{rel} columns changed. expected={expected} actual={actual}", ROOT / rel)
 
 
+def check_sample_ids(df, rel, messages):
+    if "sample" not in df:
+        return None
+    raw = df["sample"]
+    keys = raw.astype(str).str.strip()
+    empty = raw.isna() | (keys == "")
+    if empty.any():
+        add_message(messages, "ERROR", "empty_sample_id",
+                    f"{rel}:sample contains empty values.", ROOT / rel)
+    has_outer_whitespace = raw.notna() & (raw.astype(str) != keys)
+    if has_outer_whitespace.any():
+        add_message(messages, "ERROR", "sample_id_has_whitespace",
+                    f"{rel}:sample contains leading or trailing whitespace.",
+                    ROOT / rel)
+    duplicate_keys = keys[~empty & keys.duplicated()].unique()
+    if len(duplicate_keys):
+        add_message(messages, "ERROR", "duplicate_sample_id",
+                    f"{rel}:sample contains duplicate IDs after trimming whitespace.",
+                    ROOT / rel)
+    return keys
+
+
 def check_probability_series(series, rel, column, messages):
     values = pd.to_numeric(series, errors="coerce")
     if values.isna().any():
@@ -162,13 +184,7 @@ def check_score_csv(rel, messages):
     if df is None:
         return None
     check_columns(df, SCORE_COLUMNS, rel, messages)
-    if "sample" in df:
-        if df["sample"].isna().any() or (df["sample"].astype(str).str.len() == 0).any():
-            add_message(messages, "ERROR", "empty_sample_id",
-                        f"{rel}:sample contains empty values.", ROOT / rel)
-        if df["sample"].duplicated().any():
-            add_message(messages, "ERROR", "duplicate_sample_id",
-                        f"{rel}:sample contains duplicate IDs.", ROOT / rel)
+    check_sample_ids(df, rel, messages)
     if "tumor_probability" in df:
         check_probability_series(df["tumor_probability"], rel, "tumor_probability", messages)
     if "call" in df and not set(df["call"]).issubset({"tumor", "normal"}):
@@ -209,6 +225,7 @@ def check_labels(messages):
     if df is None:
         return
     check_columns(df, ["sample", "label"], "example_labels.csv", messages)
+    check_sample_ids(df, "example_labels.csv", messages)
     if "label" in df and not set(df["label"]).issubset({"tumor", "normal", 1, 0, "1", "0"}):
         add_message(messages, "ERROR", "invalid_label_value",
                     "example_labels.csv:label has unsupported values.", ROOT / "example_labels.csv")

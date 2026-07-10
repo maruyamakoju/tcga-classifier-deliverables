@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Release: `v1.1.20-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.21-gdc-starcounts` (`2026-07-10`)
 
 Start with:
 
@@ -126,6 +126,13 @@ The workflow preserves `qc.json` and `scores.csv`, records the calibration error
 in `manifest.json` and `workflow_report.md`, and does not write threshold or
 calibration outputs. Check label sample IDs, duplicates, supported label values,
 and `--min-match-fraction`, then rerun.
+
+### Output contract audit reports sample ID errors
+
+`validate_output_contracts.py` treats sample IDs in scored outputs and
+`example_labels.csv` as trimmed identifiers. Empty IDs, leading/trailing
+whitespace, and duplicate IDs after trimming are contract failures. Fix the
+source CSV so sample identifiers are exact and unique before rebuilding outputs.
 
 ### Scorer, explainer, or adaptation CLI says `invalid matched values`
 
