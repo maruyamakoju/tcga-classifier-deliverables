@@ -1,5 +1,23 @@
 # Release notes
 
+## v1.1.14-gdc-starcounts — 2026-07-10
+
+Threshold contract metric hardening release. Model weights, training data, and
+headline validation metrics are unchanged from v1.1.13; this release tightens
+the bundled output-contract validator for threshold metric CSV fields.
+
+### Fixed
+
+- `validate_output_contracts.py` now rejects non-empty threshold metric fields
+  that cannot be parsed as numbers instead of silently ignoring them as missing.
+- Blank optional `youden_j` values remain valid for rows where that metric is
+  intentionally absent.
+
+### Tests
+
+- Added unit coverage for non-numeric threshold metrics and blank optional
+  `youden_j` handling.
+
 ## v1.1.13-gdc-starcounts — 2026-07-10
 
 Output contract JSON hardening release. Model weights, training data, and

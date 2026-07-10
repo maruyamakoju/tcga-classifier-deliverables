@@ -126,6 +126,20 @@ def check_numeric_range(value, rel, key, messages, minimum=0, maximum=1):
                     ROOT / rel)
 
 
+def check_optional_numeric_series(series, rel, column, messages, minimum=0, maximum=1):
+    values = pd.to_numeric(series, errors="coerce")
+    invalid = values.isna() & series.notna()
+    if invalid.any():
+        add_message(messages, "ERROR", "non_numeric_metric",
+                    f"{rel}:{column} must be numeric when present.", ROOT / rel)
+        return
+    present = values.dropna()
+    if not ((present >= minimum) & (present <= maximum)).all():
+        add_message(messages, "ERROR", "metric_out_of_range",
+                    f"{rel}:{column} must be in [{minimum}, {maximum}] when present.",
+                    ROOT / rel)
+
+
 def check_columns(df, expected, rel, messages):
     actual = list(df.columns)
     if actual != expected:
@@ -186,11 +200,12 @@ def check_thresholds(messages):
                         ROOT / "example_workflow_output/thresholds.csv")
     for column in ["threshold", "accuracy", "f1", "precision", "recall", "specificity", "youden_j"]:
         if column in df:
-            values = pd.to_numeric(df[column], errors="coerce").dropna()
-            if not ((values >= 0) & (values <= 1)).all():
-                add_message(messages, "ERROR", "metric_out_of_range",
-                            f"thresholds.csv:{column} must be in [0, 1] when present.",
-                            ROOT / "example_workflow_output/thresholds.csv")
+            check_optional_numeric_series(
+                df[column],
+                "example_workflow_output/thresholds.csv",
+                column,
+                messages,
+            )
     for column in ["tn", "fp", "fn", "tp"]:
         if column in df:
             values = pd.to_numeric(df[column], errors="coerce")

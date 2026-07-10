@@ -1,6 +1,6 @@
 # User guide
 
-Release: `v1.1.13-gdc-starcounts` (`2026-07-10`)
+Release: `v1.1.14-gdc-starcounts` (`2026-07-10`)
 
 This guide is for people who want to run the lightweight classifier on a new
 expression matrix. For a short project-level handoff, read
