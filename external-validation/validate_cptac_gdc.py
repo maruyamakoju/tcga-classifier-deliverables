@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import argparse
 import math
+import os
+import pickle
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -20,12 +22,14 @@ import pandas as pd
 import requests
 from sklearn.metrics import (accuracy_score, average_precision_score,
                              confusion_matrix, f1_score, precision_score,
-                             recall_score, roc_auc_score, roc_curve)
+                             recall_score, roc_auc_score)
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from tcga_rnaseq import load_lr_model, score_binary_dataframe  # noqa: E402
+from tcga_rnaseq import metrics as M  # noqa: E402
+from tcga_rnaseq.align import strip_version  # noqa: E402
 
 GDC_FILES_ENDPOINT = "https://api.gdc.cancer.gov/files"
 GDC_DATA_ENDPOINT = "https://api.gdc.cancer.gov/data"
@@ -97,7 +101,9 @@ def load_or_query_manifest(path: Path, refresh: bool) -> pd.DataFrame:
         return pd.read_csv(path)
     manifest = query_cptac_manifest()
     path.parent.mkdir(parents=True, exist_ok=True)
-    manifest.to_csv(path, index=False)
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    manifest.to_csv(tmp_path, index=False)
+    os.replace(tmp_path, path)
     return manifest
 
 
@@ -124,15 +130,21 @@ def extract_selected_genes(file_id: str, selected_genes: list[str],
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache_path = cache_dir / f"{file_id}.pkl"
     if cache_path.exists():
-        return pd.read_pickle(cache_path)
+        try:
+            return pd.read_pickle(cache_path)
+        except (OSError, EOFError, pickle.UnpicklingError):
+            print(f"[cptac] cache for {file_id} could not be read; re-downloading",
+                  file=sys.stderr)
 
     wanted = set(selected_genes)
-    wanted_by_base = {gene.split(".")[0]: gene for gene in selected_genes}
+    wanted_by_base = {strip_version(gene): gene for gene in selected_genes}
     values = {}
+    collisions = []
     url = f"{GDC_DATA_ENDPOINT}/{file_id}"
     last_error = None
     for attempt in range(1, retries + 1):
         values = {}
+        collisions = []
         try:
             with requests.get(url, stream=True, timeout=120) as response:
                 response.raise_for_status()
@@ -151,8 +163,15 @@ def extract_selected_genes(file_id: str, selected_genes: list[str],
                         continue
 
                     gene_id = parts[gene_idx]
-                    target = gene_id if gene_id in wanted else wanted_by_base.get(gene_id.split(".")[0])
+                    target = gene_id if gene_id in wanted else wanted_by_base.get(strip_version(gene_id))
                     if target is None:
+                        continue
+                    if target in values:
+                        # A second raw row maps to the same selected gene
+                        # after version-stripping (duplicate/ambiguous
+                        # annotation row): keep the first value seen instead
+                        # of silently overwriting it.
+                        collisions.append(gene_id)
                         continue
                     try:
                         tpm = float(parts[tpm_idx])
@@ -171,9 +190,20 @@ def extract_selected_genes(file_id: str, selected_genes: list[str],
                   file=sys.stderr)
     if last_error is not None and not values:
         raise last_error
+    if not values:
+        raise ValueError(
+            f"No selected genes matched GDC file {file_id}; the download may be "
+            "empty, corrupt, or in an unexpected format."
+        )
+    if collisions:
+        print(f"[cptac] WARNING: {file_id}: {len(collisions)} gene rows collided with an "
+              f"already-matched selected gene after version-stripping and were skipped: "
+              f"{collisions[:5]}", file=sys.stderr)
 
     series = pd.Series(values, name=file_id, dtype=float)
-    pd.to_pickle(series, cache_path)
+    tmp_path = cache_path.with_suffix(cache_path.suffix + ".tmp")
+    pd.to_pickle(series, tmp_path)
+    os.replace(tmp_path, cache_path)
     return series
 
 
@@ -221,11 +251,10 @@ def summarize(y_true: np.ndarray, scores: np.ndarray, threshold: float) -> dict:
 
 
 def threshold_sweep(y_true: np.ndarray, scores: np.ndarray) -> pd.DataFrame:
-    fpr, tpr, thresholds = roc_curve(y_true, scores)
-    best_idx = int(np.argmax(tpr - fpr))
+    youden_threshold = M.youden_threshold(y_true, scores)["threshold"]
     threshold_specs = [
         ("default_0.5", 0.5),
-        ("youden_j", float(thresholds[best_idx])),
+        ("youden_j", float(youden_threshold)),
         ("high_specificity_0.75", 0.75),
         ("high_specificity_0.9", 0.9),
         ("high_specificity_0.95", 0.95),
@@ -389,6 +418,17 @@ def main() -> int:
                            "sample_submitter_id", "sample_type", "label"]].merge(
         scored, left_on="file_id", right_on="sample", how="left"
     ).drop(columns=["sample"])
+    if len(predictions) != len(sampled):
+        raise ValueError(
+            f"[cptac] merge produced {len(predictions)} rows, expected {len(sampled)} "
+            "(duplicate or missing file_id join keys)"
+        )
+    n_missing = int(predictions["tumor_probability"].isna().sum())
+    if n_missing:
+        raise ValueError(
+            f"[cptac] {n_missing}/{len(sampled)} samples have no score after the merge "
+            "(file_id mismatch between the extracted matrix and the sampled manifest)"
+        )
     predictions_path = out_dir / "cptac_predictions.csv"
     predictions.to_csv(predictions_path, index=False)
 

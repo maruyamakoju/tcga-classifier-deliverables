@@ -19,7 +19,7 @@ from pathlib import Path
 import pandas as pd
 from sklearn.metrics import (accuracy_score, average_precision_score,
                              confusion_matrix, f1_score, precision_score,
-                             recall_score, roc_auc_score, roc_curve)
+                             recall_score, roc_auc_score)
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -27,8 +27,10 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from tcga_rnaseq import load_lr_model, score_binary_dataframe  # noqa: E402
+from tcga_rnaseq import metrics as M  # noqa: E402
 from validate_gtex_xena import (extract_matrix_from_xena,  # noqa: E402
-                                load_or_download_phenotype)
+                                load_or_download_phenotype,
+                                require_complete_merge)
 
 TCGA_TPM_URL = "https://toil.xenahubs.net/download/tcga_RSEM_gene_tpm.gz"
 LABEL_MAP = {"Solid Tissue Normal": 0, "Primary Tumor": 1}
@@ -75,12 +77,11 @@ def summarize(predictions: pd.DataFrame, threshold: float) -> dict:
 def threshold_sweep(predictions: pd.DataFrame) -> pd.DataFrame:
     y_true = predictions["label"].to_numpy()
     scores = predictions["tumor_probability"].to_numpy()
-    fpr, tpr, thresholds = roc_curve(y_true, scores)
-    best_idx = int((tpr - fpr).argmax())
+    youden_threshold = M.youden_threshold(y_true, scores)["threshold"]
     rows = []
     for name, threshold in [
         ("default_0.5", 0.5),
-        ("youden_j", float(thresholds[best_idx])),
+        ("youden_j", float(youden_threshold)),
         ("high_0.99", 0.99),
         ("high_0.999", 0.999),
         ("high_0.9999", 0.9999),
@@ -218,6 +219,7 @@ def main() -> int:
             file=sys.stderr,
         )
     predictions = sampled.merge(scored, on="sample", how="left")
+    require_complete_merge(predictions, len(sampled), "tumor_probability", "[tcga-toil]")
     predictions_path = out_dir / "tcga_toil_predictions.csv"
     predictions.to_csv(predictions_path, index=False)
 

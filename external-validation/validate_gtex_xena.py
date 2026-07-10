@@ -12,7 +12,11 @@ from __future__ import annotations
 
 import argparse
 import gzip
+import hashlib
 import io
+import json
+import os
+import pickle
 import sys
 from pathlib import Path
 
@@ -24,6 +28,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from tcga_rnaseq import load_lr_model, score_binary_dataframe  # noqa: E402
+from tcga_rnaseq.align import strip_version  # noqa: E402
 
 PHENOTYPE_URL = "https://toil.xenahubs.net/download/TcgaTargetGTEX_phenotype.txt.gz"
 GTEX_TPM_URL = "https://toil.xenahubs.net/download/gtex_RSEM_gene_tpm.gz"
@@ -36,12 +41,23 @@ def read_gzip_tsv_from_url(url: str) -> pd.DataFrame:
     return pd.read_csv(io.BytesIO(payload), sep="\t", encoding="latin-1")
 
 
+def atomic_write_bytes(path: Path, write_fn) -> None:
+    """Call write_fn(tmp_path) then atomically replace path with tmp_path.
+
+    Protects a concurrently-reading process (or a rerun after this one is
+    killed mid-write) from ever observing a truncated cache file.
+    """
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    write_fn(tmp_path)
+    os.replace(tmp_path, path)
+
+
 def load_or_download_phenotype(path: Path, refresh: bool) -> pd.DataFrame:
     if path.exists() and not refresh:
         return pd.read_csv(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     phenotype = read_gzip_tsv_from_url(PHENOTYPE_URL)
-    phenotype.to_csv(path, index=False)
+    atomic_write_bytes(path, lambda tmp: phenotype.to_csv(tmp, index=False))
     return phenotype
 
 
@@ -67,15 +83,59 @@ def xena_log2_tpm001_to_model_scale(values: np.ndarray) -> np.ndarray:
     return np.log2(tpm + 1.0)
 
 
+def cache_fingerprint(sample_ids: list[str], selected_genes: list[str], matrix_url: str) -> str:
+    """Fingerprint of everything that determines extract_matrix_from_xena's output.
+
+    A cache keyed only on a fixed output path (the prior behavior) silently
+    returns stale data -- for the wrong sample_ids, or extracted against an
+    older model's selected_genes -- if the script is rerun with different
+    sampling parameters or a different --weights model without --refresh.
+    """
+    digest = hashlib.sha256()
+    digest.update(matrix_url.encode("utf-8"))
+    for sample_id in sample_ids:
+        digest.update(b"\x00" + str(sample_id).encode("utf-8"))
+    for gene in selected_genes:
+        digest.update(b"\x01" + str(gene).encode("utf-8"))
+    return digest.hexdigest()
+
+
+def _cache_meta_path(cache_path: Path) -> Path:
+    return cache_path.with_suffix(cache_path.suffix + ".meta.json")
+
+
+def _load_cached_matrix(cache_path: Path, fingerprint: str) -> pd.DataFrame | None:
+    meta_path = _cache_meta_path(cache_path)
+    if not cache_path.exists() or not meta_path.exists():
+        return None
+    try:
+        meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if meta.get("fingerprint") != fingerprint:
+        print(f"[xena] cache at {cache_path} is stale (sample_ids/selected_genes/url changed "
+              "since it was written); re-extracting", file=sys.stderr)
+        return None
+    try:
+        return pd.read_pickle(cache_path)
+    except (OSError, EOFError, pickle.UnpicklingError):
+        print(f"[xena] cache at {cache_path} could not be read; re-extracting", file=sys.stderr)
+        return None
+
+
 def extract_matrix_from_xena(sample_ids: list[str], selected_genes: list[str],
                              cache_path: Path, refresh: bool,
                              matrix_url: str = GTEX_TPM_URL) -> pd.DataFrame:
-    if cache_path.exists() and not refresh:
-        return pd.read_pickle(cache_path)
+    fingerprint = cache_fingerprint(sample_ids, selected_genes, matrix_url)
+    if not refresh:
+        cached = _load_cached_matrix(cache_path, fingerprint)
+        if cached is not None:
+            return cached
 
-    wanted_bases = {gene.split(".")[0]: gene for gene in selected_genes}
+    wanted_bases = {strip_version(gene): gene for gene in selected_genes}
     selected_set = set(selected_genes)
     rows = {}
+    collisions = []
     header = None
     sample_indices = None
 
@@ -96,8 +156,15 @@ def extract_matrix_from_xena(sample_ids: list[str], selected_genes: list[str],
                     continue
 
                 gene_id = parts[0]
-                target = gene_id if gene_id in selected_set else wanted_bases.get(gene_id.split(".")[0])
+                target = gene_id if gene_id in selected_set else wanted_bases.get(strip_version(gene_id))
                 if target is None:
+                    continue
+                if target in rows:
+                    # A second raw row maps to the same selected gene after
+                    # version-stripping (duplicate/ambiguous annotation row):
+                    # keep the first value seen instead of silently
+                    # overwriting it, and surface the collision.
+                    collisions.append(gene_id)
                     continue
                 vals = np.array([float(parts[i]) for i in sample_indices], dtype=float)
                 rows[target] = xena_log2_tpm001_to_model_scale(vals)
@@ -107,11 +174,47 @@ def extract_matrix_from_xena(sample_ids: list[str], selected_genes: list[str],
                 if len(rows) == len(selected_genes):
                     break
 
+    if not rows:
+        raise ValueError(
+            f"No selected genes matched any row in {matrix_url}; the download may be "
+            "empty, truncated, or in an unexpected format."
+        )
+    if collisions:
+        print(f"[xena] WARNING: {len(collisions)} gene rows collided with an already-matched "
+              f"selected gene after version-stripping and were skipped: {collisions[:5]}",
+              file=sys.stderr)
+
     matrix = pd.DataFrame(rows, index=sample_ids)
     matrix = matrix.reindex(columns=selected_genes)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
-    matrix.to_pickle(cache_path)
+    atomic_write_bytes(cache_path, matrix.to_pickle)
+    _cache_meta_path(cache_path).write_text(
+        json.dumps({"fingerprint": fingerprint}, indent=2) + "\n", encoding="utf-8"
+    )
     return matrix
+
+
+def require_complete_merge(predictions: pd.DataFrame, expected_n: int, score_col: str,
+                           context: str) -> None:
+    """Raise if a label/score merge silently dropped, duplicated, or left rows unscored.
+
+    A left-merge that doesn't match every row (e.g. a stale/misaligned cache,
+    per cache_fingerprint's docstring) produces NaN scores that downstream
+    aggregate metrics (means, rates) compute over silently, without ever
+    raising -- a 0% or 100% "false positive rate" from an all-NaN column is a
+    real, previously-possible failure mode this guards against.
+    """
+    if len(predictions) != expected_n:
+        raise ValueError(
+            f"{context}: merge produced {len(predictions)} rows, expected {expected_n} "
+            "(duplicate or missing join keys)"
+        )
+    n_missing = int(predictions[score_col].isna().sum())
+    if n_missing:
+        raise ValueError(
+            f"{context}: {n_missing}/{expected_n} samples have no score after the merge "
+            "(sample ID mismatch between the extracted matrix and the sampled manifest)"
+        )
 
 
 def summarize(predictions: pd.DataFrame, threshold: float) -> dict:
@@ -275,6 +378,7 @@ def main() -> int:
             file=sys.stderr,
         )
     predictions = sampled.merge(scored, left_on="sample", right_on="sample", how="left")
+    require_complete_merge(predictions, len(sampled), "tumor_probability", "[gtex]")
     predictions_path = out_dir / "gtex_predictions.csv"
     predictions.to_csv(predictions_path, index=False)
 
