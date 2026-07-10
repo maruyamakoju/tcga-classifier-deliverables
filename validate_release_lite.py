@@ -24,6 +24,7 @@ REQUIRED_FALLBACK = {
     "audit_release_docs.py",
     "calibrate_threshold.py",
     "check_environment.py",
+    "cohort_adapt_score.py",
     "DATA_DICTIONARY.md",
     "deployable_lr_weights.npz",
     "EXECUTIVE_SUMMARY.md",

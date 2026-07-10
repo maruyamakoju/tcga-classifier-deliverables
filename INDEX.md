@@ -12,7 +12,7 @@ classifier sources that are intentionally outside the lite bundle.
 
 - [`REPORT.md`](REPORT.md) — full methods and results for the pan-cancer
   tumor-vs-normal logistic-regression classifier (held-out test AUC 0.997,
-  accuracy 0.979; grouped 5-fold CV AUC 0.997±0.003).
+  accuracy 0.979; grouped 5-fold CV AUC 0.996±0.003).
 - [`MODEL_CARD.md`](MODEL_CARD.md) — one-page fact sheet: intended use, limits,
   and validation summary.
 

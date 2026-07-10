@@ -7,14 +7,23 @@ from pathlib import Path
 
 import pandas as pd
 
+from release_tools.common import append_timeout_message, subprocess_output_text
+
 
 ROOT = Path(__file__).resolve().parent
 
 
 def run(cmd, timeout_seconds=300):
     print("[smoke]", " ".join(cmd))
-    return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True,
-                          encoding="utf-8", errors="replace", timeout=timeout_seconds)
+    try:
+        return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=True,
+                              encoding="utf-8", errors="replace", timeout=timeout_seconds)
+    except subprocess.TimeoutExpired as exc:
+        return subprocess.CompletedProcess(
+            cmd, 124,
+            stdout=subprocess_output_text(exc.stdout),
+            stderr=append_timeout_message(subprocess_output_text(exc.stderr), timeout_seconds),
+        )
 
 
 def require_ok(result):

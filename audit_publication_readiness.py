@@ -91,8 +91,15 @@ def current_github_release_note_name():
     must be derived from VERSION rather than hardcoded -- a hardcoded name
     only fails once the file it names has actually been removed, silently
     skipping the real "does the current release note exist" check.
+
+    Returns None if VERSION itself is missing; VERSION is already in
+    REQUIRED_FILES, so that gets reported as a normal missing-file message
+    instead of this function raising before that check runs.
     """
-    version = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+    version_path = ROOT / "VERSION"
+    if not version_path.exists():
+        return None
+    version = version_path.read_text(encoding="utf-8").strip()
     release_prefix = version.split("-", 1)[0]
     return f"GITHUB_RELEASE_{release_prefix}.md"
 
@@ -124,7 +131,9 @@ def is_text_path(rel):
 def check_required_files(files, messages):
     file_set = set(files)
     required = set(REQUIRED_FILES)
-    required.add(current_github_release_note_name())
+    note_name = current_github_release_note_name()
+    if note_name is not None:
+        required.add(note_name)
     for rel in sorted(required):
         if rel not in file_set or not (ROOT / rel).exists():
             add_message(messages, "ERROR", "required_file_missing",
@@ -200,9 +209,10 @@ def check_history_blob_sizes(messages, max_bytes):
 def check_release_artifacts(messages):
     artifacts_path = ROOT / "RELEASE_ARTIFACTS.json"
     zip_path = ROOT / ZIP_NAME
-    note_path = ROOT / current_github_release_note_name()
     if not artifacts_path.exists() or not zip_path.exists():
         return
+    note_name = current_github_release_note_name()
+    note_path = ROOT / note_name if note_name is not None else None
     try:
         artifacts = json.loads(artifacts_path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
@@ -222,7 +232,7 @@ def check_release_artifacts(messages):
         if artifacts.get(key) != actual:
             add_message(messages, "ERROR", "release_artifact_mismatch",
                         f"RELEASE_ARTIFACTS.json {key} does not match zip.", artifacts_path)
-    if note_path.exists():
+    if note_path is not None and note_path.exists():
         note = note_path.read_text(encoding="utf-8")
         if actual_sha not in note or str(actual_bytes) not in note:
             add_message(messages, "ERROR", "github_release_note_stale",

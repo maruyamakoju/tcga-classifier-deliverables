@@ -29,7 +29,19 @@ validation metrics are unchanged from v1.1.21.
 - Added a `ruff` lint step to CI and 41 new unit tests (`tcga_rnaseq` edge
   cases, `release_tools.common`).
 - Fixed several docs-vs-code inconsistencies, including an undocumented CLI
-  and a rounding error in a reported metric (0.9963 shown as "0.997").
+  and a rounding error in a reported metric (0.9963 shown as "0.997" in
+  README.md/MODEL_CARD.md/EXECUTIVE_SUMMARY.md/INDEX.md/REPORT.md/REPRODUCIBILITY.md).
+- Independent review pass caught and fixed: `cohort_adapt_score.py` computed
+  its reported metrics from the *rounded* `tumor_probability` column instead
+  of the raw probability, which could disagree with the CSV's own `call`
+  column for a sample whose probability rounds across the threshold; added
+  regression coverage. `run_safety_tests.py`/`run_smoke_tests.py` gained a
+  subprocess timeout without catching it, so a hung step would crash with a
+  raw traceback instead of failing cleanly. `audit_publication_readiness.py`
+  could crash instead of reporting a clean error if `VERSION` were missing.
+  `explain_scores.py` still hand-rolled the standardization formula the rest
+  of this pass moved into `tcga_rnaseq`. `cohort_adapt_score.py` was missing
+  from the release-lite required-file lists despite being shipped/documented.
 
 ## Validation
 
@@ -47,6 +59,6 @@ validation metrics are unchanged from v1.1.21.
 ## Release asset
 
 - Asset: `tcga-tumor-normal-release-lite.zip`
-- SHA256: `ad0a7a66a5e6a91c4e454f9c56bef42f7905fa14f6aa57b16093199bf0bbfe89`
-- Size: `321465` bytes
+- SHA256: `7ba0489cce97d80d5e56b967e9b70142d51e246e39bf32f19946f238926d74ec`
+- Size: `321902` bytes
 - Zip entries: `74`

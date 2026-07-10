@@ -14,6 +14,7 @@ from tcga_rnaseq import (
     print_invalid_alignment_summary,
     read_matrix,
     sigmoid,
+    standardize,
     strip_version,
     validate_alignment_report,
     validate_gene_match_report,
@@ -50,7 +51,7 @@ def explain_dataframe(df, weights, top_n, gene_names=None, return_alignment_repo
     X, alignment_report = align_to_genes_with_report(df, genes, mean)
     n_matched = alignment_report["n_matched_genes"]
     missing = alignment_report["missing_genes"]
-    X_scaled = (X - mean) / scale
+    X_scaled = standardize(X, {"mean": mean, "scale": scale})
     contributions = X_scaled * coef
     logits = contributions.sum(axis=1) + intercept
     probabilities = sigmoid(logits)

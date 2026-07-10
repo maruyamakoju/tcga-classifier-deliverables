@@ -39,6 +39,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from calibrate_threshold import normalize_label, validate_threshold  # noqa: E402
 from tcga_rnaseq import (  # noqa: E402
     load_lr_model,
+    predict_proba,
     print_invalid_alignment_summary,
     read_matrix,
     score_binary_dataframe,
@@ -182,7 +183,12 @@ def main(argv=None):
         warnings.append("cohort standardization assumes an internal tumor/normal mix; "
                         "a near-single-class cohort is only partially corrected")
 
-    p = out_df["tumor_probability"].to_numpy(dtype=float)
+    # Use the raw (unrounded) probability for metrics/summary stats, not the
+    # rounded tumor_probability CSV column: score_binary_dataframe derives
+    # `call` from the unrounded probability before rounding it for display,
+    # so re-thresholding the rounded column here could disagree with `call`
+    # for a sample whose raw probability rounds across the threshold.
+    p = predict_proba(model, X, adapt=args.adapt, allow_invalid_values=True)
 
     out_path = args.out or (os.path.splitext(args.input_csv)[0] + ".adapted_scores.csv")
     out_df.to_csv(out_path, index=False)

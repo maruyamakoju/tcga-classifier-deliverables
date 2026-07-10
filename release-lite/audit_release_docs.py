@@ -44,6 +44,7 @@ CORE_FILES = [
     "audit_release_docs.py",
     "calibrate_threshold.py",
     "check_environment.py",
+    "cohort_adapt_score.py",
     "deployable_lr_weights.npz",
     "DATA_DICTIONARY.md",
     "example_input.csv",

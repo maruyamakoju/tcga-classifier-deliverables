@@ -53,7 +53,7 @@ genes were retained as features. Three classifiers were trained on this
 Logistic regression edges out on AUC; XGBoost on accuracy/F1/precision — all
 three are within a fraction of a percent of each other. 5-fold grouped
 cross-validation on the training set alone confirms this is not a lucky split:
-logistic regression 0.997 ± 0.003 AUC, random forest 0.996 ± 0.002 AUC across
+logistic regression 0.996 ± 0.003 AUC, random forest 0.996 ± 0.002 AUC across
 folds.
 
 Per-cancer-type breakdown (logistic regression) shows AUC = 1.000 on 15 of 17

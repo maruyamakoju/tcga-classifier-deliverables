@@ -23,9 +23,9 @@ ROOT = Path(__file__).resolve().parent
 ZIP_NAME = RELEASE_ZIP_NAME
 
 
-def run_step(label, cmd, cwd, timeout_seconds=300):
+def run_step(label, cmd, cwd, required=True, timeout_seconds=300):
     return run_subprocess_step(label, cmd, cwd, timeout_seconds=timeout_seconds,
-                               prefix="zip-bundle")
+                               required=required, prefix="zip-bundle")
 
 
 def validate_zip_members(zip_path):
