@@ -58,11 +58,15 @@ def test_shipped_summary_artifacts_match_golden(root, golden):
     )
 
 
-def test_train_test_split_is_patient_disjoint(root):
+def test_train_test_split_is_patient_disjoint(features_npy, root):
+    # X_samples.npy is part of the gitignored full-data feature generation, so
+    # this guardrail runs only when that generation is available (locally or via
+    # TCGA_FEATURES) and skips otherwise, matching the other full-data tests.
+    feature_dir = os.path.dirname(features_npy)
     train_idx = np.load(os.path.join(root, "train_idx.npy"))
     test_idx = np.load(os.path.join(root, "test_idx.npy"))
     samples = np.load(
-        os.path.join(root, "cancer-type-classifier", "X_samples.npy"),
+        os.path.join(feature_dir, "X_samples.npy"),
         allow_pickle=False,
     ).astype(str)
     meta = pd.read_csv(os.path.join(root, "selected_files.csv"), dtype=str)
