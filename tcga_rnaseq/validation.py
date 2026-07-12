@@ -60,15 +60,20 @@ def sample_key(series, source_name="sample identifiers"):
     return keys
 
 
+def _reject_duplicate_keys(keys, source_name, kind):
+    """Raise ValueError if ``keys`` (a canonical string Series) has duplicates."""
+    duplicated = sorted(keys[keys.duplicated()].unique())
+    if duplicated:
+        preview = ", ".join(duplicated[:5])
+        raise ValueError(f"{source_name} contains duplicate {kind}: {preview}")
+
+
 def require_unique_samples(df, sample_col, source_name):
     """sample_key(df[sample_col]), raising ValueError on any duplicate."""
     if sample_col not in df.columns:
         raise ValueError(f"{source_name} must contain {sample_col!r}")
     keys = sample_key(df[sample_col], f"{source_name} sample identifiers")
-    duplicated = sorted(keys[keys.duplicated()].unique())
-    if duplicated:
-        preview = ", ".join(duplicated[:5])
-        raise ValueError(f"{source_name} contains duplicate sample IDs: {preview}")
+    _reject_duplicate_keys(keys, source_name, "sample IDs")
     return keys
 
 
@@ -91,10 +96,7 @@ def validate_expression_matrix(df, source_name="expression matrix"):
         raise ValueError(f"{source_name} must contain at least one gene column")
 
     sample_keys = sample_key(df.index, f"{source_name} sample identifiers")
-    duplicated_samples = sorted(sample_keys[sample_keys.duplicated()].unique())
-    if duplicated_samples:
-        preview = ", ".join(duplicated_samples[:5])
-        raise ValueError(f"{source_name} contains duplicate sample IDs: {preview}")
+    _reject_duplicate_keys(sample_keys, source_name, "sample IDs")
 
     raw_columns = pd.Series(list(df.columns), dtype=object)
     gene_keys = raw_columns.astype(str).str.strip()
@@ -104,10 +106,7 @@ def validate_expression_matrix(df, source_name="expression matrix"):
         raise ValueError(
             f"{source_name} gene identifiers must not contain leading or trailing whitespace"
         )
-    duplicated_genes = sorted(gene_keys[gene_keys.duplicated()].unique())
-    if duplicated_genes:
-        preview = ", ".join(duplicated_genes[:5])
-        raise ValueError(f"{source_name} contains duplicate gene columns: {preview}")
+    _reject_duplicate_keys(gene_keys, source_name, "gene columns")
 
     result = df.copy(deep=False)
     result.index = pd.Index(sample_keys.to_numpy(dtype=str), name=df.index.name)

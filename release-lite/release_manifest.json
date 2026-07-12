@@ -304,9 +304,9 @@
       "sha256": "96552663082855b9dde3aa90671c4c365f039f807ca24dad34cc062786d48da5"
     },
     {
-      "bytes": 12460,
+      "bytes": 12378,
       "path": "tcga_rnaseq/align.py",
-      "sha256": "922491fa2b85d7bde376b6dd81bfc10c5a7e6b358fefb4a18466ccaea2419e2e"
+      "sha256": "c3fbca34de5614d063076fb98cbd0b45bd098221f1b84e6da36ad5f3dd1dbd5c"
     },
     {
       "bytes": 23050,
@@ -324,9 +324,9 @@
       "sha256": "623f5cc683ad30155620ded813167312533f591c330a5326380b89e178c12f62"
     },
     {
-      "bytes": 5184,
+      "bytes": 5034,
       "path": "tcga_rnaseq/validation.py",
-      "sha256": "aaa3dc9683b9801adcb928a0266c9c5e6533cbcce2c4cb9f3a032df76d53f8d2"
+      "sha256": "759e5ca45a65c3fbce5052c5a9d88ed0ebcd34dc98581b024dfd79d6119e9026"
     },
     {
       "bytes": 109,

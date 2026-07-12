@@ -160,7 +160,6 @@ def align_to_genes_with_report(X, genes, impute_mean=None):
         "matched_cells": int(matched_cells),
         "invalid_matched_cells": int(invalid_cells),
         "invalid_matched_fraction": _fraction(invalid_cells, matched_cells),
-        "invalid_matched_cell_fraction": _fraction(invalid_cells, matched_cells),
         "n_genes_with_invalid_values": int(len(invalid_gene_reports)),
         "n_genes_with_all_invalid_values": int(len(all_invalid_genes)),
         "first_genes_with_invalid_values": invalid_gene_reports[:20],

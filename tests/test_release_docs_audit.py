@@ -46,3 +46,29 @@ def test_publication_checklist_must_reference_current_release_note(tmp_path, mon
     messages = []
     check_publication_release_note_reference(messages)
     assert messages == []
+
+
+def test_python_commands_allow_full_tree_scripts(tmp_path, monkeypatch):
+    """A bundled doc may reference full-deliverables-only reproduction commands.
+
+    Regression guard: ``check_python_commands`` must classify full-tree scripts
+    with the same ``is_intentionally_external_to_lite`` predicate the code-spanned
+    path check uses, so the two allowlists cannot drift back apart and make the
+    extracted-bundle docs audit fail on the exact-reproduction commands.
+    """
+    monkeypatch.setattr(audit_release_docs, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_release_docs, "COMMAND_DOCS", ["TESTDOC.md"])
+    (tmp_path / "TESTDOC.md").write_text(
+        "python train_classifier.py --x\n"            # in FULL_DELIVERABLE_ONLY_REFS
+        "python cross-cancer-holdout/run_loco.py --y\n"  # matches a full-tree prefix
+        "python nonexistent_script.py --z\n",         # genuinely missing -> error
+        encoding="utf-8",
+    )
+    messages = []
+    audit_release_docs.check_python_commands(messages)
+
+    codes = [message["code"] for message in messages]
+    assert codes.count("full_deliverable_command") == 2
+    assert codes.count("command_script_missing") == 1
+    missing = [m for m in messages if m["code"] == "command_script_missing"]
+    assert "nonexistent_script.py" in missing[0]["message"]

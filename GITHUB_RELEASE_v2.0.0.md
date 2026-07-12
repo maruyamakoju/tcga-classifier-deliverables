@@ -45,7 +45,7 @@ Do not extract or execute the downloaded asset until its SHA-256 matches the
 trusted value published below. Acceptance requires the digest explicitly:
 
 ```bash
-python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip --expected-sha256 a23301d6d194f4a91f7a2d59ed427749d92eca6a26da0b84e17400897fe86b6a
+python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip --expected-sha256 58054a5689d794c99875d49b14229a4f442082c4083c08cf67996c8d77072930
 ```
 
 Without a trusted digest, `--skip-acceptance` is limited to non-executing
@@ -53,7 +53,7 @@ structural inspection.
 
 ## Validation
 
-- `python -m pytest -q`: 412 passed.
+- `python -m pytest -q`: 413 passed.
 - `python -m ruff check .`: passed.
 - `python run_smoke_tests.py`: passed.
 - Deterministic build and local artifact checks passed; hosted cross-platform CI
@@ -62,8 +62,8 @@ structural inspection.
 ## Release asset
 
 - Asset: `tcga-tumor-normal-release-lite.zip`
-- SHA256: `a23301d6d194f4a91f7a2d59ed427749d92eca6a26da0b84e17400897fe86b6a`
-- Size: `937046` bytes
+- SHA256: `58054a5689d794c99875d49b14229a4f442082c4083c08cf67996c8d77072930`
+- Size: `936814` bytes
 - Zip entries: `75`
 
 These asset values are taken from the generated `RELEASE_ARTIFACTS.json` after the
