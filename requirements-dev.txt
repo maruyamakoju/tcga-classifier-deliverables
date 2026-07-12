@@ -3,4 +3,4 @@
 -r requirements-external-validation.txt
 -r requirements-training.txt
 pytest>=8.3,<10
-ruff>=0.15,<0.16
+ruff>=0.15.21,<0.16
