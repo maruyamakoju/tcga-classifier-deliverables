@@ -1,8 +1,16 @@
 {
-  "release_date": "2026-07-10",
-  "release_name": "GDC STAR-Counts expression input read error handling release",
+  "release_date": "2026-07-12",
+  "release_name": "Safety, provenance, and deterministic reproducibility release",
+  "library_api_version": "3.0.0",
   "schema_version": "1.0",
-  "version": "v1.1.22-gdc-starcounts",
+  "version": "v2.0.0-gdc-starcounts",
+  "changes_since_v1_1_22": [
+    "Released public tcga_rnaseq API 3.0.0 with breaking fail-closed validation for model artifacts, sample identifiers, matched expression values, and output paths; each file is written atomically and workflow stop states are explicit, without claiming an all-or-nothing directory transaction.",
+    "Made cohort adaptation disabled by default and an explicit transductive, composition-dependent opt-in with a minimum cohort size of 20 by default.",
+    "Marked threshold-calibration metrics as apparent/resubstitution estimates computed on the same labeled samples and added warnings when either class contains fewer than 10 samples.",
+    "Added locked external-validation cohort manifests, semantic cache fingerprints, content hashes, atomic cache writes, and run manifests; committed external metrics remain a historical snapshot because no post-fix live-network rerun was performed.",
+    "Added exact float32 cancer-type and float64 binary/LOCO reproduction entry points, Python 3.11+ lightweight scoring acceptance, a canonical Python 3.11/NumPy 1.26.4/pandas 2.3.3/SciPy 1.15.3/scikit-learn 1.8.0 training profile, Python 3.13 light-only CI, cross-platform acceptance, trusted-digest ZIP execution, and deterministic non-mutating release drift checks with canonical ZIP metadata."
+  ],
   "changes_since_v1_1_21": [
     "Hardened tcga_rnaseq.read_matrix so missing expression paths, directory paths, and common pandas/OS read failures become user-facing ValueError messages.",
     "Kept CLI missing-input failures from printing Python tracebacks or writing partial score outputs.",
@@ -151,7 +159,7 @@
   "producer_commands": {
     "build_release": "python build_release_lite.py --smoke --timeout-seconds 300",
     "validate_release": "python validate_release_lite.py --release-dir release-lite --zip tcga-tumor-normal-release-lite.zip --source-root . --artifacts RELEASE_ARTIFACTS.json",
-    "zip_acceptance": "python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip"
+    "zip_acceptance": "python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip --expected-sha256 <trusted-published-sha256>"
   },
   "bundle_commands": {
     "check_environment": "python check_environment.py --self-test",

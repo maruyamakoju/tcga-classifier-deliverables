@@ -1,11 +1,12 @@
 # TCGA tumor-vs-normal classifier — deliverables
 
 [![CI](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml/badge.svg)](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v1.1.22-gdc-starcounts)
+[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v2.0.0-gdc-starcounts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Citation](https://img.shields.io/badge/citation-CITATION.cff-blue.svg)](CITATION.cff)
 
-Release: `v1.1.22-gdc-starcounts` (`2026-07-10`). For a single guided path
+Release: `v2.0.0-gdc-starcounts` (`2026-07-12`; public scoring-library API
+`3.0.0`). For a single guided path
 through the public lightweight bundle, start with `INDEX.md`. Otherwise start
 with `EXECUTIVE_SUMMARY.md` if you need a short
 handoff/readout, or `USER_GUIDE.md` if you are preparing a new input matrix.
@@ -13,8 +14,11 @@ handoff/readout, or `USER_GUIDE.md` if you are preparing a new input matrix.
 A pan-cancer RNA-seq classifier that calls a sample **tumor** vs **normal**, trained on
 2,160 TCGA samples across 17 cancer types. Best model: logistic regression on 2,000
 genes. Validated three ways: patient-held-out AUC 0.997, 5-fold grouped CV 0.996±0.003,
-leave-one-**cancer-type**-out macro-mean AUC 0.994 (pooled 0.988) (generalizes to cancer types never trained on),
+leave-one-**cancer-type**-out macro-mean AUC 0.994 (pooled 0.988),
 and an external CPTAC-3/GDC STAR-Counts smoke test with AUC 0.989.
+LOCO measures held-out project discrimination, but it does not remove
+GDC/project/procurement/batch confounding and is not proof of causal biological
+generalization.
 
 Important boundary: the deployable model is **GDC STAR-Counts-scale specific**. A
 cross-platform UCSC Xena Toil/RSEM check showed strong ranking on sampled TCGA Toil
@@ -32,14 +36,14 @@ python audit_cli_entrypoints.py                  # verify release CLI --help ent
 python audit_release_docs.py                     # check docs and command references
 python validate_output_contracts.py              # check bundled output schemas
 python run_release_acceptance.py                 # run environment, smoke, safety, and release checks
-python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip  # clean zip extraction acceptance
+python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip --expected-sha256 <trusted-published-sha256>
 python score_tumor_normal.py example_input.csv          # -> example_input.scored.csv
 python score_tumor_normal.py --self-test                # verify bundled example, no sklearn needed
 python inspect_expression_input.py example_input.csv     # QC gene coverage, scale, and shift
 python score_tumor_normal.py expr.csv -o calls.csv --threshold 0.5
 python calibrate_threshold.py calls.csv labels.csv       # choose a threshold from labeled samples
 python explain_scores.py expr.csv --top-n 10             # per-sample LR gene contributions
-python cohort_adapt_score.py expr.csv --adapt cohort_zscore  # re-threshold a foreign-pipeline cohort
+python cohort_adapt_score.py expr.csv --adapt cohort_zscore  # explicit experimental cohort adaptation
 ```
 
 - **Input:** rows = samples, columns = genes (Ensembl IDs, with or without the `.version`
@@ -50,12 +54,16 @@ python cohort_adapt_score.py expr.csv --adapt cohort_zscore  # re-threshold a fo
   `run_tumor_normal_workflow.py`; `cohort_adapt_score.py` currently expects
   samples as rows). Genes missing from the input are filled with the training
   mean (neutral after standardization) and reported.
-- **Cross-platform cohorts:** `cohort_adapt_score.py` re-centers a batch on its
-  own mean/variance (`--adapt cohort_zscore` / `cohort_center`) before scoring,
-  restoring the default 0.5 threshold on foreign-pipeline inputs where the
-  deployed model's ranking (AUC) still holds but its calibration doesn't; see
+- **Cross-platform cohorts:** adaptation defaults to `none`. The
+  `--adapt cohort_zscore` and `cohort_center` modes are explicit experimental
+  opt-ins: they are transductive, depend on the other samples and class mixture
+  in the batch, require at least `--min-samples` (default 20), and produce scores
+  that are not comparable across separately adapted batches. They do not
+  validate arbitrary foreign pipelines; see
   `cross-platform-adaptation/CROSS_PLATFORM_ADAPTATION.md`.
-- **Output CSV:** `sample, tumor_probability, call`.
+- **Output CSV:** `sample, tumor_probability, call`. `tumor_probability` is the
+  model's logistic score, not clinical risk or a calibrated diagnostic
+  probability.
 - **One-command workflow:** `run_tumor_normal_workflow.py` writes `qc.json`,
   `scores.csv`, optional `thresholds.csv` / `calibration.json`,
   `explanations.csv`, `manifest.json`, and `workflow_report.md` into one output
@@ -86,7 +94,10 @@ under-called at 0.5 despite AUC ≈ 0.95–1.0. If you score a genuinely new tis
 a few labeled samples, choose a cutoff on them and pass `--threshold`. See
 `cross-cancer-holdout/` for the per-type calibration analysis. Use
 `calibrate_threshold.py` with a scored CSV and a `sample,label` CSV to compute a
-Youden's-J threshold.
+Youden's-J threshold. Reported calibration metrics are apparent/resubstitution
+estimates computed on the same samples used to choose the threshold, not
+independent performance estimates. The CLI warns when either class has fewer
+than 10 samples.
 
 ### Explanations
 `explain_scores.py` reports the top positive and negative per-gene contributions to the
@@ -94,20 +105,61 @@ logistic-regression logit for each sample. Use it for model debugging and sanity
 not as a causal biological explanation. `model_gene_metadata.csv` lists all 2,000 model
 genes, coefficients, training means/scales, and the direction implied by high expression.
 
+Literature consistency of selected genes is qualitative context only. It does
+not establish a causal mechanism for the classifier or its predictions.
+
 ### Running environment
-For default LR scoring, use `requirements-light.txt` (NumPy + pandas only, with pyarrow
+Python 3.11 or newer is supported; CI exercises Python 3.11 and 3.13. For
+default LR scoring, use `requirements-light.txt` (NumPy + pandas only, with pyarrow
 for parquet input). Use `requirements.txt` or `environment.yml` only when retraining,
 running external validation scripts, or doing full-artifact maintenance outside the
 public lightweight bundle.
 
+That broad runtime statement applies to lightweight scoring, not exact model
+refitting. Strict shipped-model reproduction uses `requirements-training.txt`
+on Python 3.11 with NumPy 1.26.4, pandas 2.3.3, SciPy 1.15.3, and
+scikit-learn 1.8.0. Python 3.13 is covered only for lightweight scoring
+acceptance; an investigated Python 3.13/scikit-learn 1.9 refit showed
+coefficient and out-of-fold drift.
+Treat such drift as an environment mismatch; do not relax committed golden or
+parity tolerances to make a different stack pass.
+
 Run `python check_environment.py --self-test` after installation. If it or the
 workflow QC reports WARN/FAIL, start with `TROUBLESHOOTING.md`.
 
-This model is validated for TCGA/GDC-style log2(TPM+1) tumor-vs-adjacent-normal RNA-seq
-contrasts and now has an external CPTAC-3 smoke validation within the same GDC
-harmonized STAR-Counts ecosystem. Non-GDC / cross-platform RNA-seq has been tested via
-UCSC Xena Toil/GTEx and should be treated as **not directly compatible** without
-pipeline-specific refitting or threshold calibration.
+This model was evaluated internally on TCGA/GDC-style log2(TPM+1)
+tumor-vs-adjacent-normal RNA-seq contrasts and has a historical external CPTAC-3
+smoke check within the same GDC harmonized STAR-Counts ecosystem. Non-GDC /
+cross-platform RNA-seq was explored via UCSC Xena Toil/GTEx and should be treated
+as **not directly compatible** without pipeline-specific refitting and independent
+threshold evaluation.
+
+The committed CPTAC/GTEx/Toil metrics are historical snapshots. Version 2.0.0
+adds locked cohort manifests, cache fingerprints, hashes, atomic cache writes,
+and run manifests, but no post-fix live-network validation rerun was performed;
+do not describe those committed numbers as a newly reproduced live run.
+External validators now require a concrete provider revision for live access,
+offer explicit `--offline` / `--cache-only` operation, strictly bind locked
+cohort semantics, and publish derived outputs as a staged set with the manifest
+last. The historical CPTAC locked manifest has no provider MD5 and is therefore
+eligible only for offline reuse with an already-valid historical cache; a new
+download requires reviewed GDC metadata refresh and provider MD5 verification.
+
+### What changed in 2.0.0
+
+The public `tcga_rnaseq` API is now 3.0.0 and intentionally breaks unsafe
+legacy behavior: model/sample contracts fail closed, public output paths cannot
+collide with inputs or each other, and each output file is written atomically.
+The workflow is not an all-or-nothing transaction: it removes stale downstream
+files, records documented stop states, and writes the manifest last. The
+development tree also adds separated lightweight/external/dev dependency
+profiles, Ruff and full pytest CI, cross-platform release acceptance, canonical
+ZIP metadata, and a non-mutating deterministic release drift check.
+
+For a downloaded release ZIP, first obtain its SHA-256 from a trusted release
+channel and pass it with `--expected-sha256`. If no trusted digest is available,
+use `--skip-acceptance` only for non-executing structural inspection; the
+validator will not extract or execute the archive.
 
 ## Files
 
@@ -143,7 +195,7 @@ pipeline-specific refitting or threshold calibration.
 The full repository, not the lightweight zip, also contains maintenance and
 historical-analysis assets such as `build_release_lite.py`,
 `audit_publication_readiness.py`, `audit_github_repository.py`,
-`requirements.txt`, `environment.yml`, `tests/`, `cross-cancer-holdout/`,
+`requirements.txt`, `requirements-training.txt`, `environment.yml`, `tests/`, `cross-cancer-holdout/`,
 `from-workbench-loco/`, `cross-platform-adaptation/`, and
 `cancer-type-classifier/`. Full training/checkpoint artifacts such as
 `model_lr.pkl`, `model_rf.pkl`, `feature_selection.pkl`,

@@ -83,8 +83,6 @@ assert set(CORE_FILES) <= set(RELEASE_FILES), (
     "CORE_FILES has entries release_tools.common.RELEASE_FILES does not ship"
 )
 
-FULL_DELIVERABLE_COMMANDS = {"build_release_lite.py"}
-
 PATH_LIKE_SUFFIXES = {
     ".cff",
     ".csv",
@@ -128,6 +126,9 @@ FULL_DELIVERABLE_ONLY_REFS = {
     "model_xgb.pkl",
     "predict_cancer_type.py",
     "requirements.txt",
+    "requirements-dev.txt",
+    "requirements-external-validation.txt",
+    "requirements-training.txt",
     "selected_files.csv",
     "tcga-tumor-normal-release-lite.zip",
     "train_classifier.py",
@@ -154,6 +155,7 @@ FULL_DELIVERABLE_ONLY_PREFIXES = (
     "cross-platform-adaptation/",
     "from-workbench-loco/",
     "tests/",
+    "training_tools/",
 )
 
 RELEASE_SIDECAR_REFS = {
@@ -181,6 +183,9 @@ CODE_SPAN_RE = re.compile(r"`([^`\n]+)`")
 MARKDOWN_LINK_RE = re.compile(r"!?\[[^\]\n]*\]\(([^)\n]+)\)")
 PYTHON_SCRIPT_COMMAND_RE = re.compile(
     r"(?m)^\s*python\s+([A-Za-z0-9_./\\-]+\.py)\b"
+)
+PUBLICATION_RELEASE_NOTE_RE = re.compile(
+    r"GITHUB_RELEASE_(v\d+\.\d+\.\d+)\.md"
 )
 
 
@@ -212,12 +217,24 @@ def check_version_consistency(messages):
     metadata_path = ROOT / "RELEASE_METADATA.json"
     if not version_path.exists() or not metadata_path.exists():
         return
-    version = version_path.read_text(encoding="utf-8").strip()
+    try:
+        version = version_path.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeError) as exc:
+        add_message(messages, "ERROR", "version_unreadable",
+                    f"VERSION could not be read: {exc}", version_path)
+        return
+    if not version:
+        add_message(messages, "ERROR", "version_empty", "VERSION must be non-empty.", version_path)
+        return
     try:
         metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         add_message(messages, "ERROR", "release_metadata_invalid_json",
                     f"RELEASE_METADATA.json is invalid JSON: {exc}", metadata_path)
+        return
+    if not isinstance(metadata, dict):
+        add_message(messages, "ERROR", "release_metadata_not_object",
+                    "RELEASE_METADATA.json top-level value must be an object.", metadata_path)
         return
     if metadata.get("version") != version:
         add_message(messages, "ERROR", "release_version_mismatch",
@@ -236,6 +253,32 @@ def check_version_consistency(messages):
         if text is not None and version not in text:
             add_message(messages, "ERROR", "doc_version_missing",
                         f"{rel} does not mention release version {version}.", path)
+
+
+def check_publication_release_note_reference(messages):
+    """Require the publication checklist to name the current release body."""
+    version_path = ROOT / "VERSION"
+    checklist_path = ROOT / "PUBLICATION_CHECKLIST.md"
+    if not version_path.is_file() or not checklist_path.is_file():
+        return
+    try:
+        version = version_path.read_text(encoding="utf-8").strip()
+        checklist = checklist_path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        add_message(messages, "ERROR", "publication_checklist_unreadable",
+                    f"Could not inspect publication checklist: {exc}", checklist_path)
+        return
+    release_prefix = version.split("-", 1)[0]
+    expected = f"GITHUB_RELEASE_{release_prefix}.md"
+    referenced = {match.group(0) for match in PUBLICATION_RELEASE_NOTE_RE.finditer(checklist)}
+    if referenced != {expected}:
+        add_message(
+            messages,
+            "ERROR",
+            "publication_release_note_stale",
+            f"PUBLICATION_CHECKLIST.md must reference only {expected}; found {sorted(referenced)}.",
+            checklist_path,
+        )
 
 
 def check_release_bundle_contents(messages):
@@ -285,7 +328,12 @@ def check_python_commands(messages):
             script_path = ROOT / script
             if script_path.exists():
                 continue
-            if script in FULL_DELIVERABLE_COMMANDS:
+            # A python command that names a script only shipped in the full
+            # deliverables tree (e.g. the exact-reproduction trainers) is
+            # intentional documentation, not a broken bundle reference. Reuse the
+            # same full-tree classifier the code-spanned path check uses so the
+            # two allowlists cannot drift apart.
+            if is_intentionally_external_to_lite(script):
                 add_message(messages, "INFO", "full_deliverable_command",
                             f"{rel} references full-deliverables-only command: {script}", path)
                 continue
@@ -455,6 +503,7 @@ def build_report():
     messages = []
     check_core_files(messages)
     check_version_consistency(messages)
+    check_publication_release_note_reference(messages)
     check_release_bundle_contents(messages)
     check_python_commands(messages)
     check_code_spanned_paths(messages)

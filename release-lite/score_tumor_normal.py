@@ -28,17 +28,21 @@ import os
 import sys
 
 import numpy as np
-import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from tcga_rnaseq import (  # noqa: E402
+    ensure_distinct_paths,
     load_lr_model,
     print_invalid_alignment_summary,
+    read_csv_table,
     read_matrix,
     score_binary_dataframe,
+    validate_lr_model,
+    validate_tumor_binary_model,
     validate_alignment_report,
     validate_gene_match_report,
     validate_threshold,
+    write_dataframe_csv,
 )
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -50,6 +54,7 @@ def load_lr_weights(path):
     m = load_lr_model(path)
     if m["kind"] != "binary":
         raise ValueError("tumor-vs-normal scoring requires a binary LR weights file")
+    m = validate_tumor_binary_model(m)
     return {"selected_genes": m["genes"].astype(str).tolist(),
             "scaler_mean": m["mean"], "scaler_scale": m["scale"],
             "coef": m["coef"], "intercept": m["intercept"]}
@@ -58,19 +63,22 @@ def load_lr_weights(path):
 def _as_model(model):
     """Accept either a tcga_rnaseq model dict or the legacy load_lr_weights dict."""
     if "genes" in model:
-        if model.get("kind") != "binary":
+        canonical = validate_lr_model(model)
+        if canonical.get("kind") != "binary":
             raise ValueError("score_dataframe_lr_weights requires a binary model")
-        return model
+        return validate_tumor_binary_model(canonical)
     coef = np.asarray(model["coef"], dtype=float)
     if coef.ndim != 1:
         raise ValueError("score_dataframe_lr_weights requires a 1-D binary coefficient vector")
-    return {"genes": np.asarray(model["selected_genes"], dtype=str),
-            "mean": np.asarray(model["scaler_mean"], dtype=float),
-            "scale": np.asarray(model["scaler_scale"], dtype=float),
-            "coef": coef,
-            "intercept": float(model["intercept"]),
-            "classes": np.array([0, 1]),
-            "kind": "binary"}
+    return validate_tumor_binary_model({
+        "genes": np.asarray(model["selected_genes"], dtype=str),
+        "mean": np.asarray(model["scaler_mean"], dtype=float),
+        "scale": np.asarray(model["scaler_scale"], dtype=float),
+        "coef": coef,
+        "intercept": float(model["intercept"]),
+        "classes": np.array([0, 1]),
+        "kind": "binary",
+    })
 
 
 def score_dataframe_lr_weights(
@@ -80,6 +88,8 @@ def score_dataframe_lr_weights(
     max_invalid_cell_fraction=0.0,
     allow_invalid_values=False,
     return_alignment_report=False,
+    min_model_gene_match_rate=0.5,
+    allow_low_gene_coverage=False,
 ):
     """Score with the pure-NumPy npz logistic-regression model.
     `model` may be a tcga_rnaseq model dict or a legacy load_lr_weights dict."""
@@ -89,6 +99,8 @@ def score_dataframe_lr_weights(
         threshold=threshold,
         max_invalid_cell_fraction=max_invalid_cell_fraction,
         allow_invalid_values=allow_invalid_values,
+        min_model_gene_match_rate=min_model_gene_match_rate,
+        allow_low_gene_coverage=allow_low_gene_coverage,
         return_alignment_report=return_alignment_report,
     )
 
@@ -100,7 +112,7 @@ def run_self_test(lr_weights_path):
     model = load_lr_model(lr_weights_path)
     observed, n_matched, missing = score_dataframe_lr_weights(read_matrix(example_in), model)
     n_genes = len(model["genes"])
-    expected = pd.read_csv(expected_out)
+    expected = read_csv_table(expected_out, string_columns=("sample",))
 
     same_samples = observed["sample"].tolist() == expected["sample"].tolist()
     same_calls = observed["call"].tolist() == expected["call"].tolist()
@@ -174,24 +186,31 @@ def main(argv=None):
             "use deployable_lr_weights.npz with the default NumPy LR scorer"
         )
     if args.self_test:
-        return run_self_test(args.lr_weights)
+        try:
+            return run_self_test(args.lr_weights)
+        except ValueError as exc:
+            ap.error(str(exc))
     if not args.input:
         ap.error("input is required unless --self-test is used")
 
+    out = args.output or (os.path.splitext(args.input)[0] + ".scored.csv")
     try:
+        ensure_distinct_paths(
+            {"scores output": out},
+            {"expression input": args.input, "LR weights": args.lr_weights},
+        )
+        model = load_lr_model(args.lr_weights)
         df = read_matrix(args.input, transpose=args.transpose)
+        res, n_matched, missing, alignment_report = score_dataframe_lr_weights(
+            df,
+            model,
+            args.threshold,
+            allow_invalid_values=True,
+            allow_low_gene_coverage=True,
+            return_alignment_report=True,
+        )
     except ValueError as exc:
         ap.error(str(exc))
-    if not os.path.exists(args.lr_weights):
-        ap.error(f"LR weights file not found: {args.lr_weights}")
-    model = load_lr_model(args.lr_weights)
-    res, n_matched, missing, alignment_report = score_dataframe_lr_weights(
-        df,
-        model,
-        args.threshold,
-        allow_invalid_values=True,
-        return_alignment_report=True,
-    )
     n_genes = len(model["genes"])
     # --model is kept for CLI compatibility (TROUBLESHOOTING.md documents that
     # --model rf is rejected); choices=["lr"] means this can only ever be "lr".
@@ -234,8 +253,10 @@ def main(argv=None):
         for issue in alignment_issues:
             print(f"[score] WARNING: {issue}", file=sys.stderr)
 
-    out = args.output or (os.path.splitext(args.input)[0] + ".scored.csv")
-    res.to_csv(out, index=False)
+    try:
+        write_dataframe_csv(res, out, index=False)
+    except ValueError as exc:
+        ap.error(str(exc))
     call = res["call"].to_numpy()
     print(f"[score] wrote {out}  ({(call=='tumor').sum()} tumor / "
           f"{(call=='normal').sum()} normal at threshold {args.threshold})", file=sys.stderr)

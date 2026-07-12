@@ -10,6 +10,7 @@ _smoke_*
 _acceptance_*
 tcga_safety_*/
 *_tumor_normal_workflow/
+.tmp-workflow*/
 *.scored.csv
 *.qc.json
 *.adapted_scores.csv
@@ -29,11 +30,16 @@ deployable_pipeline.pkl
 
 # Optional exported full feature matrices.
 cancer-type-classifier/X_full.npy
+cancer-type-classifier/X_full_float64.npy
+cancer-type-classifier/X_full.export.json
 cancer-type-classifier/X_genes.npy
 cancer-type-classifier/X_samples.npy
 
 # Large external-validation caches.
 external-validation/**/gene_cache/
+.external-validation-run-*/
+.external-validation-backup-*/
+.*.external-validation-run-*/
 
 # Local logs and OS/editor noise
 *.log

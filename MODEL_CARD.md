@@ -1,6 +1,6 @@
 # Model card: TCGA/GDC tumor-vs-normal RNA-seq classifier
 
-Release: `v1.1.22-gdc-starcounts` (`2026-07-10`)
+Release: `v2.0.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 ## Intended use
 
@@ -44,6 +44,14 @@ issues for ordinary scoring.
   before scoring, adaptation, prediction, or explanation outputs are written.
 - Default threshold: 0.5, but threshold calibration is recommended for new
   tissues or pipelines.
+- Score meaning: `tumor_probability` is the logistic model score. It is not
+  clinical risk or a calibrated diagnostic probability.
+- Calibration: threshold metrics are apparent/resubstitution estimates on the
+  same labeled samples used to choose the threshold. Either class below 10
+  samples produces a warning.
+- Cohort adaptation: defaults to `none`. Adapted modes are explicit,
+  transductive, composition-dependent opt-ins that require at least 20 samples
+  by default; scores from separately adapted batches are not comparable.
 - Input QC: `inspect_expression_input.py` checks model-gene coverage,
   expression range, standardized distribution shift, and score saturation before
   hard calls.
@@ -62,6 +70,11 @@ issues for ordinary scoring.
 | TCGA Toil/RSEM pipeline check | AUC 0.992, but default-threshold accuracy 0.515 |
 | GTEx/Toil normal tissue check | 538/540 normals called tumor at threshold 0.5 |
 
+External-validation numbers above are committed historical snapshots. Cache
+fingerprints, locked cohort manifests, content hashes, atomic cache writes, and
+run manifests were added in v2.0.0, but no post-fix live-network rerun was
+performed.
+
 ## Key limitations
 
 The model is **GDC STAR-Counts-scale specific**. It transfers well to CPTAC-3
@@ -73,6 +86,10 @@ TCGA solid tissue normals are tumor-adjacent tissues, not healthy-donor normals.
 Therefore the validated target is tumor-vs-adjacent-normal, not a general
 healthy-vs-cancer diagnostic setting.
 
+LOCO holds out cancer type/project, but does not remove GDC project,
+procurement, center, or batch confounding. Literature consistency of model
+genes is qualitative plausibility, not causal mechanism proof.
+
 ## Recommended deployment workflow
 
 1. Prepare expression matrix as rows=samples, columns=Ensembl genes, values
@@ -83,7 +100,8 @@ healthy-vs-cancer diagnostic setting.
 4. Treat any WARN/FAIL QC result as a reason to check normalization, gene IDs,
    and whether the matrix is truly GDC STAR-Counts-style.
 5. If labeled calibration samples are available, use the reported
-   Youden's-J threshold instead of assuming the default 0.5 cutoff transfers.
+   Youden's-J threshold instead of assuming the default 0.5 cutoff transfers,
+   while labeling its same-sample metrics as apparent/resubstitution.
 6. Use `scores.csv` for calls and `explanations.csv` only for model debugging.
 
 The individual tools (`inspect_expression_input.py`, `score_tumor_normal.py`,

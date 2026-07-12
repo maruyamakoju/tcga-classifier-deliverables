@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Run end-to-end acceptance checks for the lightweight release."""
 import argparse
+import json
 import shutil
 import subprocess  # noqa: F401 -- re-exported: tests monkeypatch subprocess.run via this module
 import sys
@@ -8,7 +9,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from release_tools.common import (
+    RELEASE_SCHEMA_VERSION,
     RELEASE_ZIP_NAME,
+    ZIP_ACCEPTANCE_COMMAND,
     append_timeout_message,  # noqa: F401 -- re-exported for tests/test_subprocess_reporting.py
     run_subprocess_step,
     subprocess_output_text,  # noqa: F401 -- re-exported for tests/test_subprocess_reporting.py
@@ -18,6 +21,7 @@ from release_tools.common import (
 
 ROOT = Path(__file__).resolve().parent
 ZIP_NAME = RELEASE_ZIP_NAME
+ARTIFACTS_NAME = "RELEASE_ARTIFACTS.json"
 
 
 def run_step(label, cmd, required=True, timeout_seconds=300):
@@ -55,6 +59,55 @@ def choose_release_validation():
             "--artifacts", "RELEASE_ARTIFACTS.json",
         ]
     return None
+
+
+def load_trusted_zip_sha256(path=None):
+    """Load the canonical trusted digest used before executing ZIP payload code."""
+    artifacts_path = Path(path) if path is not None else ROOT / ARTIFACTS_NAME
+    if artifacts_path.is_symlink():
+        raise ValueError(f"{ARTIFACTS_NAME} must not be a symbolic link")
+    try:
+        artifacts = json.loads(artifacts_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"Could not read {ARTIFACTS_NAME}: {exc}") from exc
+    if not isinstance(artifacts, dict):
+        raise ValueError(f"{ARTIFACTS_NAME} top-level value must be an object")
+    if artifacts.get("schema_version") != RELEASE_SCHEMA_VERSION:
+        raise ValueError(f"{ARTIFACTS_NAME} schema_version is not canonical")
+    if artifacts.get("zip_path") != ZIP_NAME:
+        raise ValueError(f"{ARTIFACTS_NAME} zip_path must be {ZIP_NAME!r}")
+    zip_bytes = artifacts.get("zip_bytes")
+    if not isinstance(zip_bytes, int) or isinstance(zip_bytes, bool) or zip_bytes < 0:
+        raise ValueError(f"{ARTIFACTS_NAME} zip_bytes must be a non-negative integer")
+    digest = artifacts.get("zip_sha256")
+    if (
+        not isinstance(digest, str)
+        or len(digest) != 64
+        or any(character not in "0123456789abcdef" for character in digest)
+    ):
+        raise ValueError(
+            f"{ARTIFACTS_NAME} zip_sha256 must be 64 lowercase hexadecimal characters"
+        )
+    expected_command = f"{ZIP_ACCEPTANCE_COMMAND} --expected-sha256 {digest}"
+    if artifacts.get("zip_acceptance_command") != expected_command:
+        raise ValueError(
+            f"{ARTIFACTS_NAME} zip_acceptance_command must include its trusted digest"
+        )
+    return digest
+
+
+def preflight_failure_step(message):
+    return {
+        "label": "trusted_zip_digest",
+        "command": [],
+        "cwd": str(ROOT),
+        "required": True,
+        "returncode": 2,
+        "status": "FAIL",
+        "duration_seconds": 0.0,
+        "stdout": "",
+        "stderr": message,
+    }
 
 
 def write_json_report(path, report):
@@ -116,15 +169,36 @@ def main(argv=None):
         commands.append(("release_validation", [sys.executable] + release_validation))
     else:
         skipped.append("release validation: no release-lite directory/zip or in-place manifest found")
+    preflight_error = None
     if (ROOT / "release-lite").is_dir() and (ROOT / ZIP_NAME).exists():
-        commands.append(("zip_bundle", [sys.executable, "validate_zip_bundle.py", ZIP_NAME]))
+        try:
+            trusted_digest = load_trusted_zip_sha256()
+        except ValueError as exc:
+            preflight_error = str(exc)
+        else:
+            commands.append(
+                (
+                    "zip_bundle",
+                    [
+                        sys.executable,
+                        "validate_zip_bundle.py",
+                        ZIP_NAME,
+                        "--expected-sha256",
+                        trusted_digest,
+                    ],
+                )
+            )
 
-    for label, cmd in commands:
-        if label in {"release_validation", "zip_bundle"}:
-            cleanup_transient_files()
-        steps.append(run_step(label, cmd, timeout_seconds=args.timeout_seconds))
-        if steps[-1]["returncode"] != 0:
-            break
+    if preflight_error is not None:
+        print(f"[acceptance] ERROR: {preflight_error}", file=sys.stderr)
+        steps.append(preflight_failure_step(preflight_error))
+    else:
+        for label, cmd in commands:
+            if label in {"release_validation", "zip_bundle"}:
+                cleanup_transient_files()
+            steps.append(run_step(label, cmd, timeout_seconds=args.timeout_seconds))
+            if steps[-1]["returncode"] != 0:
+                break
 
     failed = [step for step in steps if step["required"] and step["returncode"] != 0]
     report = {

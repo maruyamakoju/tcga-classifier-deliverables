@@ -374,6 +374,20 @@ def test_calibration_rejects_accidental_label_subset(tmp_path):
         load_scores_and_labels(scores, labels, "sample", "label")
 
 
+def test_external_labels_override_same_named_scores_column_without_merge_collision(tmp_path):
+    scores = tmp_path / "scores.csv"
+    labels = tmp_path / "labels.csv"
+    scores.write_text(
+        "sample,tumor_probability,label\ns1,0.1,stale\ns2,0.9,stale\n",
+        encoding="utf-8",
+    )
+    labels.write_text("sample,label\ns1,normal\ns2,tumor\n", encoding="utf-8")
+
+    observed = load_scores_and_labels(scores, labels, "sample", "label")
+
+    assert observed["label_binary"].tolist() == [0, 1]
+
+
 def test_cohort_adapt_labels_preserve_numeric_strings_and_missing(tmp_path):
     labels = tmp_path / "labels.csv"
     labels.write_text(
@@ -549,6 +563,18 @@ def test_predict_returns_binary_class_labels():
     assert calls.tolist() == [1, 0]
 
 
+def test_predict_uses_default_binary_classes_after_model_canonicalization():
+    model = {
+        "genes": np.array(["g1"]),
+        "mean": np.array([0.0]),
+        "scale": np.array([1.0]),
+        "coef": np.array([1.0]),
+        "intercept": 0.0,
+    }
+    X = pd.DataFrame({"g1": [1.0, -1.0]}, index=["s1", "s2"])
+    assert S.predict(model, X).tolist() == [1, 0]
+
+
 def test_predict_returns_multiclass_class_labels():
     model = {
         "genes": np.array(["g1", "g2"]),
@@ -688,7 +714,7 @@ def test_load_pipeline_stubs_xgboost_objects_without_importing(tmp_path):
     path = tmp_path / "legacy_pipeline.pkl"
     path.write_bytes(payload)
 
-    loaded = load_pipeline(path)
+    loaded = load_pipeline(path, trusted=True)
 
     assert "xgboost" not in sys.modules
     assert isinstance(loaded, dict)
@@ -945,7 +971,7 @@ def test_workflow_qc_fail_report_does_not_claim_zero_scored_samples():
     assert "Samples: 0" not in report
 
 
-def test_explain_empty_input_preserves_output_columns():
+def test_explain_empty_input_is_rejected():
     weights = {
         "selected_genes": np.array(["g1"]),
         "scaler_mean": np.array([0.0]),
@@ -954,10 +980,8 @@ def test_explain_empty_input_preserves_output_columns():
         "intercept": 0.0,
     }
     df = pd.DataFrame({"g1": []})
-    explanations, n_matched, missing = explain_dataframe(df, weights, top_n=1)
-    assert list(explanations.columns) == EXPLANATION_COLUMNS
-    assert explanations.empty
-    assert n_matched == 1 and missing == []
+    with pytest.raises(ValueError, match="at least one sample"):
+        explain_dataframe(df, weights, top_n=1)
 
 
 def test_explain_dataframe_can_return_alignment_report():

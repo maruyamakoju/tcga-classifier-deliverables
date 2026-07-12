@@ -10,8 +10,17 @@ def _preview(values, limit=5):
 
 
 def strip_version(gene_id):
-    """Drop the Ensembl version suffix: 'ENSG00000005.6' -> 'ENSG00000005'."""
-    return str(gene_id).split(".")[0]
+    """Drop a trailing numeric version suffix only.
+
+    ``ENSG00000005.6`` becomes ``ENSG00000005`` while identifiers containing
+    meaningful dots, such as ``HLA.DRA`` or ``GENE.A.2``, retain everything
+    except an actual final numeric suffix.
+    """
+    text = str(gene_id)
+    base, separator, suffix = text.rpartition(".")
+    if separator and base and suffix.isdecimal():
+        return base
+    return text
 
 
 def build_gene_column_lookups(columns):
@@ -80,10 +89,12 @@ def align_to_genes_with_report(X, genes, impute_mean=None):
         means = np.full(len(genes), np.nan)
     else:
         means = np.asarray(impute_mean, dtype=float)
-        if means.shape[0] != len(genes):
+        if means.shape != (len(genes),):
             raise ValueError(
-                f"impute_mean length {means.shape[0]} does not match gene count {len(genes)}"
+                f"impute_mean length/shape {means.shape} does not match gene count {len(genes)}"
             )
+        if not np.all(np.isfinite(means)):
+            raise ValueError("impute_mean must contain only finite values")
 
     out = np.empty((X.shape[0], len(genes)), dtype=float)
     missing = []

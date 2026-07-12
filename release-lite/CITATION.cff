@@ -1,8 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this repository, please cite the software release."
 title: "TCGA/GDC tumor-vs-normal RNA-seq classifier"
-version: "v1.1.22-gdc-starcounts"
-date-released: "2026-07-10"
+version: "v2.0.0-gdc-starcounts"
+date-released: "2026-07-12"
 type: software
 license: MIT
 authors:
@@ -12,8 +12,9 @@ repository-code: "https://github.com/maruyamakoju/tcga-classifier-deliverables"
 abstract: >-
   Lightweight deployment release for a TCGA/GDC STAR-Counts-scale bulk RNA-seq
   tumor-vs-adjacent-normal classifier, with input QC, scoring, threshold
-  calibration, explanations, release validation, and compact external-validation
-  artifacts.
+  calibration, explanations, release validation, reproducible training and
+  validation entry points, and compact external-validation artifacts. The
+  public scoring library API is version 3.0.0.
 keywords:
   - TCGA
   - GDC

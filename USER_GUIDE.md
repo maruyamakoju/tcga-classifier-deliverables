@@ -1,6 +1,6 @@
 # User guide
 
-Release: `v1.1.22-gdc-starcounts` (`2026-07-10`)
+Release: `v2.0.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 This guide is for people who want to run the lightweight classifier on a new
 expression matrix. For a short project-level handoff, read
@@ -9,6 +9,10 @@ expression matrix. For a short project-level handoff, read
 ## 1. Install
 
 From the `release-lite/` folder:
+
+Lightweight scoring supports Python 3.11 or newer. The hosted scoring
+compatibility matrix exercises Python 3.11 and 3.13; exact model refitting is
+separately pinned to the canonical Python 3.11 stack in `REPRODUCIBILITY.md`.
 
 ```bash
 pip install -r requirements-light.txt
@@ -23,13 +27,17 @@ python audit_cli_entrypoints.py
 python audit_release_docs.py
 python validate_output_contracts.py
 python run_release_acceptance.py
-python validate_zip_bundle.py ../tcga-tumor-normal-release-lite.zip
+python validate_zip_bundle.py ../tcga-tumor-normal-release-lite.zip --expected-sha256 <trusted-published-sha256>
 python run_smoke_tests.py
 python run_safety_tests.py
 ```
 
 All should pass before scoring new data.
 If installation or QC fails, see `TROUBLESHOOTING.md`.
+
+The ZIP command requires a SHA-256 obtained from a trusted release channel
+before it extracts or executes archive content. With no trusted digest, use
+`--skip-acceptance` only for non-executing structural inspection.
 
 ## 2. Prepare input
 
@@ -91,10 +99,18 @@ Start with:
 - `qc.json`: detailed input compatibility checks
 - `scores.csv`: `sample,tumor_probability,call`
 
+`tumor_probability` is the model's unrounded logistic score. It is not clinical
+risk and must not be presented as a calibrated diagnostic probability.
+
 When labels are supplied:
 
 - `thresholds.csv`: default and Youden's-J threshold metrics
 - `calibration.json`: compact recommended-threshold summary
+
+These threshold metrics are apparent/resubstitution estimates: the same
+labeled samples both choose and evaluate the threshold. They are not an
+independent validation result. The CLI warns when either class has fewer than
+10 samples.
 
 For model debugging:
 
@@ -167,11 +183,16 @@ Do not use this release for direct hard calls on:
 
 These require additional validation, recalibration, or refitting. For a
 foreign-pipeline cohort where the model's ranking (AUC) still holds but the
-default 0.5 threshold does not, `cohort_adapt_score.py --adapt cohort_zscore`
-re-centers the batch on its own mean/variance before scoring; see
+default 0.5 threshold does not, adaptation is still disabled by default
+(`--adapt none`). `cohort_adapt_score.py --adapt cohort_zscore` is an explicit
+experimental opt-in that re-centers the batch on its own mean/variance before
+scoring; see
 `cross-platform-adaptation/CROSS_PLATFORM_ADAPTATION.md` for when this
 applies and its limits (it needs an internal tumor/normal contrast in the
-cohort, so it does not help an all-normal or all-tumor batch).
+cohort, so it does not help an all-normal or all-tumor batch). Adaptation is
+transductive and composition-dependent, requires at least `--min-samples`
+(default 20), changes a sample's score when its batch changes, and makes scores
+from separately adapted batches non-comparable.
 
 ## 8. Quick reference
 
@@ -182,7 +203,7 @@ python audit_cli_entrypoints.py
 python audit_release_docs.py
 python validate_output_contracts.py
 python run_release_acceptance.py
-python validate_zip_bundle.py ../tcga-tumor-normal-release-lite.zip
+python validate_zip_bundle.py ../tcga-tumor-normal-release-lite.zip --expected-sha256 <trusted-published-sha256>
 python run_tumor_normal_workflow.py input.csv --labels labels.csv
 python inspect_expression_input.py input.csv -o input.qc.json
 python score_tumor_normal.py input.csv -o scores.csv --threshold 0.5

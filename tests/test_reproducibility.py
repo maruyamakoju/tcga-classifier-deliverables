@@ -1,6 +1,8 @@
 """Regression tests: current code must reproduce the verified golden numbers."""
 import json
 import os
+import subprocess
+import sys
 
 import numpy as np
 import pandas as pd
@@ -59,7 +61,12 @@ def test_shipped_summary_artifacts_match_golden(root, golden):
 def test_train_test_split_is_patient_disjoint(root):
     train_idx = np.load(os.path.join(root, "train_idx.npy"))
     test_idx = np.load(os.path.join(root, "test_idx.npy"))
-    meta = pd.read_csv(os.path.join(root, "selected_files.csv"))
+    samples = np.load(
+        os.path.join(root, "cancer-type-classifier", "X_samples.npy"),
+        allow_pickle=False,
+    ).astype(str)
+    meta = pd.read_csv(os.path.join(root, "selected_files.csv"), dtype=str)
+    meta = meta.set_index("file_id").reindex(samples)
     assert set(train_idx).isdisjoint(set(test_idx))
     for column in ["case_id", "submitter_id"]:
         groups = meta[column].astype(str).to_numpy()
@@ -122,8 +129,8 @@ def test_cancer_type_npz_reproduces_sklearn(cancer_type_model, features_npy, roo
     from sklearn.linear_model import LogisticRegression
     d = os.path.dirname(features_npy)
     X = np.load(features_npy)
-    genes = np.load(os.path.join(d, "X_genes.npy"), allow_pickle=True).astype(str)
-    samp = np.load(os.path.join(d, "X_samples.npy"), allow_pickle=True).astype(str)
+    genes = np.load(os.path.join(d, "X_genes.npy"), allow_pickle=False).astype(str)
+    samp = np.load(os.path.join(d, "X_samples.npy"), allow_pickle=False).astype(str)
     sf = pd.read_csv(os.path.join(root, "selected_files.csv")).set_index("file_id")
     meta = sf.reindex(samp)
     ct = meta["project"].str.replace("TCGA-", "", regex=False).values
@@ -143,15 +150,15 @@ def test_cancer_type_npz_reproduces_sklearn(cancer_type_model, features_npy, roo
 
 
 @pytest.mark.slow
-def test_binary_heldout_auc_full_data(binary_model, features_npy, root, golden):
+def test_binary_heldout_auc_full_data(binary_model, features_float64_npy, root, golden):
     """Full-data reproduction of the headline held-out test AUC (patient-disjoint split)."""
     from sklearn.feature_selection import SelectKBest, f_classif
     from sklearn.preprocessing import StandardScaler
     from sklearn.linear_model import LogisticRegression
     from sklearn.metrics import roc_auc_score
-    d = os.path.dirname(features_npy)
-    X = np.load(features_npy)
-    samp = np.load(os.path.join(d, "X_samples.npy"), allow_pickle=True).astype(str)
+    d = os.path.dirname(features_float64_npy)
+    X = np.load(features_float64_npy)
+    samp = np.load(os.path.join(d, "X_samples.npy"), allow_pickle=False).astype(str)
     sf = pd.read_csv(os.path.join(root, "selected_files.csv")).set_index("file_id")
     y = (sf.reindex(samp)["label"].values == "tumor").astype(int)
     tr = np.load(os.path.join(root, "train_idx.npy"))
@@ -163,3 +170,153 @@ def test_binary_heldout_auc_full_data(binary_model, features_npy, root, golden):
     p = lr.predict_proba(sc.transform(sel.transform(X[te])))[:, 1]
     exp = golden["binary_tumor_normal"]["heldout_test_auc"]
     assert roc_auc_score(y[te], p) == pytest.approx(exp, abs=golden["tolerance"])
+
+
+@pytest.mark.slow
+def test_binary_training_pipeline_reproduces_shipped_model(
+    features_float64_npy, root, tmp_path, golden
+):
+    """Run the canonical trainer and verify metrics, weights, IDs, and provenance."""
+    output_dir = tmp_path / "binary-reproduction"
+    result = subprocess.run(
+        [
+            sys.executable,
+            os.path.join(root, "train_classifier.py"),
+            "--features",
+            features_float64_npy,
+            "--metadata",
+            os.path.join(root, "selected_files.csv"),
+            "--train-index",
+            os.path.join(root, "train_idx.npy"),
+            "--test-index",
+            os.path.join(root, "test_idx.npy"),
+            "--verify-shipped",
+            os.path.join(root, "deployable_lr_weights.npz"),
+            "--output-dir",
+            str(output_dir),
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+        timeout=300,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
+    with open(output_dir / "binary_lr_training_summary.json", encoding="utf-8") as handle:
+        summary = json.load(handle)
+    expected = golden["binary_tumor_normal"]
+    assert summary["heldout"]["auc"] == pytest.approx(
+        expected["heldout_test_auc"], abs=5e-5
+    )
+    assert summary["heldout"]["accuracy"] == pytest.approx(
+        expected["heldout_test_accuracy"], abs=5e-5
+    )
+    assert summary["grouped_cv"]["mean_auc"] == pytest.approx(
+        expected["grouped_cv_auc_clean"], abs=5e-5
+    )
+    assert max(summary["weight_deltas_vs_shipped"].values()) < 1e-7
+    assert set(summary["provenance"]["inputs"]) == {
+        "features",
+        "genes",
+        "samples",
+        "metadata",
+        "train_index",
+        "test_index",
+        "feature_manifest",
+    }
+
+    predictions = pd.read_csv(
+        output_dir / "binary_lr_heldout_predictions.csv", dtype=str
+    )
+    expected_samples = np.load(
+        os.path.join(os.path.dirname(features_float64_npy), "X_samples.npy"),
+        allow_pickle=False,
+    ).astype(str)[np.load(os.path.join(root, "test_idx.npy"), allow_pickle=False)]
+    assert predictions["sample"].tolist() == expected_samples.tolist()
+    assert predictions["sample"].is_unique
+
+
+@pytest.mark.slow
+def test_full_loco_analysis_reproduces_committed_metrics(features_float64_npy, root):
+    """Re-fit all 17 held-out-type models and verify the canonical LOCO tables."""
+    script = os.path.join(root, "cross-cancer-holdout", "run_loco.py")
+    result = subprocess.run(
+        [
+            sys.executable,
+            script,
+            "--features",
+            features_float64_npy,
+            "--metadata",
+            os.path.join(root, "selected_files.csv"),
+            "--verify-existing",
+            os.path.join(root, "cross-cancer-holdout"),
+            "--tolerance",
+            "1e-10",
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+        timeout=300,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "verified 17 held-out cancer types / 2160 samples" in result.stdout
+
+
+@pytest.mark.slow
+def test_cancer_type_training_pipeline_reproduces_shipped_model(
+    features_npy, root, tmp_path, golden
+):
+    """Run grouped OOF evaluation and final export from the version-neutral matrix."""
+    script = os.path.join(
+        root, "cancer-type-classifier", "train_cancer_type_classifier.py"
+    )
+    output_dir = tmp_path / "cancer-type-reproduction"
+    result = subprocess.run(
+        [
+            sys.executable,
+            script,
+            "--features",
+            features_npy,
+            "--metadata",
+            os.path.join(root, "selected_files.csv"),
+            "--output-dir",
+            str(output_dir),
+            "--gene-symbols",
+            os.path.join(root, "cancer-type-classifier", "gene_id_to_name.csv"),
+            "--verify-shipped",
+            os.path.join(
+                root, "cancer-type-classifier", "cancer_type_lr_weights.npz"
+            ),
+        ],
+        cwd=root,
+        text=True,
+        capture_output=True,
+        timeout=300,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+
+    with open(output_dir / "cancer_type_summary.json", encoding="utf-8") as handle:
+        summary = json.load(handle)
+    expected = golden["cancer_type"]
+    assert summary["accuracy"] == pytest.approx(expected["patient_heldout_accuracy"], abs=5e-5)
+    assert summary["balanced_accuracy"] == pytest.approx(
+        expected["patient_heldout_balanced_accuracy"], abs=5e-5
+    )
+    assert summary["macro_f1"] == pytest.approx(
+        expected["patient_heldout_macro_f1"], abs=5e-5
+    )
+
+    shipped = np.load(
+        os.path.join(root, "cancer-type-classifier", "cancer_type_lr_weights.npz"),
+        allow_pickle=False,
+    )
+    reproduced = np.load(output_dir / "cancer_type_lr_weights.npz", allow_pickle=False)
+    for key in ["selected_genes", "selected_gene_index", "classes"]:
+        assert np.array_equal(shipped[key], reproduced[key])
+    for key in ["scaler_mean", "scaler_scale", "coef", "intercept"]:
+        assert shipped[key].shape == reproduced[key].shape
+        assert np.max(np.abs(shipped[key] - reproduced[key])) < 1e-10
+    assert max(summary["weight_deltas_vs_shipped"].values()) < 1e-10

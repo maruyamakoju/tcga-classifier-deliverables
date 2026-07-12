@@ -4,7 +4,10 @@ import numpy as np
 from .align import (
     align_to_genes_with_report,
     format_alignment_issues,
+    format_gene_match_issues,
 )
+from .io import validate_lr_model
+from .validation import validate_expression_matrix, validate_threshold
 
 ADAPT_MODES = ("none", "cohort_zscore", "cohort_center")
 
@@ -22,6 +25,10 @@ def sigmoid(x):
 
 def softmax(logits, axis=1):
     logits = np.asarray(logits, dtype=float)
+    if logits.ndim < 1:
+        raise ValueError("softmax logits must have at least one dimension")
+    if not np.all(np.isfinite(logits)):
+        raise ValueError("softmax logits must be finite")
     z = logits - logits.max(axis=axis, keepdims=True)
     e = np.exp(z)
     return e / e.sum(axis=axis, keepdims=True)
@@ -34,8 +41,9 @@ def standardize(values, model, adapt="none"):
     cohort_zscore  z = (x - cohort_mean) / cohort_std         (domain adaptation)
     cohort_center  z = (x - cohort_mean) / train_scale        (location-only DA)
 
-    Cohort modes realign a foreign-pipeline batch onto the training marginal;
-    see cross-platform-adaptation/ for when to use them.
+    Cohort modes are experimental, transductive transforms: every score depends
+    on the other samples in the batch.  They do not restore calibration or
+    guarantee that a decision threshold transfers across platforms.
     """
     v = np.asarray(values, dtype=float)
     if adapt == "none":
@@ -60,6 +68,31 @@ def _validate_aligned_values(model, values):
         )
     if not np.isfinite(values).all():
         raise ValueError("aligned values contain non-finite values")
+    if values.shape[0] == 0:
+        raise ValueError("aligned values must contain at least one sample")
+
+
+def _binary_role(value):
+    text = str(value).strip().lower()
+    if text in {"0", "0.0", "false", "normal", "healthy", "negative", "neg"}:
+        return "normal"
+    if text in {"1", "1.0", "true", "tumor", "tumour", "cancer", "positive", "pos"}:
+        return "tumor"
+    return None
+
+
+def validate_tumor_binary_model(model):
+    """Validate that binary class 1 really denotes tumor probability."""
+    model = validate_lr_model(model)
+    if model["kind"] != "binary":
+        raise ValueError("tumor-vs-normal scoring requires a binary model")
+    roles = [_binary_role(value) for value in model["classes"]]
+    if roles != ["normal", "tumor"]:
+        raise ValueError(
+            "binary class order must identify normal as class 0 and tumor as class 1; "
+            f"received {model['classes'].tolist()}"
+        )
+    return model
 
 
 def predict_proba_from_aligned(model, values, adapt="none", validate_values=True):
@@ -69,14 +102,32 @@ def predict_proba_from_aligned(model, values, adapt="none", validate_values=True
     This helper lets CLIs align once, then reuse the same matrix for reporting
     matched/missing genes and probabilities.
     """
+    model = validate_lr_model(model)
     values = np.asarray(values, dtype=float)
     if validate_values:
         _validate_aligned_values(model, values)
-    z = standardize(values, model, adapt=adapt)
-    coef = model["coef"]
-    if model["kind"] == "binary":
-        return sigmoid(z @ coef + model["intercept"])
-    return softmax(z @ coef.T + model["intercept"], axis=1)
+    try:
+        with np.errstate(over="raise", invalid="raise", divide="raise"):
+            z = standardize(values, model, adapt=adapt)
+            if not np.all(np.isfinite(z)):
+                raise ValueError("standardized expression values are non-finite")
+            coef = model["coef"]
+            if model["kind"] == "binary":
+                logits = z @ coef + model["intercept"]
+            else:
+                logits = z @ coef.T + model["intercept"]
+    except FloatingPointError as exc:
+        raise ValueError(f"numeric overflow while scoring expression values: {exc}") from exc
+    if not np.all(np.isfinite(logits)):
+        raise ValueError("model logits are non-finite")
+    proba = sigmoid(logits) if model["kind"] == "binary" else softmax(logits, axis=1)
+    if not np.all(np.isfinite(proba)) or np.any((proba < 0) | (proba > 1)):
+        raise ValueError("model probabilities must be finite and between 0 and 1")
+    if model["kind"] == "multiclass" and not np.allclose(
+        proba.sum(axis=1), 1.0, rtol=0.0, atol=1e-12
+    ):
+        raise ValueError("multiclass probability rows must sum to 1")
+    return proba
 
 
 def _raise_for_invalid_alignment(report, max_invalid_cell_fraction):
@@ -95,6 +146,8 @@ def predict_proba(
     max_invalid_cell_fraction=0.0,
     allow_invalid_values=False,
     return_alignment_report=False,
+    min_model_gene_match_rate=0.5,
+    allow_low_gene_coverage=False,
 ):
     """Score an expression DataFrame.
 
@@ -103,10 +156,26 @@ def predict_proba(
     Missing model genes are imputed at the training mean. Invalid values in
     matched model-gene cells raise ``ValueError`` by default; pass
     ``allow_invalid_values=True`` only after reviewing mean imputation.
+    Inputs matching fewer than ``min_model_gene_match_rate`` model genes also
+    fail by default; bypassing that guard requires ``allow_low_gene_coverage``.
     """
+    model = validate_lr_model(model)
+    X = validate_expression_matrix(X)
+    min_model_gene_match_rate = validate_threshold(
+        min_model_gene_match_rate, "min_model_gene_match_rate"
+    )
+    max_invalid_cell_fraction = validate_threshold(
+        max_invalid_cell_fraction, "max_invalid_cell_fraction"
+    )
     values, report = align_to_genes_with_report(
         X, model["genes"], impute_mean=model["mean"]
     )
+    if not allow_low_gene_coverage:
+        message = format_gene_match_issues(
+            report, min_match_rate=min_model_gene_match_rate
+        )
+        if message:
+            raise ValueError(message)
     if not allow_invalid_values:
         _raise_for_invalid_alignment(report, max_invalid_cell_fraction)
     proba = predict_proba_from_aligned(model, values, adapt=adapt)
@@ -122,34 +191,54 @@ def score_binary_dataframe(
     adapt="none",
     positive_label="tumor",
     negative_label="normal",
-    round_digits=6,
+    round_digits=None,
     max_invalid_cell_fraction=0.0,
     allow_invalid_values=False,
     return_alignment_report=False,
+    min_model_gene_match_rate=0.5,
+    allow_low_gene_coverage=False,
 ):
     """Return the stable public scoring CSV shape for a binary model.
 
     Returns ``(dataframe, n_matched, missing)``. The DataFrame columns are
-    ``sample,tumor_probability,call`` to preserve the release contract.
+    ``sample,tumor_probability,call`` to preserve the release contract. Public
+    probabilities retain full float precision so the serialized probability
+    and hard call cannot disagree at the threshold.
     When ``return_alignment_report`` is true, returns
     ``(dataframe, n_matched, missing, report)``.
     """
-    if model["kind"] != "binary":
-        raise ValueError("score_binary_dataframe requires a binary model")
+    model = validate_tumor_binary_model(model)
+    X = validate_expression_matrix(X)
+    threshold = validate_threshold(threshold)
+    min_model_gene_match_rate = validate_threshold(
+        min_model_gene_match_rate, "min_model_gene_match_rate"
+    )
+    max_invalid_cell_fraction = validate_threshold(
+        max_invalid_cell_fraction, "max_invalid_cell_fraction"
+    )
     values, report = align_to_genes_with_report(
         X, model["genes"], impute_mean=model["mean"]
     )
     n_matched = report["n_matched_genes"]
     missing = report["missing_genes"]
+    if not allow_low_gene_coverage:
+        message = format_gene_match_issues(
+            report, min_match_rate=min_model_gene_match_rate
+        )
+        if message:
+            raise ValueError(message)
     if not allow_invalid_values:
         _raise_for_invalid_alignment(report, max_invalid_cell_fraction)
     proba = predict_proba_from_aligned(model, values, adapt=adapt)
     calls = np.where(proba >= threshold, positive_label, negative_label)
     import pandas as pd
 
+    displayed_proba = proba if round_digits is None else np.round(proba, round_digits)
+    if round_digits is not None:
+        calls = np.where(displayed_proba >= threshold, positive_label, negative_label)
     result = pd.DataFrame({
         "sample": X.index,
-        "tumor_probability": np.round(proba, round_digits),
+        "tumor_probability": displayed_proba,
         "call": calls,
     })
     if return_alignment_report:
@@ -164,18 +253,24 @@ def predict(
     threshold=0.5,
     max_invalid_cell_fraction=0.0,
     allow_invalid_values=False,
+    min_model_gene_match_rate=0.5,
+    allow_low_gene_coverage=False,
 ):
     """Return hard class calls.
 
     Binary: array of the two class labels using `threshold` on P(positive).
     Multi-class: array of argmax class labels.
     """
+    model = validate_lr_model(model)
+    threshold = validate_threshold(threshold)
     proba = predict_proba(
         model,
         X,
         adapt=adapt,
         max_invalid_cell_fraction=max_invalid_cell_fraction,
         allow_invalid_values=allow_invalid_values,
+        min_model_gene_match_rate=min_model_gene_match_rate,
+        allow_low_gene_coverage=allow_low_gene_coverage,
     )
     classes = model["classes"]
     if model["kind"] == "binary":

@@ -17,16 +17,18 @@ types (tissue of origin) it is.
 `StandardScaler -> SelectKBest(f_classif, k=1000) -> multinomial LogisticRegression(C=2)`.
 
 Multinomial logistic regression was chosen over gradient boosting: on the same
-patient-held-out protocol a `HistGradientBoostingClassifier` scored essentially
+grouped out-of-fold protocol a `HistGradientBoostingClassifier` scored essentially
 the same accuracy (0.932) but **lower balanced accuracy (0.865 vs 0.878)** and ran
 ~50x slower (102 s vs 2 s). Logistic regression is also directly interpretable as
 per-type gene markers.
 
-## Evaluation (patient-held-out)
+## Evaluation (patient-grouped out-of-fold)
 
 5-fold `StratifiedGroupKFold` grouped by `case_id` (no patient in both train and
-test), out-of-fold predictions pooled. These are the honest generalization
-numbers (the final all-data model fits the training set at accuracy 1.0).
+test), with out-of-fold predictions pooled. These estimate internal performance
+for this fixed TCGA cohort while preventing the same `case_id` from crossing a
+fold. They are not an external or prospective generalization estimate; model
+and hyperparameter choices were developed in the same overall research cohort.
 
 | Metric | Value |
 |---|---:|
@@ -57,10 +59,11 @@ numbers (the final all-data model fits the training set at accuracy 1.0).
 | ESCA (esophagus) | 26 | 0.79 | 0.73 | 0.76 |
 | READ (rectum) | 20 | 0.45 | 0.25 | **0.32** |
 
-## The errors are biologically adjacent tissues, not noise
+## Error-pattern hypotheses
 
-Almost every misclassification is between anatomically or developmentally related
-tissues (dominant off-diagonal confusions, true -> predicted):
+Many misclassifications are between anatomically or developmentally related
+tissues (dominant off-diagonal confusions, true -> predicted). This pattern is
+biologically plausible but does not prove why the model made an error:
 
 - **READ -> COAD: 15 of 20.** Rectal and colon adenocarcinoma are essentially one
   disease (colorectal); TCGA labels them separately but they are transcriptionally
@@ -73,10 +76,11 @@ tissues (dominant off-diagonal confusions, true -> predicted):
 Tissues with unique, strongly expressed markers (thyroid, prostate) are classified
 perfectly.
 
-## Marker genes are the expected tissue markers
+## Marker-gene consistency
 
-The top positive per-type coefficients recover canonical tissue markers, confirming
-the model learns genuine tissue-of-origin biology (see `cancer_type_top_genes.csv`):
+Several top positive per-type coefficients agree with canonical tissue markers
+(see `cancer_type_top_genes.csv`). This is a qualitative consistency check, not
+causal interpretation or proof that predictions are free of technical confounding:
 
 | Type | Top markers |
 |---|---|
@@ -111,17 +115,35 @@ exactly (argmax agreement 1.0, max |Δp| = 1.5e-8). Requires only numpy + pandas
 ## Reproduce
 
 ```bash
-# 1) one-time feature export, in a numpy>=2 / pandas>=3 env (see script header)
-python export_features_npy.py
-# 2) train + patient-held-out evaluation + deployable export (any numpy/pandas)
-python train_cancer_type_classifier.py
+# 1) one-time trusted-pickle migration in the exact, separate converter
+#    environment from training_tools/requirements-feature-export.txt
+python cancer-type-classifier/export_features_npy.py \
+  --source X_full_filtered.pkl \
+  --output-dir cancer-type-classifier \
+  --dtype both \
+  --trusted-source-pickle
+
+# 2) switch to the exact requirements-training.txt environment, then write a
+#    fresh candidate generation without replacing the committed artifacts
+python cancer-type-classifier/train_cancer_type_classifier.py \
+  --features cancer-type-classifier/X_full.npy \
+  --metadata selected_files.csv \
+  --output-dir <fresh-output-dir> \
+  --gene-symbols cancer-type-classifier/gene_id_to_name.csv \
+  --verify-shipped cancer-type-classifier/cancer_type_lr_weights.npz
 ```
+
+The float32 input is intentional for exact reproduction of this historical
+17-class pipeline. The committed path-neutral feature-export lock verifies the
+source/output hashes, shapes, dtypes, and exact converter versions without
+committing the large arrays. See the top-level `REPRODUCIBILITY.md` for the
+isolated converter setup, manifest, overwrite, and numerical-drift rules.
 
 ## Files
 
-- `train_cancer_type_classifier.py` - training, patient-held-out CV, exports
+- `train_cancer_type_classifier.py` - training, patient-grouped OOF evaluation, exports
 - `predict_cancer_type.py` - pure-numpy scoring CLI
-- `export_features_npy.py` - version-neutral feature export (numpy>=2 / pandas>=3)
+- `export_features_npy.py` - locked, version-neutral trusted-pickle migration
 - `cancer_type_lr_weights.npz` - deployable model (scaler + 17x1000 coef + intercept)
 - `cancer_type_per_class_metrics.csv`, `cancer_type_confusion_matrix.csv`
 - `cancer_type_oof_predictions.csv`, `cancer_type_top_genes.csv`, `cancer_type_summary.json`

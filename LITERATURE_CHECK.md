@@ -1,12 +1,15 @@
 # Literature check — do the top genes match published pan-cancer signatures?
 
-**Verdict: yes, strongly — and the picture is richer than "stromal/ECM remodeling."**
+Reviewed for release `v2.0.0-gdc-starcounts` (`2026-07-12`).
+
+**Verdict: the selected genes are qualitatively consistent with published
+stromal/ECM and normal-tissue architecture themes.**
 The classifier separates tumor from normal using a *bidirectional* signature: it keys on
 genes that are **gained in tumors** (ECM remodeling / cancer-associated-fibroblast /
 desmoplasia programs) **and** on normal-tissue architecture / microvascular / tumor-
-suppressor genes that are **lost in tumors**. Both arms are well documented pan-cancer,
-which is exactly why the model generalizes to cancer types it never trained on (this
-gain/loss pattern is shared across epithelial cancers).
+suppressor genes that are **lost in tumors**. Both themes appear in pan-cancer
+literature, but this post-hoc comparison is neither independent validation nor
+evidence that these programs caused the classifier's performance.
 
 ## Arm 1 — gained in tumors (top drivers of the "tumor" call)
 
@@ -45,19 +48,22 @@ gain/loss pattern is shared across epithelial cancers).
 
 ## Interpretation
 
-The original report's claim — "top genes dominated by stromal/ECM remodeling markers,
-consistent with a known pan-cancer signature" — **holds up**, and the more precise reading
-is: **tumor = (desmoplastic ECM / CAF program UP) + (normal tissue, lymphatic/vascular and
-tumor-suppressor markers DOWN).** This bidirectional, tissue-agnostic contrast is the
-mechanistic explanation for the leave-one-cancer-type-out result (AUC 0.994): the model
-isn't memorizing per-cancer patterns, it's reading a shared malignant-vs-normal tissue
-state.
+The original report's observation that many top genes map to stromal/ECM themes
+is qualitatively supported. A useful descriptive hypothesis is: **tumor =
+(desmoplastic ECM / CAF program UP) + (normal tissue, lymphatic/vascular and
+tumor-suppressor markers DOWN).** The coefficient list and literature review do
+not establish this as the causal mechanism of the model, exclude correlated
+project/procurement/batch effects, or prove that the model is not using other
+features. The LOCO AUC 0.994 is a held-out-project performance result, not a
+mechanistic experiment.
 
 ## Caveat carried over
 
 TCGA "normal" is tumor-adjacent resected tissue, so part of Arm 2 reflects **field/adjacent
-normal** rather than healthy-population tissue. The signature is therefore validated as
-tumor-vs-adjacent-normal; generalization to healthy-donor tissue is untested.
+normal** rather than healthy-population tissue. The classifier is evaluated for
+tumor-vs-adjacent-normal; generalization to healthy-donor tissue is not
+established. Literature consistency should not be cited as causal proof or as a
+replacement for external validation.
 
 ## Sources
 - COL10A1 pan-cancer review: https://pmc.ncbi.nlm.nih.gov/articles/PMC11487528/ ; LUAD ECM remodeling: https://www.frontiersin.org/journals/oncology/articles/10.3389/fonc.2020.573534/full

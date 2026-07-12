@@ -7,7 +7,15 @@ import subprocess
 import zipfile
 from pathlib import Path
 
-from release_tools.common import RELEASE_ZIP_NAME, add_message, sha256_file, write_json_report
+from release_tools.common import (
+    RELEASE_SCHEMA_VERSION,
+    RELEASE_VALIDATION_COMMAND,
+    RELEASE_ZIP_NAME,
+    ZIP_ACCEPTANCE_COMMAND,
+    add_message,
+    sha256_file,
+    write_json_report,
+)
 
 
 ROOT = Path(__file__).resolve().parent
@@ -31,15 +39,22 @@ REQUIRED_FILES = {
     ".zenodo.json",
     "CITATION.cff",
     "CONTRIBUTING.md",
+    "environment.yml",
     "LICENSE",
     "MAINTENANCE.md",
     "NOTICE.md",
     "PUBLICATION_CHECKLIST.md",
     "README.md",
     "RELEASE_ARTIFACTS.json",
+    "requirements-dev.txt",
+    "requirements-external-validation.txt",
+    "requirements-light.txt",
+    "requirements-training.txt",
+    "requirements.txt",
     "SECURITY.md",
     "VERSION",
     "audit_github_repository.py",
+    "audit_release_identity.py",
     "codemeta.json",
     ZIP_NAME,
 }
@@ -215,18 +230,50 @@ def check_release_artifacts(messages):
     note_path = ROOT / note_name if note_name is not None else None
     try:
         artifacts = json.loads(artifacts_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         add_message(messages, "ERROR", "release_artifacts_invalid_json",
                     f"RELEASE_ARTIFACTS.json is invalid JSON: {exc}", artifacts_path)
         return
+    if not isinstance(artifacts, dict):
+        add_message(messages, "ERROR", "release_artifacts_not_object",
+                    "RELEASE_ARTIFACTS.json top-level value must be an object.",
+                    artifacts_path)
+        return
     actual_sha = sha256_file(zip_path)
     actual_bytes = zip_path.stat().st_size
-    with zipfile.ZipFile(zip_path) as zf:
-        actual_entries = len(zf.infolist())
+    try:
+        with zipfile.ZipFile(zip_path) as zf:
+            actual_entries = len(zf.infolist())
+    except (OSError, zipfile.BadZipFile) as exc:
+        add_message(messages, "ERROR", "release_zip_invalid",
+                    f"Could not read release ZIP: {exc}", zip_path)
+        return
+    version_path = ROOT / "VERSION"
+    metadata_path = ROOT / "RELEASE_METADATA.json"
+    version = None
+    release_date = None
+    if version_path.is_file():
+        version = version_path.read_text(encoding="utf-8").strip()
+    if metadata_path.is_file():
+        try:
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            if isinstance(metadata, dict):
+                release_date = metadata.get("release_date")
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            pass
     expected = {
+        "schema_version": RELEASE_SCHEMA_VERSION,
+        "version": version,
+        "release_date": release_date,
+        "release_dir": "release-lite",
         "zip_sha256": actual_sha,
         "zip_bytes": actual_bytes,
         "zip_entries": actual_entries,
+        "zip_path": ZIP_NAME,
+        "validation_command": RELEASE_VALIDATION_COMMAND,
+        "zip_acceptance_command": (
+            f"{ZIP_ACCEPTANCE_COMMAND} --expected-sha256 {actual_sha}"
+        ),
     }
     for key, actual in expected.items():
         if artifacts.get(key) != actual:
@@ -241,6 +288,17 @@ def check_release_artifacts(messages):
 
 
 def check_json_metadata(messages):
+    version_path = ROOT / "VERSION"
+    if not version_path.is_file():
+        # check_required_files already emits the primary diagnostic. Avoid a
+        # secondary FileNotFoundError while collecting the remaining findings.
+        return
+    try:
+        version = version_path.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeError) as exc:
+        add_message(messages, "ERROR", "version_unreadable",
+                    f"VERSION could not be read: {exc}", version_path)
+        return
     checks = {
         ".zenodo.json": {
             "access_right",
@@ -268,15 +326,19 @@ def check_json_metadata(messages):
             continue
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
+        except (OSError, UnicodeError, json.JSONDecodeError) as exc:
             add_message(messages, "ERROR", "metadata_json_invalid",
-                        f"{rel} is invalid JSON: {exc}", path)
+                         f"{rel} is invalid JSON: {exc}", path)
+            continue
+        if not isinstance(data, dict):
+            add_message(messages, "ERROR", "metadata_not_object",
+                        f"{rel} top-level value must be an object.", path)
             continue
         missing = sorted(key for key in required_keys if key not in data)
         if missing:
             add_message(messages, "ERROR", "metadata_key_missing",
                         f"{rel} is missing required keys: {', '.join(missing)}", path)
-        if data.get("version") != (ROOT / "VERSION").read_text(encoding="utf-8").strip():
+        if data.get("version") != version:
             add_message(messages, "ERROR", "metadata_version_mismatch",
                         f"{rel} version does not match VERSION.", path)
 
@@ -292,6 +354,9 @@ def check_workflow(messages):
         "run_release_acceptance.py",
         "validate_release_lite.py",
         "build_release_lite.py",
+        "audit_release_identity.py",
+        "requirements-dev.txt",
+        "requirements-training.txt",
     ]:
         if marker not in text:
             add_message(messages, "ERROR", "ci_marker_missing",

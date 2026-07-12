@@ -1,0 +1,4 @@
+# External GDC/Xena validation. Metrics use the dependency-light tcga_rnaseq
+# implementation; scikit-learn remains a training/development dependency only.
+-r requirements-light.txt
+requests>=2.32,<3

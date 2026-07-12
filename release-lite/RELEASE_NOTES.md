@@ -1,5 +1,79 @@
 # Release notes
 
+## v2.0.0-gdc-starcounts — 2026-07-12
+
+Safety, provenance, and deterministic reproducibility release. The deployed
+weights and committed headline metrics are unchanged. The major version marks
+the breaking public `tcga_rnaseq` API 3.0.0 contract: ambiguous or unsafe model,
+sample, input-value, and output-path states now fail closed.
+
+### Public scoring safety
+
+- Model artifacts are fully shape/type/finite/gene validated before scoring;
+  binary paths reject multiclass or inconsistent arrays.
+- Sample identifiers preserve strings (including leading zeros and literal
+  `NA`) while blank, padded, duplicate, or trim-colliding IDs fail explicitly.
+- Public CLIs reject input/output and output/output path collisions and write
+  each output file atomically. The multi-output workflow is not a directory
+  transaction: it removes stale downstream files, retains only documented
+  earlier outputs on stop states, and writes its manifest last.
+- Scores retain full precision. `tumor_probability` is explicitly a logistic
+  model score, not clinical risk or a calibrated diagnostic probability.
+- Pickled expression input remains blocked by default; only a caller that has
+  independently established trust may opt into low-level pickle loading.
+
+### Scientific guardrails
+
+- Cohort adaptation now defaults to `none`. Adapted modes are explicit,
+  experimental, transductive and composition-dependent opt-ins, require at
+  least `--min-samples` (default 20), and yield scores that are not comparable
+  across separately adapted batches.
+- Calibration reports identify their metrics as apparent/resubstitution
+  estimates computed on the same labeled samples used to choose the threshold;
+  either class below 10 samples emits a warning.
+- Documentation now states that LOCO does not remove GDC project,
+  procurement, center, or batch confounding, and that literature consistency
+  does not prove a causal mechanism.
+
+### Reproducibility and provenance
+
+- Added exact dtype-preserving feature export and reproduction commands:
+  float32 for the historical cancer-type classifier, float64 for binary and
+  LOCO verification.
+- Added locked external-validation cohort manifests, semantic cache
+  fingerprints, content hashes, atomic cache writes, post-merge integrity
+  checks, and generated run manifests.
+- No post-fix live-network external-validation rerun was performed. Committed
+  CPTAC/GTEx/Toil metrics remain a historical snapshot and must not be described
+  as newly reproduced by the fixed cache/fetch paths.
+
+### Runtime, CI, and release engineering
+
+- Lightweight scoring supports Python 3.11 or newer; CI exercises 3.11 and
+  3.13. Exact shipped-model reproduction is pinned to Python 3.11, NumPy
+  1.26.4, pandas 2.3.3, SciPy 1.15.3, and scikit-learn 1.8.0 because the Python
+  3.13/scikit-learn 1.9 refit showed weight and out-of-fold drift. Golden
+  tolerances are not relaxed to hide environment drift.
+- Separated lightweight, external-validation, development, and complete
+  dependency profiles, with a distinct exact-pinned canonical training
+  profile; CI runs `pip check`, Ruff, and the full pytest suite.
+- Release acceptance runs across Windows, Linux, and macOS with GitHub Actions
+  pinned by commit.
+- The builder stages and atomically publishes canonical sorted ZIP entries with
+  fixed release-date timestamps and permissions, and offers a non-mutating
+  deterministic `--check` mode.
+- ZIP acceptance now requires a trusted digest via `--expected-sha256` before
+  extraction or execution. `--skip-acceptance` performs structure-only,
+  non-executing inspection when a trusted digest is unavailable.
+
+### Validation before final artifact build
+
+- `python -m pytest -q`: 271 passed.
+- `python -m ruff check .`: passed.
+- `python run_smoke_tests.py`: passed.
+- The final deterministic builder, artifact digest, and cross-platform hosted
+  CI must still be confirmed for publication.
+
 ## v1.1.22-gdc-starcounts — 2026-07-10
 
 Expression input read error handling release. Model weights, training data, and

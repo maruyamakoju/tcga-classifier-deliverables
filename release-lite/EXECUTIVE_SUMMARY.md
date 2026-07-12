@@ -8,8 +8,9 @@ default deployable model is logistic regression over 2,000 selected genes,
 exported to `deployable_lr_weights.npz` so ordinary scoring uses only NumPy and
 pandas rather than scikit-learn pickle loading.
 
-Release version: `v1.1.22-gdc-starcounts`
-Release date: `2026-07-10`
+Release version: `v2.0.0-gdc-starcounts`
+Release date: `2026-07-12`
+Public scoring-library API: `3.0.0` (breaking safety hardening)
 
 ## Validated use
 
@@ -22,6 +23,9 @@ Use this release for expression matrices with:
 
 The model is strongest inside the GDC STAR-Counts ecosystem. Internal TCGA
 validation and an external CPTAC-3/GDC smoke validation support this boundary.
+The committed external metrics are historical snapshots: v2.0.0 adds locked
+cohort manifests and cache/run provenance, but no post-fix live-network rerun
+was performed.
 
 ## Key results
 
@@ -42,7 +46,12 @@ refitting or calibration. Cross-platform checks showed that ranking can remain
 strong while probabilities and thresholds shift severely.
 
 This is not a clinical diagnostic model and should not be used for patient
-management.
+management. `tumor_probability` is the logistic model score; it is not clinical
+risk or a calibrated diagnostic probability.
+
+LOCO does not remove GDC project, procurement, center, or batch confounding.
+Likewise, agreement between selected genes and published biology is qualitative
+context, not causal-mechanism proof.
 
 ## Fast path for users
 
@@ -56,7 +65,7 @@ python audit_cli_entrypoints.py
 python audit_release_docs.py
 python validate_output_contracts.py
 python run_release_acceptance.py
-python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
+python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip --expected-sha256 <trusted-published-sha256>
 python run_smoke_tests.py
 python run_safety_tests.py
 python run_tumor_normal_workflow.py example_input.csv --labels example_labels.csv
@@ -84,6 +93,14 @@ adaptation, and cancer-type prediction outputs before files are written unless
 explicitly allowed. Use `TROUBLESHOOTING.md`
 for common install, input-QC, threshold, and release-integrity failures.
 
+When labels are supplied, calibration metrics are apparent/resubstitution
+estimates on the same samples used to select the threshold; they are not an
+independent validation estimate, and either class below 10 samples triggers a
+warning. Cohort adaptation defaults to `none`. Adapted modes are explicit,
+transductive and composition-dependent opt-ins, require at least 20 samples by
+default, and yield scores that cannot be compared across separately adapted
+batches.
+
 ## Release integrity
 
 Build and validate the release from the full deliverables folder with:
@@ -91,11 +108,17 @@ Build and validate the release from the full deliverables folder with:
 ```bash
 python build_release_lite.py --smoke
 python validate_release_lite.py --release-dir release-lite --zip tcga-tumor-normal-release-lite.zip
-python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
+python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip --expected-sha256 <trusted-published-sha256>
 ```
 
 The build writes `release-lite/SHA256SUMS.txt`, `release-lite/release_manifest.json`,
 and the sidecar `RELEASE_ARTIFACTS.json` containing the zip size and SHA256.
+The v2 builder stages before publishing, emits canonical sorted ZIP entries
+with fixed timestamps and permissions, and supports a non-mutating
+deterministic `--check` drift test. CI installs separated role-specific
+dependency profiles plus the exact-pinned canonical training profile, runs Ruff
+and the full test suite, and exercises release acceptance
+on Windows, Linux, and macOS.
 
 ## Main files
 

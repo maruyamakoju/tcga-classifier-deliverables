@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cross-cancer-type generalization (Leave-One-Cancer-type-Out)</title>
+<title>Leave-One-Cancer-type-Out sensitivity analysis</title>
 <style>
   :root, .viz-root {
     --page:#f9f9f7; --surface-1:#fcfcfb;
@@ -66,14 +66,14 @@
 </head>
 <body>
 <div class="wrap viz-root">
-  <h1>Does the tumor-vs-normal classifier generalize to an <em>unseen</em> cancer type?</h1>
-  <p class="sub">Leave-One-Cancer-type-Out test &mdash; train on 16 TCGA cancer types, test on the 17th, for each. Logistic regression (the report's best model). 2,160 samples.</p>
+  <h1>Leave-One-Cancer-type-Out sensitivity analysis</h1>
+  <p class="sub">Train on 16 TCGA projects and evaluate on the 17th, in turn. Retrospective internal analysis of 2,160 samples; not external clinical validation.</p>
 
   <div class="tiles" id="tiles"></div>
 
   <div class="card">
     <h2>Per-cancer-type AUC &mdash; within-distribution vs held-out</h2>
-    <p class="note">Each cancer type withheld entirely from training. Axis zoomed to 0.945&ndash;1.0; sorted worst-generalizing first.</p>
+    <p class="note">Each cancer type is withheld from model fitting. Axis zoomed to 0.945&ndash;1.0; sorted by LOCO AUC.</p>
     <div class="legend">
       <span><i class="dot" style="background:var(--loco)"></i> LOCO &mdash; cancer type never seen in training</span>
       <span><i class="dot" style="background:var(--within)"></i> Within-distribution (original report)</span>
@@ -84,9 +84,9 @@
 
   <div class="card">
     <h2>All metrics per held-out cancer type</h2>
-    <p class="note">AUC generalizes almost perfectly; the 0.5 decision threshold does not always transfer &mdash; watch the accuracy/recall columns where AUC is high but accuracy is not (flagged).</p>
+    <p class="note">Within this cohort, ranking was stronger than fixed-threshold accuracy. LOCO does not exclude GDC-wide processing, procurement, center, purity, adjacent-normal sampling, or project batch confounding.</p>
     <table id="tbl"></table>
-    <p class="cap">Pooled LOCO: AUC 0.988, avg-precision 0.994, accuracy 0.947, F1 0.960. Macro-mean AUC 0.994, worst 0.950 (PRAD).</p>
+    <p class="cap">Macro-mean AUC 0.994, worst 0.950 (PRAD). The pooled AUC 0.988, avg-precision 0.994, accuracy 0.947, and F1 0.960 are cross-fitted aggregates across 17 separately fitted project-specific models, not global metrics from one frozen model. Because score scale and calibration can differ between those models, interpret the per-type AUCs and macro summary primarily. None of these values guarantees transport to a new tissue, protocol, center, or population.</p>
   </div>
 </div>
 <div class="tooltip" id="tt"></div>
@@ -114,7 +114,7 @@ var DATA = [
 ];
 
 var tiles = [
-  {v:"0.988", l:"Pooled AUC (unseen types)", d:"vs 0.997 within-distribution"},
+  {v:"0.988", l:"Cross-fitted pooled AUC", d:"17 models; not one frozen model"},
   {v:"0.994", l:"Macro-mean AUC over 17 types", d:"per-type average"},
   {v:"0.950", l:"Worst-type AUC (PRAD)", d:"still >= 0.95"},
   {v:"12 / 17", l:"Types with AUC >= 0.998", d:"held out entirely"}

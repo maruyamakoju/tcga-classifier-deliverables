@@ -23,8 +23,11 @@ No QC warnings or errors.
 
 - Labeled samples: 5 (3 tumor / 2 normal)
 - AUC: 1.0000
+- Evaluation: **apparent/resubstitution** (threshold and metrics were estimated on these same labeled samples; this is not independent validation)
 - Recommended threshold: 0.989957 (youden_j)
 - Recommended accuracy / recall / specificity: 1.0000 / 1.0000 / 1.0000
+
+- WARNING: Calibration metrics are unstable because at least one class has fewer than 10 labeled samples (3 tumor, 2 normal).
 
 ## Explanations
 

@@ -1,6 +1,8 @@
 {
   "calibration": {
     "auc": 1.0,
+    "evaluation_note": "Threshold and metrics were estimated and evaluated on the same labeled samples; they are apparent/resubstitution performance, not independent validation.",
+    "evaluation_type": "apparent_resubstitution",
     "n": 5,
     "n_normal": 2,
     "n_tumor": 3,
@@ -8,7 +10,10 @@
     "recommended_metric": "youden_j",
     "recommended_recall": 1.0,
     "recommended_specificity": 1.0,
-    "recommended_threshold": 0.989957
+    "recommended_threshold": 0.9899565622025662,
+    "warnings": [
+      "Calibration metrics are unstable because at least one class has fewer than 10 labeled samples (3 tumor, 2 normal)."
+    ]
   },
   "input": "example_input.csv",
   "input_genes": 2000,

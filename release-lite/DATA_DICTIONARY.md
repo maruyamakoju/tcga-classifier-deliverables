@@ -1,6 +1,6 @@
 # Data dictionary
 
-Release: `v1.1.22-gdc-starcounts` (`2026-07-10`)
+Release: `v2.0.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 This file defines the stable input and output fields used by the lightweight
 release. Run `python validate_output_contracts.py` to verify the bundled
@@ -12,6 +12,10 @@ Expression input files use samples as rows and Ensembl gene IDs as columns.
 The first column is the sample identifier / row index. Values must be
 `log2(TPM+1)` on a GDC STAR-Counts-style scale. Ensembl version suffixes are
 accepted.
+
+Sample identifiers are read as strings, so leading zeros and the literal text
+`NA` are preserved. Blank, padded (leading/trailing whitespace), duplicate, and
+trim-colliding identifiers are rejected.
 
 ## Labels CSV
 
@@ -29,7 +33,7 @@ accepted.
 | Column | Type | Meaning |
 |---|---|---|
 | `sample` | string | Sample identifier |
-| `tumor_probability` | float | Logistic-regression tumor probability in `[0, 1]` |
+| `tumor_probability` | float | Unrounded logistic model score in `[0, 1]`; not clinical risk or a calibrated diagnostic probability |
 | `call` | string | `tumor` if probability is at or above the threshold, else `normal` |
 
 ## Thresholds CSV
@@ -48,6 +52,11 @@ accepted.
 | `tn`, `fp`, `fn`, `tp` | int | Confusion-matrix counts |
 | `youden_j` | float/blank | Recall + specificity - 1 |
 
+When JSON calibration output is requested it also records
+`evaluation_type: apparent_resubstitution`, an `evaluation_note`, and a
+`warnings` list. Metrics use the same labeled samples that selected the
+threshold; a class count below 10 adds a warning.
+
 ## Explanations CSV
 
 `explain_scores.py` writes per-sample LR logit contributions:
@@ -55,7 +64,7 @@ accepted.
 | Column | Type | Meaning |
 |---|---|---|
 | `sample` | string | Sample identifier |
-| `tumor_probability` | float | Tumor probability in `[0, 1]` |
+| `tumor_probability` | float | Unrounded logistic model score in `[0, 1]`; not clinical risk or a calibrated diagnostic probability |
 | `logit` | float | Logistic-regression logit before sigmoid |
 | `direction` | string | `tumor` for positive contributions or `normal` for negative contributions |
 | `rank` | int | Rank within sample and direction |
@@ -66,6 +75,10 @@ accepted.
 | `training_mean` | float | Training-set scaler mean |
 | `scaled_value` | float | Standardized input value |
 | `lr_coef` | float | Logistic-regression coefficient |
+
+`direction` has only the sign-based values `tumor` and `normal`. If fewer than
+`top_n` strictly positive or negative contributions exist, that direction has
+fewer than `top_n` rows rather than including zero/opposite-sign genes.
 
 ## QC JSON
 
@@ -100,6 +113,12 @@ malformed, `status` is `stopped_after_calibration_error` instead: `scores.csv`
 is written and kept, but `thresholds.csv`, `calibration.json`, and
 `explanations.csv` are not, and the manifest includes a `calibration_error`
 message. See `TROUBLESHOOTING.md`.
+
+Workflow runs remove stale downstream outputs before starting and write each
+new output file atomically. This is not an all-or-nothing directory transaction:
+documented stop states may retain valid earlier outputs, and the manifest is
+written last. Input/output path collisions and collisions among public outputs
+are rejected before computation.
 
 ## Model Gene Metadata
 

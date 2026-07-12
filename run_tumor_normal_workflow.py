@@ -1,35 +1,259 @@
 #!/usr/bin/env python3
 """Run the complete lightweight tumor-vs-normal scoring workflow."""
 import argparse
+import contextlib
+import hashlib
 import os
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 import pandas as pd
 
 from calibrate_threshold import (
+    build_calibration_summary,
     choose_youden_threshold,
     load_scores_and_labels,
     metrics_at_threshold,
-    rank_auc,
 )
 from explain_scores import explain_dataframe, load_gene_metadata
 from inspect_expression_input import inspect_dataframe, load_reference
 from score_tumor_normal import (
     load_lr_weights,
+    score_dataframe_lr_weights,
+)
+from tcga_rnaseq import (
+    ensure_distinct_paths,
     print_invalid_alignment_summary,
     read_matrix,
-    score_dataframe_lr_weights,
     validate_alignment_report,
+    validate_threshold,
+    write_dataframe_csv,
+    write_json,
+    write_text,
 )
-from tcga_rnaseq import validate_threshold, write_json
 
 
-def remove_if_exists(path):
+MANAGED_OUTPUT_NAMES = {
+    "qc.json",
+    "scores.csv",
+    "workflow_report.md",
+    "manifest.json",
+    "thresholds.csv",
+    "calibration.json",
+    "explanations.csv",
+}
+
+
+def sha256_file(path):
+    digest = hashlib.sha256()
     try:
-        path.unlink()
-    except FileNotFoundError:
-        pass
+        with Path(path).open("rb") as handle:
+            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+                digest.update(chunk)
+    except OSError as exc:
+        raise ValueError(f"could not hash workflow input {path}: {exc}") from exc
+    return digest.hexdigest()
+
+
+def snapshot_inputs(paths):
+    """Hash every file consumed by the workflow before computation."""
+    records = {}
+    for name, raw_path in paths.items():
+        if not raw_path:
+            continue
+        path = Path(raw_path).resolve()
+        if not path.is_file():
+            raise ValueError(f"workflow input is not a regular file ({name}): {path}")
+        try:
+            size = int(path.stat().st_size)
+        except OSError as exc:
+            raise ValueError(f"could not inspect workflow input ({name}) {path}: {exc}") from exc
+        try:
+            display_path = path.relative_to(Path.cwd().resolve()).as_posix()
+        except ValueError:
+            display_path = str(path)
+        records[name] = {
+            "path": display_path,
+            "bytes": size,
+            "sha256": sha256_file(path),
+            "_resolved_path": str(path),
+        }
+    return records
+
+
+def verify_input_snapshot(records):
+    """Refuse publication if an input changed while outputs were computed."""
+    for name, expected in records.items():
+        path = Path(expected["_resolved_path"])
+        if not path.is_file():
+            raise ValueError(f"workflow input changed during the run ({name}): {path}")
+        try:
+            size = int(path.stat().st_size)
+        except OSError as exc:
+            raise ValueError(
+                f"could not verify workflow input snapshot ({name}) {path}: {exc}"
+            ) from exc
+        if size != expected["bytes"] or sha256_file(path) != expected["sha256"]:
+            raise ValueError(f"workflow input changed during the run ({name}): {path}")
+
+
+def manifest_provenance(records):
+    """Stable top-level hashes plus the complete consumed-input snapshot."""
+    public_records = {
+        name: {key: value for key, value in record.items() if not key.startswith("_")}
+        for name, record in records.items()
+    }
+    return {
+        "input_sha256": records["expression_input"]["sha256"],
+        "model_sha256": records["lr_weights"]["sha256"],
+        "input_artifacts": public_records,
+    }
+
+
+def _remove_managed_path(path):
+    path = Path(path)
+    if path.is_symlink() or path.is_file():
+        path.unlink(missing_ok=True)
+    elif path.exists():
+        shutil.rmtree(path)
+
+
+def _replace_file(source, destination):
+    """Small indirection used by rollback fault-injection tests."""
+    os.replace(source, destination)
+
+
+@contextlib.contextmanager
+def staged_generation(output_dir):
+    """Yield a same-filesystem sibling stage and always clean it afterward."""
+    output_dir = Path(output_dir).resolve()
+    if output_dir.exists() and not output_dir.is_dir():
+        raise ValueError(f"workflow output path is not a directory: {output_dir}")
+    try:
+        output_dir.parent.mkdir(parents=True, exist_ok=True)
+        stage = Path(
+            tempfile.mkdtemp(
+                prefix=f".{output_dir.name}.workflow-stage.",
+                dir=output_dir.parent,
+            )
+        )
+    except OSError as exc:
+        raise ValueError(f"could not create workflow staging directory: {exc}") from exc
+    try:
+        yield stage
+    finally:
+        if stage.exists():
+            shutil.rmtree(stage, ignore_errors=True)
+
+
+def commit_generation(stage_dir, output_dir, staged_names):
+    """Rollback-capable managed-file commit with the manifest installed last."""
+    stage_dir = Path(stage_dir).resolve()
+    output_dir = Path(output_dir).resolve()
+    staged_names = list(staged_names)
+    if not staged_names or staged_names[-1] != "manifest.json":
+        raise ValueError("workflow manifest must be staged and committed last")
+    if len(set(staged_names)) != len(staged_names):
+        raise ValueError("workflow staged output names must be unique")
+    if not set(staged_names) <= MANAGED_OUTPUT_NAMES:
+        raise ValueError("workflow stage contains an unmanaged output name")
+    for name in staged_names:
+        if Path(name).name != name or not (stage_dir / name).is_file():
+            raise ValueError(f"invalid or missing staged workflow output: {name}")
+
+    try:
+        output_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise ValueError(f"could not create workflow output directory: {exc}") from exc
+    for name in MANAGED_OUTPUT_NAMES:
+        path = output_dir / name
+        if path.exists() and path.is_dir() and not path.is_symlink():
+            raise ValueError(f"managed workflow output path is a directory: {path}")
+
+    try:
+        backup = Path(
+            tempfile.mkdtemp(prefix=".workflow-backup.", dir=output_dir.parent)
+        )
+    except OSError as exc:
+        raise ValueError(f"could not create workflow rollback directory: {exc}") from exc
+    backed_up = []
+    installed = []
+    completed = False
+    rolled_back = False
+    try:
+        backup_order = ["manifest.json"] + sorted(
+            MANAGED_OUTPUT_NAMES - {"manifest.json"}
+        )
+        for name in backup_order:
+            source = output_dir / name
+            if source.exists() or source.is_symlink():
+                _replace_file(source, backup / name)
+                backed_up.append(name)
+        for name in staged_names:
+            _replace_file(stage_dir / name, output_dir / name)
+            installed.append(name)
+        completed = True
+    except BaseException as exc:
+        rollback_errors = []
+        for name in reversed(installed):
+            try:
+                _remove_managed_path(output_dir / name)
+            except BaseException as rollback_exc:
+                rollback_errors.append(str(rollback_exc))
+        for name in backed_up:
+            previous = backup / name
+            if not previous.exists() and not previous.is_symlink():
+                continue
+            try:
+                _replace_file(previous, output_dir / name)
+            except BaseException as rollback_exc:
+                rollback_errors.append(str(rollback_exc))
+        rolled_back = not rollback_errors
+        if rollback_errors:
+            raise RuntimeError(
+                "workflow commit failed and rollback was incomplete: "
+                + "; ".join(rollback_errors)
+                + f"; recovery files remain in {backup}"
+            ) from exc
+        if isinstance(exc, ValueError):
+            raise
+        if isinstance(exc, Exception):
+            raise ValueError(f"could not commit workflow outputs: {exc}") from exc
+        raise
+    finally:
+        if backup.exists() and (completed or rolled_back):
+            shutil.rmtree(backup, ignore_errors=True)
+
+
+def publish_generation(stage_dir, output_dir, manifest, outputs, input_records):
+    """Validate and commit one coherent terminal workflow generation."""
+    stage_dir = Path(stage_dir)
+    output_names = list(outputs.values())
+    if len(set(output_names)) != len(output_names):
+        raise ValueError("workflow manifest output paths must be unique")
+    if set(output_names) - MANAGED_OUTPUT_NAMES:
+        raise ValueError("workflow manifest references an unmanaged output")
+    if "manifest.json" not in output_names:
+        raise ValueError("workflow generation must publish manifest.json")
+    for name in output_names:
+        if name == "manifest.json":
+            continue
+        if not (stage_dir / name).is_file():
+            raise ValueError(f"workflow manifest references a missing staged output: {name}")
+
+    manifest = {
+        **manifest,
+        **manifest_provenance(input_records),
+        "outputs": outputs,
+    }
+    write_json(manifest, stage_dir / "manifest.json", sort_keys=True)
+    verify_input_snapshot(input_records)
+    staged_names = sorted(name for name in output_names if name != "manifest.json")
+    staged_names.append("manifest.json")
+    commit_generation(stage_dir, output_dir, staged_names)
+    return manifest
 
 
 def calibration_from_labels(scores_path, labels_path, sample_column, label_column,
@@ -48,17 +272,7 @@ def calibration_from_labels(scores_path, labels_path, sample_column, label_colum
     for threshold in extra_thresholds:
         rows.append(metrics_at_threshold(y_true, scores, threshold, f"threshold_{threshold:g}"))
     metrics = pd.DataFrame(rows)
-    summary = {
-        "n": int(len(data)),
-        "n_tumor": int((y_true == 1).sum()),
-        "n_normal": int((y_true == 0).sum()),
-        "auc": float(rank_auc(y_true, scores)),
-        "recommended_threshold": float(best["threshold"]),
-        "recommended_metric": "youden_j",
-        "recommended_accuracy": float(best["accuracy"]),
-        "recommended_recall": float(best["recall"]),
-        "recommended_specificity": float(best["specificity"]),
-    }
+    summary = build_calibration_summary(y_true, scores, best)
     return metrics, summary
 
 
@@ -141,6 +355,8 @@ def build_report(input_path, qc, scores, out_files, calibration_summary=None,
             f"({calibration_summary['n_tumor']} tumor / "
             f"{calibration_summary['n_normal']} normal)",
             f"- AUC: {format_float(calibration_summary['auc'])}",
+            "- Evaluation: **apparent/resubstitution** (threshold and metrics were "
+            "estimated on these same labeled samples; this is not independent validation)",
             f"- Recommended threshold: "
             f"{calibration_summary['recommended_threshold']:.6f} "
             f"({calibration_summary['recommended_metric']})",
@@ -150,6 +366,10 @@ def build_report(input_path, qc, scores, out_files, calibration_summary=None,
             f"{format_float(calibration_summary['recommended_specificity'])}",
             "",
         ])
+        for warning in calibration_summary.get("warnings", []):
+            lines.append(f"- WARNING: {warning}")
+        if calibration_summary.get("warnings"):
+            lines.append("")
     elif calibration_error:
         lines.extend([
             "## Calibration",
@@ -174,7 +394,7 @@ def build_report(input_path, qc, scores, out_files, calibration_summary=None,
         markdown_table(file_rows),
         "",
     ])
-    return "\n".join(lines)
+    return "\n".join(lines).rstrip("\n") + "\n"
 
 
 def default_output_dir(input_path):
@@ -230,8 +450,6 @@ def main(argv=None):
         parser.error("--top-n must be >= 1 unless --skip-explanations is used")
 
     output_dir = Path(args.output_dir or default_output_dir(args.input))
-    output_dir.mkdir(parents=True, exist_ok=True)
-
     paths = {
         "qc_json": output_dir / "qc.json",
         "scores_csv": output_dir / "scores.csv",
@@ -244,50 +462,93 @@ def main(argv=None):
     if not args.skip_explanations:
         paths["explanations_csv"] = output_dir / "explanations.csv"
 
-    weights = load_lr_weights(args.lr_weights)
-    reference = load_reference(args.qc_reference)
+    consumed_inputs = {
+        "expression_input": args.input,
+        "lr_weights": args.lr_weights,
+        "qc_reference": args.qc_reference,
+    }
+    input_roles = {
+        "expression input": args.input,
+        "LR weights": args.lr_weights,
+        "QC reference": args.qc_reference,
+    }
+    if args.labels:
+        consumed_inputs["labels"] = args.labels
+        input_roles["labels input"] = args.labels
+    if not args.skip_explanations:
+        consumed_inputs["gene_metadata"] = args.gene_metadata
+        input_roles["gene metadata"] = args.gene_metadata
+
     try:
+        all_managed_paths = {
+            f"workflow output {name}": output_dir / name
+            for name in MANAGED_OUTPUT_NAMES
+        }
+        ensure_distinct_paths(all_managed_paths, input_roles)
+        input_records = snapshot_inputs(consumed_inputs)
+        weights = load_lr_weights(args.lr_weights)
+        reference = load_reference(args.qc_reference)
         df = read_matrix(args.input, transpose=args.transpose)
+        qc = inspect_dataframe(
+            df,
+            weights,
+            threshold=args.threshold,
+            expected_class=args.expected_class,
+            reference=reference,
+        )
     except ValueError as exc:
         parser.error(str(exc))
 
-    qc = inspect_dataframe(df, weights, threshold=args.threshold,
-                           expected_class=args.expected_class, reference=reference)
-    write_json(qc, paths["qc_json"], sort_keys=True)
-
     if qc["status"] == "FAIL" and not args.allow_qc_fail:
+        outputs = {
+            "qc_json": paths["qc_json"].name,
+            "report_md": paths["report_md"].name,
+            "manifest_json": paths["manifest_json"].name,
+        }
         manifest = {
             "status": "stopped_after_qc_fail",
             "input": args.input,
-            "outputs": {"qc_json": paths["qc_json"].name},
             "qc_status": qc["status"],
         }
-        write_json(manifest, paths["manifest_json"], sort_keys=True)
-        report = build_report(args.input, qc, None,
-                              {"qc_json": paths["qc_json"].name,
-                               "manifest_json": paths["manifest_json"].name})
-        paths["report_md"].write_text(report, encoding="utf-8")
+        report = build_report(args.input, qc, None, outputs)
+        try:
+            with staged_generation(output_dir) as stage:
+                write_json(qc, stage / outputs["qc_json"], sort_keys=True)
+                write_text(stage / outputs["report_md"], report)
+                publish_generation(
+                    stage, output_dir, manifest, outputs, input_records
+                )
+        except (ValueError, RuntimeError) as exc:
+            parser.error(str(exc))
         print(f"[workflow] QC status=FAIL; wrote {paths['qc_json']}")
         print("[workflow] stopped before scoring; pass --allow-qc-fail to continue")
         return 1
 
-    scores, n_matched, missing, alignment_report = score_dataframe_lr_weights(
-        df,
-        weights,
-        args.threshold,
-        allow_invalid_values=True,
-        return_alignment_report=True,
-    )
+    try:
+        scores, n_matched, missing, alignment_report = score_dataframe_lr_weights(
+            df,
+            weights,
+            args.threshold,
+            allow_invalid_values=True,
+            allow_low_gene_coverage=True,
+            return_alignment_report=True,
+        )
+    except ValueError as exc:
+        parser.error(str(exc))
     print_invalid_alignment_summary(alignment_report, sys.stderr)
     alignment_issues = validate_alignment_report(
         alignment_report,
         max_invalid_cell_fraction=args.max_invalid_cell_fraction,
     )
     if alignment_issues and not args.allow_invalid_values:
+        outputs = {
+            "qc_json": paths["qc_json"].name,
+            "report_md": paths["report_md"].name,
+            "manifest_json": paths["manifest_json"].name,
+        }
         manifest = {
             "status": "stopped_after_invalid_input",
             "input": args.input,
-            "outputs": {"qc_json": paths["qc_json"].name},
             "qc_status": qc["status"],
             "alignment": {
                 "invalid_matched_cells": int(alignment_report["invalid_matched_cells"]),
@@ -307,16 +568,22 @@ def main(argv=None):
                 ],
             },
         }
-        write_json(manifest, paths["manifest_json"], sort_keys=True)
         report = build_report(
             args.input,
             qc,
             None,
-            {"qc_json": paths["qc_json"].name,
-             "manifest_json": paths["manifest_json"].name},
+            outputs,
             stop_reason="invalid matched expression values",
         )
-        paths["report_md"].write_text(report, encoding="utf-8")
+        try:
+            with staged_generation(output_dir) as stage:
+                write_json(qc, stage / outputs["qc_json"], sort_keys=True)
+                write_text(stage / outputs["report_md"], report)
+                publish_generation(
+                    stage, output_dir, manifest, outputs, input_records
+                )
+        except (ValueError, RuntimeError) as exc:
+            parser.error(str(exc))
         for issue in alignment_issues:
             print(f"[workflow] ERROR: {issue}", file=sys.stderr)
         print(
@@ -328,81 +595,133 @@ def main(argv=None):
     if alignment_issues:
         for issue in alignment_issues:
             print(f"[workflow] WARNING: {issue}", file=sys.stderr)
-    scores.to_csv(paths["scores_csv"], index=False)
-
-    calibration_summary = None
-    if args.labels:
-        try:
-            threshold_metrics, calibration_summary = calibration_from_labels(
-                paths["scores_csv"], args.labels, args.sample_column, args.label_column,
-                args.threshold, args.extra_threshold, args.min_match_fraction
-            )
-        except ValueError as exc:
-            calibration_error = str(exc)
-            for rel in ["thresholds_csv", "calibration_json", "explanations_csv"]:
-                if rel in paths:
-                    remove_if_exists(paths[rel])
-            manifest = {
-                "status": "stopped_after_calibration_error",
-                "input": args.input,
-                "labels": args.labels,
-                "outputs": {
-                    "qc_json": paths["qc_json"].name,
-                    "scores_csv": paths["scores_csv"].name,
-                },
-                "qc_status": qc["status"],
-                "calibration_error": calibration_error,
-            }
-            write_json(manifest, paths["manifest_json"], sort_keys=True)
-            report = build_report(
-                args.input,
-                qc,
-                scores,
-                {"qc_json": paths["qc_json"].name,
-                 "scores_csv": paths["scores_csv"].name,
-                 "manifest_json": paths["manifest_json"].name},
-                calibration_error=calibration_error,
-            )
-            paths["report_md"].write_text(report, encoding="utf-8")
-            print(f"[workflow] ERROR: calibration failed: {calibration_error}", file=sys.stderr)
-            print("[workflow] stopped after writing scores; fix labels and rerun", file=sys.stderr)
-            return 1
-        threshold_metrics.to_csv(paths["thresholds_csv"], index=False)
-        write_json(calibration_summary, paths["calibration_json"], sort_keys=True)
-
+    explanations = None
     explanations_rows = None
     if not args.skip_explanations:
-        gene_names = load_gene_metadata(args.gene_metadata)
-        explanations, _, _ = explain_dataframe(df, weights, args.top_n, gene_names)
-        explanations.to_csv(paths["explanations_csv"], index=False)
-        explanations_rows = int(len(explanations))
+        try:
+            gene_names = load_gene_metadata(args.gene_metadata)
+            explanations, _, _ = explain_dataframe(df, weights, args.top_n, gene_names)
+            explanations_rows = int(len(explanations))
+        except ValueError as exc:
+            parser.error(str(exc))
 
-    out_files = {name: path.name for name, path in paths.items()}
-    report = build_report(args.input, qc, scores, out_files, calibration_summary,
-                          explanations_rows)
-    paths["report_md"].write_text(report, encoding="utf-8")
+    calibration_summary = None
+    calibration_error = None
+    try:
+        with staged_generation(output_dir) as stage:
+            write_json(qc, stage / paths["qc_json"].name, sort_keys=True)
+            write_dataframe_csv(scores, stage / paths["scores_csv"].name, index=False)
 
-    manifest = {
-        "status": "complete",
-        "input": args.input,
-        "threshold": args.threshold,
-        "samples": int(df.shape[0]),
-        "input_genes": int(df.shape[1]),
-        "matched_model_genes": int(n_matched),
-        "missing_model_genes": int(len(missing)),
-        "qc_status": qc["status"],
-        "tumor_calls": int((scores["call"] == "tumor").sum()),
-        "normal_calls": int((scores["call"] == "normal").sum()),
-        "labels": args.labels,
-        "calibration": calibration_summary,
-        "outputs": out_files,
-    }
-    write_json(manifest, paths["manifest_json"], sort_keys=True)
+            if args.labels:
+                try:
+                    threshold_metrics, calibration_summary = calibration_from_labels(
+                        stage / paths["scores_csv"].name,
+                        args.labels,
+                        args.sample_column,
+                        args.label_column,
+                        args.threshold,
+                        args.extra_threshold,
+                        args.min_match_fraction,
+                    )
+                except ValueError as exc:
+                    calibration_error = str(exc)
+
+            if calibration_error is not None:
+                outputs = {
+                    "qc_json": paths["qc_json"].name,
+                    "scores_csv": paths["scores_csv"].name,
+                    "report_md": paths["report_md"].name,
+                    "manifest_json": paths["manifest_json"].name,
+                }
+                manifest = {
+                    "status": "stopped_after_calibration_error",
+                    "input": args.input,
+                    "labels": args.labels,
+                    "qc_status": qc["status"],
+                    "calibration_error": calibration_error,
+                }
+                report = build_report(
+                    args.input,
+                    qc,
+                    scores,
+                    outputs,
+                    calibration_error=calibration_error,
+                )
+                write_text(stage / outputs["report_md"], report)
+                manifest = publish_generation(
+                    stage, output_dir, manifest, outputs, input_records
+                )
+            else:
+                if args.labels:
+                    write_dataframe_csv(
+                        threshold_metrics,
+                        stage / paths["thresholds_csv"].name,
+                        index=False,
+                    )
+                    write_json(
+                        calibration_summary,
+                        stage / paths["calibration_json"].name,
+                        sort_keys=True,
+                    )
+
+                if explanations is not None:
+                    write_dataframe_csv(
+                        explanations,
+                        stage / paths["explanations_csv"].name,
+                        index=False,
+                    )
+
+                out_files = {name: path.name for name, path in paths.items()}
+                report = build_report(
+                    args.input,
+                    qc,
+                    scores,
+                    out_files,
+                    calibration_summary,
+                    explanations_rows,
+                )
+                manifest = {
+                    "status": "complete",
+                    "input": args.input,
+                    "threshold": args.threshold,
+                    "samples": int(df.shape[0]),
+                    "input_genes": int(df.shape[1]),
+                    "matched_model_genes": int(n_matched),
+                    "missing_model_genes": int(len(missing)),
+                    "qc_status": qc["status"],
+                    "tumor_calls": int((scores["call"] == "tumor").sum()),
+                    "normal_calls": int((scores["call"] == "normal").sum()),
+                    "labels": args.labels,
+                    "calibration": calibration_summary,
+                }
+                write_text(stage / paths["report_md"].name, report)
+                manifest = publish_generation(
+                    stage, output_dir, manifest, out_files, input_records
+                )
+    except (ValueError, RuntimeError) as exc:
+        parser.error(str(exc))
+
+    if calibration_error is not None:
+        print(
+            f"[workflow] ERROR: calibration failed: {calibration_error}",
+            file=sys.stderr,
+        )
+        print(
+            "[workflow] stopped after writing scores; fix labels and rerun",
+            file=sys.stderr,
+        )
+        return 1
 
     print(f"[workflow] QC status={qc['status']}; matched {n_matched}/{len(weights['selected_genes'])} model genes")
     print(f"[workflow] wrote {paths['scores_csv']} ({manifest['tumor_calls']} tumor / {manifest['normal_calls']} normal)")
     if calibration_summary:
         print(f"[workflow] recommended threshold={calibration_summary['recommended_threshold']:.6f}")
+        print(
+            "[workflow] NOTE: calibration metrics are apparent/resubstitution estimates",
+            file=sys.stderr,
+        )
+        for warning in calibration_summary.get("warnings", []):
+            print(f"[workflow] WARNING: {warning}", file=sys.stderr)
     if explanations_rows is not None:
         print(f"[workflow] wrote {paths['explanations_csv']} ({explanations_rows} rows)")
     print(f"[workflow] wrote {paths['report_md']}")

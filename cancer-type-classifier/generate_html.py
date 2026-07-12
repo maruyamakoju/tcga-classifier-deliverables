@@ -34,7 +34,7 @@ def heatmap():
     n = len(ORDER); cell = 27; padL = 52; padT = 60
     W = padL + n*cell + 14; H = padT + n*cell + 40
     s = [f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="confusion matrix">']
-    s.append(f'<text x="{padL}" y="18" class="ttl">Confusion matrix (patient-held-out, row-normalized)</text>')
+    s.append(f'<text x="{padL}" y="18" class="ttl">Confusion matrix (patient-grouped OOF)</text>')
     s.append(f'<text x="{padL}" y="34" class="sub">rows = true type, columns = predicted; number = sample count. Types ordered to group related tissues.</text>')
     for i, tr in enumerate(ORDER):
         rowtot = sum(cm[tr].values()) or 1
@@ -61,8 +61,8 @@ def f1bars():
     W=560; rowh=20; padL=54; padT=44; H=padT+len(items)*rowh+10
     barW=W-padL-70
     s=[f'<svg viewBox="0 0 {W} {H}" width="100%" role="img" aria-label="per-type F1">']
-    s.append(f'<text x="{padL}" y="18" class="ttl">Per-type F1 (patient-held-out)</text>')
-    s.append(f'<text x="{padL}" y="33" class="sub">READ collapses into COAD (colorectal = one disease); unique-marker tissues are perfect.</text>')
+    s.append(f'<text x="{padL}" y="18" class="ttl">Per-type F1 (patient-grouped OOF)</text>')
+    s.append(f'<text x="{padL}" y="33" class="sub">READ is often predicted as COAD; small classes have uncertain estimates.</text>')
     for i,t in enumerate(items):
         f1=float(per[t]["f1"]); y=padT+i*rowh
         col=rgb(lerp((232,89,12),(47,109,246), f1))  # low=orange, high=blue
@@ -73,10 +73,10 @@ def f1bars():
     s.append('</svg>')
     return "".join(s)
 
-tiles=[("Accuracy", f'{summ["accuracy"]:.3f}', DIAG, "patient-held-out"),
+tiles=[("Accuracy", f'{summ["accuracy"]:.3f}', DIAG, "patient-grouped OOF"),
        ("Balanced accuracy", f'{summ["balanced_accuracy"]:.3f}', INK, "mean over 17 types"),
        ("Macro F1", f'{summ["macro_f1"]:.3f}', INK, "unweighted"),
-       ("Perfect types", "THCA, PRAD", "#12b886", "F1 = 1.00")]
+       ("F1 = 1.00", "THCA, PRAD", "#12b886", "internal OOF estimate")]
 tile_html="".join(f'<div class="tile"><div class="tl">{html.escape(t)}</div>'
     f'<div class="tv" style="color:{c}">{html.escape(v)}</div><div class="tc">{html.escape(cap)}</div></div>'
     for t,v,c,cap in tiles)
@@ -103,19 +103,22 @@ h1{{font-size:23px;margin:0 0 6px}} .lede{{color:var(--mut);margin:0 0 24px}}
 </style></head><body><div class="wrap">
 <h1>TCGA cancer-type (tissue-of-origin) classifier</h1>
 <p class="lede">Multinomial logistic regression over 1,000 genes classifies a tumor's bulk RNA-seq
-profile into 17 TCGA cancer types. 1,440 tumors, 1,438 patients; evaluated patient-held-out.</p>
+profile into 17 TCGA cancer types. 1,440 tumors, 1,438 patients; evaluated by patient-grouped OOF.</p>
 <div class="tiles">{tile_html}</div>
 <div class="card">{heatmap()}</div>
-<div class="take"><b>The errors are biologically adjacent tissues, not noise.</b> The bright off-diagonal
-block is READ&rarr;COAD (15 of 20): rectal and colon cancer are one disease. Other confusions cluster
-within kidney (KIRC/KIRP/KICH), lung/squamous (LUAD/LUSC/HNSC), upper-GI (ESCA/STAD) and hepatobiliary (LIHC/CHOL).</div>
+<div class="take"><b>Error patterns are biologically plausible, not mechanistic proof.</b> The largest off-diagonal
+block is READ&rarr;COAD (15 of 20). Other confusions cluster within kidney, lung/squamous,
+upper-GI and hepatobiliary labels, but technical or cohort effects are not excluded.</div>
 <div class="card">{f1bars()}</div>
-<p class="note">Marker genes recover canonical tissue markers (THCA: TG/TPO/FOXE1; PRAD: ACP3/NKX3-1/KLK4;
-LIHC: SHBG/AMBP/GC; LUSC: SFTPB/SFTPA1), confirming genuine tissue-of-origin signal.
+<p class="note">Several coefficients agree with canonical tissue markers (THCA: TG/TPO/FOXE1; PRAD: ACP3/NKX3-1/KLK4;
+LIHC: SHBG/AMBP/GC; LUSC: SFTPB/SFTPA1). This is qualitative consistency, not causal proof.
 Score new samples: <code>python predict_cancer_type.py input.csv</code>. Pure-numpy model reproduces
 scikit-learn to max|&Delta;p|=1.5e-8. Generated 2026-07-06.</p>
 </div></body></html>"""
 
 out=os.path.join(HERE,"cancer_type_classifier.html")
-open(out,"w",encoding="ascii",errors="xmlcharrefreplace").write(DOC)
+with open(
+    out, "w", encoding="ascii", errors="xmlcharrefreplace", newline="\n"
+) as handle:
+    handle.write(DOC)
 print("wrote", out, len(DOC), "bytes")

@@ -1,0 +1,4 @@
+# One-time, isolated conversion environment for the trusted historical pickle.
+# Model fitting must use ../requirements-training.txt instead.
+numpy==2.4.1
+pandas==3.0.0

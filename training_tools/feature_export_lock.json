@@ -1,0 +1,55 @@
+{
+  "artifact": "canonical-tcga-feature-export",
+  "converter_environment": {
+    "implementation": "CPython",
+    "numpy": "2.4.1",
+    "pandas": "3.0.0",
+    "python": "3.13"
+  },
+  "outputs": {
+    "features_float32": {
+      "bytes": 128304128,
+      "dtype": "float32",
+      "path": "X_full.npy",
+      "sha256": "98d496ebc74e3d3edafed5086de3a67dcd5c6930906235863eb84717e1fb7192",
+      "shape": [
+        2160,
+        14850
+      ]
+    },
+    "features_float64": {
+      "bytes": 256608128,
+      "dtype": "float64",
+      "path": "X_full_float64.npy",
+      "sha256": "efd29041f224726167f424f587f428e545e3f265db690cead9c491491a86546c",
+      "shape": [
+        2160,
+        14850
+      ]
+    },
+    "genes": {
+      "bytes": 1069328,
+      "dtype": "<U18",
+      "path": "X_genes.npy",
+      "sha256": "7ed5aedcb6d063549292e57dc2023327c843cad025b2b1de848c3b77e6bdda9b",
+      "shape": [
+        14850
+      ]
+    },
+    "samples": {
+      "bytes": 311168,
+      "dtype": "<U36",
+      "path": "X_samples.npy",
+      "sha256": "8019783bf23720601485648b3e3b52abb589d10c796f2b34ee20f6d72808b202",
+      "shape": [
+        2160
+      ]
+    }
+  },
+  "schema_version": "1.0",
+  "source": {
+    "bytes": 257001891,
+    "path": "X_full_filtered.pkl",
+    "sha256": "418d7ddadd23a687b12402d7dce84b65c11981da4c14bbd5c1100568de96ae43"
+  }
+}

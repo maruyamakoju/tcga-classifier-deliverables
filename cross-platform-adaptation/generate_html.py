@@ -62,8 +62,8 @@ def getrow(cohort_sub, mode_sub):
 # Chart 1: Toil acc & specificity, deployed vs adapted
 toil_dep = getrow("Toil", "deployed"); toil_da = getrow("Toil", "z-score")
 c1 = bar_group(
-    "Foreign pipeline (TCGA-Toil/RSEM): default 0.5 threshold restored",
-    "n=200, 100 tumor / 100 normal. AUC unchanged (0.992 -> 0.994).",
+    "Historical TCGA-Toil/RSEM cohort: threshold behavior after adaptation",
+    "n=200, 100 tumor / 100 normal. Observed AUC 0.992 -> 0.994.",
     ["Accuracy @0.5", "Balanced acc", "1 - FPR (specificity)"],
     [("Deployed (no adaptation)", DEPLOY,
       [float(toil_dep["acc_at_0p5"]), float(toil_dep["balanced_acc"]), 1-float(toil_dep["FPR_at_0p5"])]),
@@ -86,7 +86,7 @@ gtex_fpr_dep = float(gtex_dep["FPR_at_0p5"]); gtex_fpr_da = float(gtex_da["FPR_a
 tiles = [
     ("Toil accuracy @0.5", "0.515 -> 0.935", ADAPT, "deployed -> adapted"),
     ("Toil specificity", "0.03 -> 0.89", GOOD, "true-normal recovery"),
-    ("Toil AUC", "0.992 -> 0.994", INK, "discrimination preserved"),
+    ("Toil AUC", "0.992 -> 0.994", INK, "historical observation"),
     ("GTEx normals FPR", f"{gtex_fpr_dep:.3f} -> {gtex_fpr_da:.3f}", BAD, "all-normal: only partial"),
 ]
 
@@ -98,7 +98,7 @@ tile_html = "\n".join(
 
 DOC = f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cross-platform calibration by cohort standardization</title>
+<title>Experimental cross-platform cohort standardization</title>
 <style>
 :root{{--ink:{INK};--mut:{MUT};--grid:{GRID};--bg:#ffffff;--card:#f7f9fc;--bd:#e3e8ef;}}
 @media (prefers-color-scheme:dark){{:root{{--ink:#e7ecf3;--mut:#9aa5b1;--grid:#2a3340;--bg:#0f141b;--card:#161d27;--bd:#28313d;}}}}
@@ -120,25 +120,27 @@ p{{margin:0 0 12px}} .note{{color:var(--mut);font-size:13px}}
 code{{background:var(--card);border:1px solid var(--bd);border-radius:5px;padding:1px 5px;font-size:13px}}
 .take{{border-left:3px solid {ADAPT};padding:6px 0 6px 14px;margin:16px 0}}
 </style></head><body><div class="wrap">
-<h1>Cross-platform calibration by label-free cohort standardization</h1>
-<p class="lede">The released GDC tumor-vs-normal model discriminates well on foreign RNA-seq
-pipelines but its 0.5 threshold breaks. Standardizing each gene on the input cohort's own
-statistics &mdash; no labels, no retraining &mdash; restores the threshold on mixed cohorts.</p>
+<h1>Experimental cross-platform cohort standardization</h1>
+<p class="lede">Historical benchmarks found severe threshold shift on foreign RNA-seq
+pipelines. Standardizing on the input cohort is a transductive, composition-dependent
+experiment &mdash; not probability calibration or a guarantee that threshold 0.5 transfers.</p>
 <div class="tiles">{tile_html}</div>
 <div class="card">{c1}</div>
-<div class="take"><b>On the Toil/RSEM pipeline, default-threshold accuracy rises from 0.515 to 0.935</b>
-(specificity 0.03 &rarr; 0.89) with AUC unchanged. The whole fix is per-gene recentering on the cohort.</div>
+<div class="take"><b>In the fixed historical Toil/RSEM cohort, accuracy changed from 0.515 to 0.935</b>
+(specificity 0.03 &rarr; 0.89). This retrospective observation is not independent validation on a new batch.</div>
 <div class="card">{c2}</div>
 <p class="note">Cohort standardization recenters on the cohort mean, so it needs an internal tumor/normal
-contrast. It is strong for mixed cohorts (&ge; ~0.9 balanced accuracy at 50&ndash;90% tumor) and weak for
+contrast. Results were stronger for mixed historical resamples and weak for
 near-pure cohorts: on the all-normal GTEx panel it only moves FPR from {gtex_fpr_dep:.3f} to {gtex_fpr_da:.3f}
-at 0.5. For near-single-class cohorts use a labeled-anchor recalibration instead.</p>
+at 0.5. Do not adapt near-single-class cohorts. Labeled calibration is still apparent until independently confirmed.</p>
 <p class="note">Reproduce: <code>python run_adaptation_benchmark.py</code> &nbsp;|&nbsp; Score:
 <code>python cohort_adapt_score.py input.csv --adapt cohort_zscore</code> &nbsp;|&nbsp;
 Frozen model reproduced to <code>max|&Delta;p| = 4.9e-7</code>. Generated 2026-07-05.</p>
 </div></body></html>"""
 
 out = os.path.join(HERE, "cross_platform_adaptation.html")
-with open(out, "w", encoding="ascii", errors="xmlcharrefreplace") as f:
+with open(
+    out, "w", encoding="ascii", errors="xmlcharrefreplace", newline="\n"
+) as f:
     f.write(DOC)
 print("wrote", out, len(DOC), "bytes")

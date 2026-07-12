@@ -1,0 +1,6 @@
+# Full development/test profile. The release-lite runtime remains defined by
+# requirements-light.txt and is tested independently in CI.
+-r requirements-external-validation.txt
+-r requirements-training.txt
+pytest>=8.3,<10
+ruff>=0.15,<0.16

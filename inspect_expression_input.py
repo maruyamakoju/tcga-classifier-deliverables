@@ -12,8 +12,14 @@ import sys
 
 import numpy as np
 
-from score_tumor_normal import load_lr_weights
-from tcga_rnaseq import read_matrix, validate_threshold, write_json
+from score_tumor_normal import _as_model, load_lr_weights
+from tcga_rnaseq import (
+    ensure_distinct_paths,
+    read_matrix,
+    validate_expression_matrix,
+    validate_threshold,
+    write_json,
+)
 from tcga_rnaseq.align import align_to_genes_with_report
 from tcga_rnaseq.score import predict_proba_from_aligned, standardize
 
@@ -57,12 +63,54 @@ def quantiles(values, probs):
 
 
 def load_reference(path):
-    if not path or not os.path.exists(path):
+    if not path:
         return {"rules": DEFAULT_RULES, "reference_source": "built-in heuristic rules"}
-    with open(path, "r", encoding="utf-8") as handle:
-        ref = json.load(handle)
+    if not os.path.exists(path):
+        raise ValueError(f"QC reference file not found: {path}")
+    if os.path.isdir(path):
+        raise ValueError(f"QC reference path is a directory: {path}")
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            ref = json.load(handle)
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        raise ValueError(f"could not read QC reference {path}: {exc}") from exc
+    if not isinstance(ref, dict):
+        raise ValueError("QC reference top-level value must be an object")
+    supplied_rules = ref.get("rules", {})
+    if not isinstance(supplied_rules, dict):
+        raise ValueError("QC reference rules must be an object")
+    unknown_rules = sorted(set(supplied_rules) - set(DEFAULT_RULES))
+    if unknown_rules:
+        raise ValueError(
+            "QC reference contains unknown rule keys: " + ", ".join(unknown_rules)
+        )
     rules = DEFAULT_RULES.copy()
-    rules.update(ref.get("rules", {}))
+    rules.update(supplied_rules)
+    for name in DEFAULT_RULES:
+        try:
+            value = float(rules[name])
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"QC rule {name!r} must be numeric") from exc
+        if not np.isfinite(value):
+            raise ValueError(f"QC rule {name!r} must be finite")
+        if value < 0:
+            raise ValueError(f"QC rule {name!r} must be non-negative")
+        if "fraction" in name or "match_rate" in name:
+            if value > 1:
+                raise ValueError(f"QC rule {name!r} must be between 0 and 1")
+        rules[name] = value
+    if rules["min_match_rate_fail"] > rules["min_match_rate_warn"]:
+        raise ValueError(
+            "QC min_match_rate_fail must not exceed min_match_rate_warn"
+        )
+    if rules["value_p99_warn_above"] > rules["value_p99_fail_above"]:
+        raise ValueError(
+            "QC value_p99_warn_above must not exceed value_p99_fail_above"
+        )
+    if rules["value_max_warn_above"] > rules["value_max_fail_above"]:
+        raise ValueError(
+            "QC value_max_warn_above must not exceed value_max_fail_above"
+        )
     ref["rules"] = rules
     return ref
 
@@ -73,13 +121,11 @@ def add_message(messages, level, code, text):
 
 def inspect_dataframe(df, weights, threshold=0.5, expected_class="unknown",
                       reference=None):
-    selected_genes = weights["selected_genes"]
-    mean = np.asarray(weights["scaler_mean"], dtype=float)
-    scale = np.asarray(weights["scaler_scale"], dtype=float)
-    coef = weights["coef"]
-    intercept = weights["intercept"]
-    model = {"genes": selected_genes, "mean": mean, "scale": scale,
-             "coef": coef, "intercept": intercept, "kind": "binary"}
+    threshold = validate_threshold(threshold)
+    df = validate_expression_matrix(df)
+    model = _as_model(weights)
+    selected_genes = model["genes"]
+    mean = model["mean"]
     reference = reference or {"rules": DEFAULT_RULES}
     rules = reference.get("rules", DEFAULT_RULES)
     messages = []
@@ -270,16 +316,25 @@ def main(argv=None):
     except ValueError as exc:
         parser.error(str(exc))
 
-    weights = load_lr_weights(args.lr_weights)
-    reference = load_reference(args.qc_reference)
+    out = args.output or (os.path.splitext(args.input)[0] + ".qc.json")
     try:
+        ensure_distinct_paths(
+            {"QC JSON output": out},
+            {
+                "expression input": args.input,
+                "LR weights": args.lr_weights,
+                "QC reference": args.qc_reference,
+            },
+        )
+        weights = load_lr_weights(args.lr_weights)
+        reference = load_reference(args.qc_reference)
         df = read_matrix(args.input, transpose=args.transpose)
+        report = inspect_dataframe(
+            df, weights, args.threshold, args.expected_class, reference
+        )
+        write_json(report, out, sort_keys=True)
     except ValueError as exc:
         parser.error(str(exc))
-    report = inspect_dataframe(df, weights, args.threshold, args.expected_class, reference)
-
-    out = args.output or (os.path.splitext(args.input)[0] + ".qc.json")
-    write_json(report, out, sort_keys=True)
     print_human_summary(report, out)
 
     if report["status"] == "FAIL" or (args.strict and report["status"] == "WARN"):

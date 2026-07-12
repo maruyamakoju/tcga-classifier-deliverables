@@ -7,17 +7,21 @@ import sys
 import numpy as np
 import pandas as pd
 
-from score_tumor_normal import load_lr_weights
+from score_tumor_normal import _as_model, load_lr_weights
 from tcga_rnaseq import (
     align_to_genes_with_report,
+    ensure_distinct_paths,
     print_invalid_alignment_summary,
+    read_csv_table,
     read_matrix,
     sigmoid,
     standardize,
     strip_version,
     validate_alignment_report,
+    validate_expression_matrix,
     validate_gene_match_report,
     validate_threshold,
+    write_dataframe_csv,
 )
 
 
@@ -29,44 +33,87 @@ EXPLANATION_COLUMNS = [
 
 
 def load_gene_metadata(path):
-    if not path or not os.path.exists(path):
+    if not path:
         return {}
-    df = pd.read_csv(path)
+    df = read_csv_table(path, string_columns=("gene_id", "gene_id_base", "gene_name"))
+    required = {"gene_id", "gene_id_base", "gene_name"}
+    missing = sorted(required - set(df.columns))
+    if missing:
+        raise ValueError(
+            "gene metadata CSV is missing required columns: " + ", ".join(missing)
+        )
     out = {}
     for row in df.itertuples(index=False):
         name = getattr(row, "gene_name", "")
-        out[str(row.gene_id)] = name if isinstance(name, str) else ""
-        out[str(row.gene_id_base)] = out[str(row.gene_id)]
+        gene_id = str(row.gene_id)
+        gene_base = str(row.gene_id_base)
+        if (
+            not gene_id
+            or not gene_base
+            or gene_id != gene_id.strip()
+            or gene_base != gene_base.strip()
+        ):
+            raise ValueError(
+                "gene metadata gene_id/gene_id_base values must be non-empty and unpadded"
+            )
+        gene_name = name if isinstance(name, str) else ""
+        for key in (gene_id, gene_base):
+            if key in out and out[key] != gene_name:
+                raise ValueError(f"gene metadata contains conflicting rows for {key}")
+            out[key] = gene_name
     return out
 
 
 def explain_dataframe(df, weights, top_n, gene_names=None, return_alignment_report=False):
-    genes = weights["selected_genes"]
-    mean = weights["scaler_mean"]
-    scale = weights["scaler_scale"]
-    coef = weights["coef"]
-    intercept = weights["intercept"]
+    if top_n < 1:
+        raise ValueError("top_n must be >= 1")
+    df = validate_expression_matrix(df)
+    model = _as_model(weights)
+    genes = model["genes"]
+    mean = model["mean"]
+    scale = model["scale"]
+    coef = model["coef"]
+    intercept = model["intercept"]
     gene_names = gene_names or {}
 
     X, alignment_report = align_to_genes_with_report(df, genes, mean)
     n_matched = alignment_report["n_matched_genes"]
     missing = alignment_report["missing_genes"]
-    X_scaled = standardize(X, {"mean": mean, "scale": scale})
-    contributions = X_scaled * coef
-    logits = contributions.sum(axis=1) + intercept
+    try:
+        with np.errstate(over="raise", invalid="raise", divide="raise"):
+            X_scaled = standardize(X, {"mean": mean, "scale": scale})
+            contributions = X_scaled * coef
+            logits = contributions.sum(axis=1) + intercept
+    except FloatingPointError as exc:
+        raise ValueError(f"numeric overflow while explaining model scores: {exc}") from exc
+    if not np.all(np.isfinite(contributions)) or not np.all(np.isfinite(logits)):
+        raise ValueError("model explanation contributions/logits are non-finite")
     probabilities = sigmoid(logits)
+    if not np.all(np.isfinite(probabilities)):
+        raise ValueError("model explanation scores are non-finite")
 
     rows = []
     for i, sample in enumerate(df.index):
         contrib = contributions[i]
-        top_tumor = np.argsort(contrib)[::-1][:top_n]
-        top_normal = np.argsort(contrib)[:top_n]
+        # `direction` is a semantic promise, not merely a rank-group name:
+        # only positive contributions push toward tumor and only negative
+        # contributions push toward normal.  Stable gene-ID tie-breaking keeps
+        # reports reproducible across NumPy versions.
+        gene_text = np.asarray(genes, dtype=str)
+        positive = np.flatnonzero(contrib > 0)
+        negative = np.flatnonzero(contrib < 0)
+        top_tumor = positive[
+            np.lexsort((gene_text[positive], -contrib[positive]))
+        ][:top_n]
+        top_normal = negative[
+            np.lexsort((gene_text[negative], contrib[negative]))
+        ][:top_n]
         for direction, indices in [("tumor", top_tumor), ("normal", top_normal)]:
             for rank, j in enumerate(indices, start=1):
                 gene = genes[j]
                 rows.append({
                     "sample": sample,
-                    "tumor_probability": round(float(probabilities[i]), 6),
+                    "tumor_probability": float(probabilities[i]),
                     "logit": float(logits[i]),
                     "direction": direction,
                     "rank": rank,
@@ -116,19 +163,28 @@ def main(argv=None):
     except ValueError as exc:
         parser.error(str(exc))
 
-    weights = load_lr_weights(args.lr_weights)
+    out = args.output or (os.path.splitext(args.input)[0] + ".explanations.csv")
     try:
+        ensure_distinct_paths(
+            {"explanations output": out},
+            {
+                "expression input": args.input,
+                "LR weights": args.lr_weights,
+                "gene metadata": args.gene_metadata,
+            },
+        )
+        weights = load_lr_weights(args.lr_weights)
         df = read_matrix(args.input, transpose=args.transpose)
+        gene_names = load_gene_metadata(args.gene_metadata)
+        explanations, n_matched, missing, alignment_report = explain_dataframe(
+            df,
+            weights,
+            args.top_n,
+            gene_names,
+            return_alignment_report=True,
+        )
     except ValueError as exc:
         parser.error(str(exc))
-    gene_names = load_gene_metadata(args.gene_metadata)
-    explanations, n_matched, missing, alignment_report = explain_dataframe(
-        df,
-        weights,
-        args.top_n,
-        gene_names,
-        return_alignment_report=True,
-    )
 
     print(f"[explain] {df.shape[0]} samples; matched {n_matched}/{len(weights['selected_genes'])} "
           f"model genes ({len(missing)} filled with training mean)", file=sys.stderr)
@@ -167,8 +223,10 @@ def main(argv=None):
         for issue in alignment_issues:
             print(f"[explain] WARNING: {issue}", file=sys.stderr)
 
-    out = args.output or (os.path.splitext(args.input)[0] + ".explanations.csv")
-    explanations.to_csv(out, index=False)
+    try:
+        write_dataframe_csv(explanations, out, index=False)
+    except ValueError as exc:
+        parser.error(str(exc))
     print(f"[explain] wrote {out}", file=sys.stderr)
     return 0
 

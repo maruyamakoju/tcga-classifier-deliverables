@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cross-platform calibration by cohort standardization</title>
+<title>Experimental cross-platform cohort standardization</title>
 <style>
 :root{--ink:#1f2933;--mut:#8a94a6;--grid:#e3e8ef;--bg:#ffffff;--card:#f7f9fc;--bd:#e3e8ef;}
 @media (prefers-color-scheme:dark){:root{--ink:#e7ecf3;--mut:#9aa5b1;--grid:#2a3340;--bg:#0f141b;--card:#161d27;--bd:#28313d;}}
@@ -22,17 +22,17 @@ p{margin:0 0 12px} .note{color:var(--mut);font-size:13px}
 code{background:var(--card);border:1px solid var(--bd);border-radius:5px;padding:1px 5px;font-size:13px}
 .take{border-left:3px solid #2f6df6;padding:6px 0 6px 14px;margin:16px 0}
 </style></head><body><div class="wrap">
-<h1>Cross-platform calibration by label-free cohort standardization</h1>
-<p class="lede">The released GDC tumor-vs-normal model discriminates well on foreign RNA-seq
-pipelines but its 0.5 threshold breaks. Standardizing each gene on the input cohort's own
-statistics &mdash; no labels, no retraining &mdash; restores the threshold on mixed cohorts.</p>
+<h1>Experimental cross-platform cohort standardization</h1>
+<p class="lede">Historical benchmarks found severe threshold shift on foreign RNA-seq
+pipelines. Standardizing on the input cohort is a transductive, composition-dependent
+experiment &mdash; not probability calibration or a guarantee that threshold 0.5 transfers.</p>
 <div class="tiles"><div class="tile"><div class="tl">Toil accuracy @0.5</div><div class="tv" style="color:#2f6df6">0.515 -&gt; 0.935</div><div class="tc">deployed -&gt; adapted</div></div>
 <div class="tile"><div class="tl">Toil specificity</div><div class="tv" style="color:#12b886">0.03 -&gt; 0.89</div><div class="tc">true-normal recovery</div></div>
-<div class="tile"><div class="tl">Toil AUC</div><div class="tv" style="color:#1f2933">0.992 -&gt; 0.994</div><div class="tc">discrimination preserved</div></div>
+<div class="tile"><div class="tl">Toil AUC</div><div class="tv" style="color:#1f2933">0.992 -&gt; 0.994</div><div class="tc">historical observation</div></div>
 <div class="tile"><div class="tl">GTEx normals FPR</div><div class="tv" style="color:#e8590c">0.996 -&gt; 0.915</div><div class="tc">all-normal: only partial</div></div></div>
-<div class="card"><svg viewBox="0 0 560 300" width="100%" role="img" aria-label="Foreign pipeline (TCGA-Toil/RSEM): default 0.5 threshold restored">
-<text x="48" y="20" class="ttl">Foreign pipeline (TCGA-Toil/RSEM): default 0.5 threshold restored</text>
-<text x="48" y="36" class="sub">n=200, 100 tumor / 100 normal. AUC unchanged (0.992 -&gt; 0.994).</text>
+<div class="card"><svg viewBox="0 0 560 300" width="100%" role="img" aria-label="Historical TCGA-Toil/RSEM cohort: threshold behavior after adaptation">
+<text x="48" y="20" class="ttl">Historical TCGA-Toil/RSEM cohort: threshold behavior after adaptation</text>
+<text x="48" y="36" class="sub">n=200, 100 tumor / 100 normal. Observed AUC 0.992 -&gt; 0.994.</text>
 <line x1="48" y1="242.0" x2="544" y2="242.0" class="grid"/>
 <text x="42" y="245.0" class="axl" text-anchor="end">0.00</text>
 <line x1="48" y1="193.0" x2="544" y2="193.0" class="grid"/>
@@ -63,8 +63,8 @@ statistics &mdash; no labels, no retraining &mdash; restores the threshold on mi
 <rect x="246" y="282" width="11" height="11" rx="2" fill="#2f6df6"/>
 <text x="262" y="292" class="leg">Cohort standardization</text>
 </svg></div>
-<div class="take"><b>On the Toil/RSEM pipeline, default-threshold accuracy rises from 0.515 to 0.935</b>
-(specificity 0.03 &rarr; 0.89) with AUC unchanged. The whole fix is per-gene recentering on the cohort.</div>
+<div class="take"><b>In the fixed historical Toil/RSEM cohort, accuracy changed from 0.515 to 0.935</b>
+(specificity 0.03 &rarr; 0.89). This retrospective observation is not independent validation on a new batch.</div>
 <div class="card"><svg viewBox="0 0 560 300" width="100%" role="img" aria-label="Threshold recovery depends on cohort composition">
 <text x="48" y="20" class="ttl">Threshold recovery depends on cohort composition</text>
 <text x="48" y="36" class="sub">Toil resampled to each tumor fraction; balanced accuracy at 0.5 (AUC stays ~0.995 throughout).</text>
@@ -109,9 +109,9 @@ statistics &mdash; no labels, no retraining &mdash; restores the threshold on mi
 <text x="150" y="292" class="leg">Cohort standardization</text>
 </svg></div>
 <p class="note">Cohort standardization recenters on the cohort mean, so it needs an internal tumor/normal
-contrast. It is strong for mixed cohorts (&ge; ~0.9 balanced accuracy at 50&ndash;90% tumor) and weak for
+contrast. Results were stronger for mixed historical resamples and weak for
 near-pure cohorts: on the all-normal GTEx panel it only moves FPR from 0.996 to 0.915
-at 0.5. For near-single-class cohorts use a labeled-anchor recalibration instead.</p>
+at 0.5. Do not adapt near-single-class cohorts. Labeled calibration is still apparent until independently confirmed.</p>
 <p class="note">Reproduce: <code>python run_adaptation_benchmark.py</code> &nbsp;|&nbsp; Score:
 <code>python cohort_adapt_score.py input.csv --adapt cohort_zscore</code> &nbsp;|&nbsp;
 Frozen model reproduced to <code>max|&Delta;p| = 4.9e-7</code>. Generated 2026-07-05.</p>

@@ -10,6 +10,7 @@ from pathlib import Path
 from tcga_rnaseq import write_json
 
 ROOT = Path(__file__).resolve().parent
+MIN_PYTHON = (3, 11)
 
 REQUIRED_FILES = [
     "audit_release_docs.py",
@@ -60,9 +61,9 @@ def add_message(messages, level, code, text):
 
 def check_python(messages):
     version = tuple(sys.version_info[:3])
-    if version < (3, 9):
+    if version < MIN_PYTHON:
         add_message(messages, "ERROR", "python_too_old",
-                    f"Python {version[0]}.{version[1]} detected; use Python >=3.9.")
+                    f"Python {version[0]}.{version[1]} detected; use Python >=3.11.")
     return {
         "executable": sys.executable,
         "version": ".".join(str(x) for x in version),

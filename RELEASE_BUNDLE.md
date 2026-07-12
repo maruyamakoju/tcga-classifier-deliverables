@@ -1,12 +1,17 @@
 # Release-lite bundle
 
 This folder is the lightweight deployment bundle for the TCGA/GDC tumor-vs-normal classifier.
+Lightweight scoring supports Python 3.11 or newer (CI exercises 3.11 and 3.13).
+Exact model refitting is a full-tree workflow pinned to Python 3.11 and is not
+part of the lite bundle.
 
-Release: `v1.1.22-gdc-starcounts` (`2026-07-10`)
+Release: `v2.0.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 ## Contents
 
 - `score_tumor_normal.py`: default pure NumPy LR scorer.
+- `cohort_adapt_score.py`: scoring with adaptation disabled by default and
+  explicit experimental adapted modes.
 - `deployable_lr_weights.npz`: model genes, scaler, coefficients, and intercept.
 - `EXECUTIVE_SUMMARY.md`: short handoff summary.
 - `USER_GUIDE.md`: practical input preparation and QC interpretation guide.
@@ -45,7 +50,7 @@ In the full deliverables folder, regenerate this bundle with:
 
 ```bash
 python build_release_lite.py --smoke
-python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
+python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip --expected-sha256 <trusted-published-sha256>
 ```
 
 ## Quick start
@@ -58,7 +63,7 @@ python audit_cli_entrypoints.py
 python audit_release_docs.py
 python validate_output_contracts.py
 python run_release_acceptance.py
-python validate_zip_bundle.py ../tcga-tumor-normal-release-lite.zip
+python validate_zip_bundle.py ../tcga-tumor-normal-release-lite.zip --expected-sha256 <trusted-published-sha256>
 python run_smoke_tests.py
 python run_safety_tests.py
 python run_tumor_normal_workflow.py example_input.csv --labels example_labels.csv
@@ -69,4 +74,19 @@ python explain_scores.py example_input.csv --top-n 5
 
 ## Boundary
 
-Use this bundle for GDC STAR-Counts-style log2(TPM+1) matrices. Do not use it for direct hard calls on Toil/RSEM/GTEx/GEO-style matrices without refitting or pipeline-specific threshold calibration.
+Use this bundle for GDC STAR-Counts-style log2(TPM+1) matrices. Do not use it
+for direct hard calls on Toil/RSEM/GTEx/GEO-style matrices without refitting or
+pipeline-specific threshold calibration. `tumor_probability` is a model
+logistic score, not clinical risk or a calibrated diagnostic probability.
+
+Adaptation defaults to `none`. Adapted modes are explicit, transductive and
+composition-dependent opt-ins, require at least 20 samples by default, and
+produce scores that cannot be compared across separately adapted batches.
+Calibration metrics are same-sample apparent/resubstitution estimates. The
+committed external metrics are historical; v2.0.0 adds locked cohorts and
+cache/run provenance but has no post-fix live-network rerun.
+
+Never extract or execute a downloaded ZIP based only on its filename. Supply a
+trusted published digest with `--expected-sha256`; if no trusted digest is
+available, `--skip-acceptance` performs structural inspection without
+extracting or running archive content.

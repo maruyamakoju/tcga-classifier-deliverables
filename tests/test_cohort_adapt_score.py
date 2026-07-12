@@ -21,16 +21,7 @@ def write_tiny_binary_model(path, coef=1.0, intercept=0.0):
 
 
 def test_metrics_use_raw_probability_not_rounded_call_boundary(tmp_path, capsys):
-    """A sample whose raw probability rounds across the threshold must still
-    be scored consistently between the 'call' column and the metrics dict.
-
-    Regression test: score_binary_dataframe derives `call` from the raw
-    (unrounded) probability, but rounds `tumor_probability` to 6 decimals for
-    display. cohort_adapt_score.py used to recompute metrics by
-    re-thresholding that *rounded* column, which could disagree with `call`
-    for a probability that rounds across the threshold (e.g. 0.4999995 -> a
-    true "normal" call, but round(.., 6) == 0.5 >= 0.5 threshold => "tumor").
-    """
+    """The serialized score and metrics retain the raw call-boundary value."""
     weights_path = tmp_path / "weights.npz"
     write_tiny_binary_model(weights_path)
 
@@ -64,15 +55,13 @@ def test_metrics_use_raw_probability_not_rounded_call_boundary(tmp_path, capsys)
 
     out_df = pd.read_csv(out_csv).set_index("sample")
     assert out_df.loc["sample_a", "call"] == "normal"
-    assert out_df.loc["sample_a", "tumor_probability"] == pytest.approx(0.5)
+    assert out_df.loc["sample_a", "tumor_probability"] == pytest.approx(0.4999995)
     assert out_df.loc["sample_b", "call"] == "tumor"
 
     report = json.loads(capsys.readouterr().out)
     assert report["normal_calls"] == 1
     assert report["tumor_calls"] == 1
-    # sample_a's rounded probability lands exactly on the threshold, but its
-    # raw probability is < 0.5 and its call is "normal" -- metrics must not
-    # score it as a false positive just because the *displayed* probability
-    # rounds up to the threshold.
+    # sample_a remains below the threshold in both memory and the CSV, so the
+    # public score/call invariant and the reported metrics agree.
     assert report["metrics"]["specificity"] == 1.0
     assert report["metrics"]["accuracy"] == 1.0

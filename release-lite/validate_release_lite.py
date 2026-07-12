@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the lightweight release bundle and optional zip archive."""
+"""Validate the lightweight release directory, canonical ZIP, and sidecar."""
 import argparse
 import hashlib
 import json
@@ -7,14 +7,27 @@ import os
 import subprocess
 import sys
 import zipfile
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 
 from release_tools.common import (
+    DEFAULT_MAX_ZIP_ARCHIVE_BYTES,
+    DEFAULT_MAX_ZIP_COMPRESSION_RATIO,
+    DEFAULT_MAX_ZIP_ENTRIES,
+    DEFAULT_MAX_ZIP_MEMBER_BYTES,
+    DEFAULT_MAX_ZIP_TOTAL_BYTES,
     FORBIDDEN_NAMES,
     RELEASE_BUNDLE_NAME,
     RELEASE_FILES,
+    RELEASE_SCHEMA_VERSION,
+    RELEASE_VALIDATION_COMMAND,
     RELEASE_ZIP_NAME,
+    ZIP_ACCEPTANCE_COMMAND,
+    canonical_zip_datetime,
+    canonical_zip_errors,
+    normalize_release_path,
+    release_path_collision_key,
     sha256_file,
+    zip_safety_errors,
 )
 
 
@@ -43,6 +56,7 @@ REQUIRED_FALLBACK = {
     "RELEASE_METADATA.json",
     "REPRODUCIBILITY.md",
     "requirements-light.txt",
+    "release_manifest.json",
     "run_release_acceptance.py",
     "run_safety_tests.py",
     "run_smoke_tests.py",
@@ -57,14 +71,12 @@ REQUIRED_FALLBACK = {
     "VERSION",
     "validate_zip_bundle.py",
 }
-# SHA256SUMS.txt is generated at build time (not copied from the source tree,
-# so it is not itself a RELEASE_FILES entry); every other fallback-required
-# name must be one of the files build_release_lite.py actually ships.
-assert REQUIRED_FALLBACK - {"SHA256SUMS.txt"} <= set(RELEASE_FILES), (
+GENERATED_RELEASE_FILES = {"release_manifest.json", "SHA256SUMS.txt"}
+assert REQUIRED_FALLBACK - GENERATED_RELEASE_FILES <= set(RELEASE_FILES), (
     "REQUIRED_FALLBACK has entries release_tools.common.RELEASE_FILES does not ship"
 )
 
-EXPECTED_MANIFEST_SCHEMA_VERSION = "1.0"
+EXPECTED_MANIFEST_SCHEMA_VERSION = RELEASE_SCHEMA_VERSION
 EXPECTED_BUNDLE_NAME = RELEASE_BUNDLE_NAME
 TRANSIENT_NAMES = {"__pycache__"}
 TRANSIENT_PREFIXES = ("_smoke_", "_acceptance_")
@@ -77,24 +89,20 @@ def sha256_bytes(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def normalize_release_path(rel):
-    if not isinstance(rel, str) or not rel.strip():
-        raise ValueError(f"Invalid empty release path: {rel!r}")
-    if "\\" in rel:
-        raise ValueError(f"Release paths must use forward slashes: {rel!r}")
-    path = PurePosixPath(rel)
-    if path.is_absolute() or rel.startswith("/"):
-        raise ValueError(f"Release path must be relative: {rel!r}")
-    if any(part in {"", ".", ".."} for part in path.parts):
-        raise ValueError(f"Release path contains unsafe component: {rel!r}")
-    return path.as_posix()
+def sha256_zip_member(zf, info):
+    digest = hashlib.sha256()
+    with zf.open(info) as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def release_files(release_dir):
+    release_dir = Path(release_dir)
     return {
         path.relative_to(release_dir).as_posix(): path
         for path in release_dir.rglob("*")
-        if path.is_file()
+        if path.is_file() or path.is_symlink()
     }
 
 
@@ -107,7 +115,9 @@ def is_text_release_path(rel):
 
 def parse_sha256sums(path):
     expected = {}
-    for lineno, line in enumerate(path.read_text(encoding="ascii").splitlines(), start=1):
+    collision_keys = {}
+    text = Path(path).read_text(encoding="ascii")
+    for lineno, line in enumerate(text.splitlines(), start=1):
         if not line.strip():
             continue
         if "  " not in line:
@@ -118,12 +128,22 @@ def parse_sha256sums(path):
             raise ValueError(f"Malformed SHA256 digest on line {lineno}: {digest!r}")
         if rel in expected:
             raise ValueError(f"Duplicate SHA256SUMS entry on line {lineno}: {rel}")
+        collision_key = release_path_collision_key(rel)
+        previous = collision_keys.get(collision_key)
+        if previous is not None:
+            raise ValueError(
+                "Case-insensitive SHA256SUMS path collision on line "
+                f"{lineno}: {previous} and {rel}"
+            )
+        collision_keys[collision_key] = rel
         expected[rel] = digest
+    if not expected:
+        raise ValueError("SHA256SUMS.txt must contain at least one checksum entry")
     return expected
 
 
 def load_manifest(release_dir):
-    path = release_dir / "release_manifest.json"
+    path = Path(release_dir) / "release_manifest.json"
     if not path.exists():
         return None
     with open(path, "r", encoding="utf-8") as handle:
@@ -133,29 +153,66 @@ def load_manifest(release_dir):
 def load_manifest_for_validation(release_dir):
     try:
         return load_manifest(release_dir), []
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         return None, [f"Could not parse release_manifest.json: {exc}"]
+
+
+def read_release_metadata(release_dir):
+    errors = []
+    release_dir = Path(release_dir)
+    version = None
+    metadata = None
+    version_path = release_dir / "VERSION"
+    metadata_path = release_dir / "RELEASE_METADATA.json"
+    if version_path.is_symlink():
+        errors.append("VERSION must not be a symbolic link")
+    if metadata_path.is_symlink():
+        errors.append("RELEASE_METADATA.json must not be a symbolic link")
+    if errors:
+        return None, None, errors
+    try:
+        version = version_path.read_text(encoding="utf-8").strip()
+        if not version:
+            errors.append("VERSION must be non-empty")
+    except (OSError, UnicodeError) as exc:
+        errors.append(f"Could not read VERSION: {exc}")
+    try:
+        metadata = json.loads(
+            metadata_path.read_text(encoding="utf-8")
+        )
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
+        errors.append(f"Could not parse RELEASE_METADATA.json: {exc}")
+        return version, None, errors
+    if not isinstance(metadata, dict):
+        errors.append("RELEASE_METADATA.json top-level value must be an object")
+        return version, None, errors
+    if version is not None and metadata.get("version") != version:
+        errors.append(
+            "RELEASE_METADATA.json version mismatch: "
+            f"expected {version!r} from VERSION, found {metadata.get('version')!r}"
+        )
+    try:
+        canonical_zip_datetime(metadata.get("release_date"))
+    except ValueError as exc:
+        errors.append(f"RELEASE_METADATA.json {exc}")
+    return version, metadata, errors
 
 
 def validate_manifest_metadata(release_dir, manifest, manifest_files):
     errors = []
     if not isinstance(manifest, dict):
         return ["release_manifest.json top-level value must be an object"]
-
-    schema_version = manifest.get("schema_version")
-    if schema_version != EXPECTED_MANIFEST_SCHEMA_VERSION:
+    if manifest.get("schema_version") != EXPECTED_MANIFEST_SCHEMA_VERSION:
         errors.append(
             "release_manifest.json schema_version mismatch: "
-            f"expected {EXPECTED_MANIFEST_SCHEMA_VERSION!r}, found {schema_version!r}"
+            f"expected {EXPECTED_MANIFEST_SCHEMA_VERSION!r}, "
+            f"found {manifest.get('schema_version')!r}"
         )
-
-    bundle_name = manifest.get("bundle_name")
-    if bundle_name != EXPECTED_BUNDLE_NAME:
+    if manifest.get("bundle_name") != EXPECTED_BUNDLE_NAME:
         errors.append(
             "release_manifest.json bundle_name mismatch: "
-            f"expected {EXPECTED_BUNDLE_NAME!r}, found {bundle_name!r}"
+            f"expected {EXPECTED_BUNDLE_NAME!r}, found {manifest.get('bundle_name')!r}"
         )
-
     expected_count = len(manifest_files)
     manifest_count = manifest.get("file_count_excluding_manifest_and_checksums")
     if not isinstance(manifest_count, int) or isinstance(manifest_count, bool):
@@ -168,83 +225,78 @@ def validate_manifest_metadata(release_dir, manifest, manifest_files):
             "release_manifest.json file_count_excluding_manifest_and_checksums "
             f"mismatch: expected {expected_count}, found {manifest_count}"
         )
-
-    expected_forbidden = sorted(FORBIDDEN_NAMES)
-    forbidden_names = manifest.get("forbidden_artifact_names")
-    if forbidden_names != expected_forbidden:
+    if manifest.get("forbidden_artifact_names") != sorted(FORBIDDEN_NAMES):
         errors.append(
             "release_manifest.json forbidden_artifact_names mismatch: "
             "expected validator deny-list"
         )
+    if manifest.get("builder") != "build_release_lite.py":
+        errors.append("release_manifest.json builder must be 'build_release_lite.py'")
+    if manifest.get("validation_command") != RELEASE_VALIDATION_COMMAND:
+        errors.append("release_manifest.json validation_command is not canonical")
 
-    version_path = release_dir / "VERSION"
-    expected_version = None
-    if version_path.exists():
-        expected_version = version_path.read_text(encoding="utf-8").strip()
-        manifest_version = manifest.get("version")
-        if manifest_version != expected_version:
-            errors.append(
-                "release_manifest.json version mismatch: "
-                f"expected {expected_version!r} from VERSION, found {manifest_version!r}"
-            )
-
-    metadata_path = release_dir / "RELEASE_METADATA.json"
-    if metadata_path.exists():
-        try:
-            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
-            errors.append(f"Could not parse RELEASE_METADATA.json: {exc}")
-            metadata = None
-        if metadata is not None:
-            if not isinstance(metadata, dict):
-                errors.append("RELEASE_METADATA.json top-level value must be an object")
-            else:
-                metadata_version = metadata.get("version")
-                if expected_version is not None and metadata_version != expected_version:
-                    errors.append(
-                        "RELEASE_METADATA.json version mismatch: "
-                        f"expected {expected_version!r} from VERSION, "
-                        f"found {metadata_version!r}"
-                    )
-                if manifest.get("version") != metadata_version:
-                    errors.append(
-                        "release_manifest.json version mismatch: "
-                        f"expected {metadata_version!r} from RELEASE_METADATA.json, "
-                        f"found {manifest.get('version')!r}"
-                    )
-                metadata_date = metadata.get("release_date")
-                if manifest.get("release_date") != metadata_date:
-                    errors.append(
-                        "release_manifest.json release_date mismatch: "
-                        f"expected {metadata_date!r} from RELEASE_METADATA.json, "
-                        f"found {manifest.get('release_date')!r}"
-                    )
+    version, metadata, metadata_errors = read_release_metadata(release_dir)
+    errors.extend(metadata_errors)
+    if version is not None and manifest.get("version") != version:
+        errors.append(
+            "release_manifest.json version mismatch: "
+            f"expected {version!r} from VERSION, found {manifest.get('version')!r}"
+        )
+    if metadata is not None and manifest.get("release_date") != metadata.get("release_date"):
+        errors.append(
+            "release_manifest.json release_date mismatch: "
+            f"expected {metadata.get('release_date')!r} from RELEASE_METADATA.json, "
+            f"found {manifest.get('release_date')!r}"
+        )
     return errors
 
 
 def validate_release_dir(release_dir, max_file_bytes):
     errors = []
     warnings = []
-    release_dir = release_dir.resolve()
+    release_arg = Path(release_dir)
+    if release_arg.is_symlink():
+        return [f"Release directory must not be a symbolic link: {release_arg}"], warnings, None
+    release_dir = release_arg.resolve()
     if not release_dir.exists():
         return [f"Release directory not found: {release_dir}"], warnings, None
     if not release_dir.is_dir():
         return [f"Release path is not a directory: {release_dir}"], warnings, None
 
     files = release_files(release_dir)
-    manifest_present = (release_dir / "release_manifest.json").exists()
-    manifest, manifest_errors = load_manifest_for_validation(release_dir)
-    errors.extend(manifest_errors)
-    required = set(REQUIRED_FALLBACK)
+    file_collision_keys = {}
+    for rel in sorted(files):
+        try:
+            normalized = normalize_release_path(rel)
+        except ValueError as exc:
+            errors.append(f"Release payload path {rel!r}: {exc}")
+            continue
+        collision_key = release_path_collision_key(normalized)
+        previous = file_collision_keys.get(collision_key)
+        if previous is not None:
+            errors.append(
+                "Release payload contains a case-insensitive path collision: "
+                f"{previous} and {rel}"
+            )
+        else:
+            file_collision_keys[collision_key] = rel
+    manifest_path = release_dir / "release_manifest.json"
+    manifest_present = manifest_path.is_file() and not manifest_path.is_symlink()
+    if manifest_path.is_symlink():
+        errors.append("release_manifest.json must not be a symbolic link")
+        manifest, manifest_errors = None, []
+    else:
+        manifest, manifest_errors = load_manifest_for_validation(release_dir)
+        errors.extend(manifest_errors)
     manifest_files = {}
-    if manifest_present:
-        seen_manifest_paths = set()
-        if manifest_errors:
-            pass
-        elif not isinstance(manifest, dict):
+    manifest_collision_keys = {}
+    if not manifest_present:
+        errors.append("release_manifest.json is required")
+    elif not manifest_errors:
+        if not isinstance(manifest, dict):
             errors.append("release_manifest.json top-level value must be an object")
         else:
-            manifest_items = manifest.get("files", [])
+            manifest_items = manifest.get("files")
             if not isinstance(manifest_items, list):
                 errors.append("release_manifest.json files must be a list")
                 manifest_items = []
@@ -257,20 +309,30 @@ def validate_release_dir(release_dir, max_file_bytes):
                 except ValueError as exc:
                     errors.append(f"Manifest file entry {idx}: {exc}")
                     continue
-                if rel in seen_manifest_paths:
+                if rel in manifest_files:
                     errors.append(f"Duplicate release_manifest.json file entry: {rel}")
                     continue
-                seen_manifest_paths.add(rel)
+                collision_key = release_path_collision_key(rel)
+                previous = manifest_collision_keys.get(collision_key)
+                if previous is not None:
+                    errors.append(
+                        "Case-insensitive release_manifest.json path collision: "
+                        f"{previous} and {rel}"
+                    )
+                    continue
+                manifest_collision_keys[collision_key] = rel
                 manifest_files[rel] = item
             errors.extend(validate_manifest_metadata(release_dir, manifest, manifest_files))
-        required.update(manifest_files)
-        required.update({"release_manifest.json", "SHA256SUMS.txt"})
-    missing_required = sorted(path for path in required if path not in files)
+
+    missing_required = sorted(path for path in REQUIRED_FALLBACK if path not in files)
     if missing_required:
         errors.append("Missing required files: " + ", ".join(missing_required))
 
     for rel, path in sorted(files.items()):
         name = Path(rel).name
+        if path.is_symlink():
+            errors.append(f"Symbolic links are not allowed in release payloads: {rel}")
+            continue
         if name in FORBIDDEN_NAMES:
             errors.append(f"Forbidden training/full-artifact file present: {rel}")
         if any(part in TRANSIENT_NAMES for part in Path(rel).parts):
@@ -283,17 +345,17 @@ def validate_release_dir(release_dir, max_file_bytes):
             errors.append(f"Text release file contains CR newline bytes: {rel}")
 
     checksum_path = release_dir / "SHA256SUMS.txt"
-    if not checksum_path.exists():
+    expected_hashes = None
+    if checksum_path.is_symlink():
+        errors.append("SHA256SUMS.txt must not be a symbolic link")
+    elif not checksum_path.is_file():
         errors.append("Missing SHA256SUMS.txt")
-        expected_hashes = {}
     else:
         try:
             expected_hashes = parse_sha256sums(checksum_path)
-        except ValueError as exc:
-            errors.append(str(exc))
-            expected_hashes = {}
-
-    if expected_hashes:
+        except (OSError, UnicodeError, ValueError) as exc:
+            errors.append(f"Could not parse SHA256SUMS.txt: {exc}")
+    if expected_hashes is not None:
         listed = set(expected_hashes)
         actual_for_hash = set(files) - {"SHA256SUMS.txt"}
         extra_listed = sorted(listed - actual_for_hash)
@@ -304,58 +366,61 @@ def validate_release_dir(release_dir, max_file_bytes):
             errors.append("Files missing from SHA256SUMS: " + ", ".join(unlisted))
         for rel, expected in sorted(expected_hashes.items()):
             path = release_dir / rel
-            if path.exists():
-                actual = sha256_file(path)
-                if actual != expected:
-                    errors.append(f"SHA256 mismatch for {rel}")
+            if path.is_file() and sha256_file(path) != expected:
+                errors.append(f"SHA256 mismatch for {rel}")
 
     if manifest_present:
         manifest_actual = set(files) - {"SHA256SUMS.txt", "release_manifest.json"}
         missing_from_manifest = sorted(manifest_actual - set(manifest_files))
         stale_manifest = sorted(set(manifest_files) - manifest_actual)
         if missing_from_manifest:
-            errors.append("Files missing from release_manifest.json: "
-                          + ", ".join(missing_from_manifest))
+            errors.append(
+                "Files missing from release_manifest.json: " + ", ".join(missing_from_manifest)
+            )
         if stale_manifest:
             errors.append("Manifest lists missing files: " + ", ".join(stale_manifest))
         for rel, item in sorted(manifest_files.items()):
             path = release_dir / rel
-            if path.exists():
-                size = path.stat().st_size
-                digest = sha256_file(path)
-                manifest_bytes = item.get("bytes")
-                if not isinstance(manifest_bytes, int) or isinstance(manifest_bytes, bool):
-                    errors.append(f"Manifest byte size for {rel} must be an integer")
-                elif manifest_bytes != size:
-                    errors.append(f"Manifest byte size mismatch for {rel}")
-                if item.get("sha256") != digest:
-                    errors.append(f"Manifest SHA256 mismatch for {rel}")
-    else:
-        warnings.append("release_manifest.json not found; using fallback required-file checks")
+            if not path.is_file():
+                continue
+            size = path.stat().st_size
+            digest = sha256_file(path)
+            manifest_bytes = item.get("bytes")
+            if not isinstance(manifest_bytes, int) or isinstance(manifest_bytes, bool):
+                errors.append(f"Manifest byte size for {rel} must be an integer")
+            elif manifest_bytes != size:
+                errors.append(f"Manifest byte size mismatch for {rel}")
+            manifest_digest = item.get("sha256")
+            if (
+                not isinstance(manifest_digest, str)
+                or len(manifest_digest) != 64
+                or any(ch not in "0123456789abcdef" for ch in manifest_digest)
+            ):
+                errors.append(f"Manifest SHA256 for {rel} is malformed")
+            elif manifest_digest != digest:
+                errors.append(f"Manifest SHA256 mismatch for {rel}")
 
     summary = {
         "release_dir": str(release_dir),
         "file_count": len(files),
-        "checksum_count": len(expected_hashes),
+        "checksum_count": len(expected_hashes or {}),
         "has_manifest": manifest_present,
-        "total_bytes": sum(path.stat().st_size for path in files.values()),
+        "total_bytes": sum(path.stat().st_size for path in files.values() if path.is_file()),
     }
     return errors, warnings, summary
 
 
 def validate_source_parity(release_dir, source_root, manifest):
     errors = []
-    source_root = source_root.resolve()
+    release_dir = Path(release_dir).resolve()
+    source_root = Path(source_root).resolve()
     if not source_root.exists() or not source_root.is_dir():
         return [f"Source root not found or not a directory: {source_root}"]
-    if manifest is None:
-        return ["Cannot validate source parity without release_manifest.json"]
     if not isinstance(manifest, dict):
-        return ["release_manifest.json top-level value must be an object"]
-    manifest_items = manifest.get("files", [])
+        return ["Cannot validate source parity without a valid release_manifest.json"]
+    manifest_items = manifest.get("files")
     if not isinstance(manifest_items, list):
         return ["release_manifest.json files must be a list"]
-
     for idx, item in enumerate(manifest_items, start=1):
         if not isinstance(item, dict):
             errors.append(f"Manifest file entry {idx} is not an object")
@@ -367,106 +432,194 @@ def validate_source_parity(release_dir, source_root, manifest):
             continue
         src = source_root / rel
         dst = release_dir / rel
-        if not src.exists():
+        if not src.is_file():
             errors.append(f"Source file missing for release payload: {rel}")
-            continue
-        if not dst.exists():
+        elif not dst.is_file():
             errors.append(f"Release file missing for source parity: {rel}")
-            continue
-        if sha256_file(src) != sha256_file(dst):
+        elif sha256_file(src) != sha256_file(dst):
             errors.append(f"Release file is stale relative to source: {rel}")
     return errors
 
 
-def validate_zip(zip_path, release_dir):
+def validate_zip(
+    zip_path,
+    release_dir,
+    *,
+    max_archive_bytes=DEFAULT_MAX_ZIP_ARCHIVE_BYTES,
+    max_entries=DEFAULT_MAX_ZIP_ENTRIES,
+    max_member_bytes=DEFAULT_MAX_ZIP_MEMBER_BYTES,
+    max_total_bytes=DEFAULT_MAX_ZIP_TOTAL_BYTES,
+    max_compression_ratio=DEFAULT_MAX_ZIP_COMPRESSION_RATIO,
+):
     errors = []
-    zip_path = zip_path.resolve()
-    if not zip_path.exists():
+    zip_arg = Path(zip_path)
+    if zip_arg.is_symlink():
+        return [f"Zip archive must not be a symbolic link: {zip_arg}"], None
+    zip_path = zip_arg.resolve()
+    release_dir = Path(release_dir).resolve()
+    if not zip_path.is_file():
         return [f"Zip archive not found: {zip_path}"], None
-    release = release_files(release_dir.resolve())
+    zip_bytes = zip_path.stat().st_size
+    if zip_bytes > max_archive_bytes:
+        return [f"Zip archive is {zip_bytes} bytes; limit is {max_archive_bytes}"], {
+            "zip_path": str(zip_path),
+            "zip_entries": 0,
+            "zip_bytes": zip_bytes,
+            "zip_sha256": None,
+        }
+    release = release_files(release_dir)
     try:
         zf = zipfile.ZipFile(zip_path)
     except (OSError, zipfile.BadZipFile) as exc:
         return [f"Could not read zip archive: {exc}"], None
     with zf:
-        bad = zf.testzip()
-        if bad is not None:
-            errors.append(f"Zip archive is corrupt at {bad}")
-        infos = [info for info in zf.infolist() if not info.is_dir()]
+        infos = zf.infolist()
+        safety_errors = zip_safety_errors(
+            infos,
+            max_entries=max_entries,
+            max_member_bytes=max_member_bytes,
+            max_total_bytes=max_total_bytes,
+            max_compression_ratio=max_compression_ratio,
+        )
+        errors.extend(safety_errors)
+        _, metadata, metadata_errors = read_release_metadata(release_dir)
+        errors.extend(metadata_errors)
+        expected_datetime = None
+        if metadata is not None:
+            try:
+                expected_datetime = canonical_zip_datetime(metadata.get("release_date"))
+            except ValueError:
+                pass
+        if expected_datetime is not None:
+            errors.extend(canonical_zip_errors(zf, infos, expected_datetime))
+
         zip_records = []
-        zip_names = set()
+        zip_names = []
         for info in infos:
             try:
                 rel = normalize_release_path(info.filename)
-            except ValueError as exc:
-                errors.append(f"Zip member {info.filename!r}: {exc}")
+            except ValueError:
                 continue
-            if rel in zip_names:
-                errors.append(f"Zip contains duplicate member path: {info.filename}")
-            zip_names.add(rel)
+            zip_names.append(rel)
             zip_records.append((rel, info))
-        release_names = set(release)
+        release_names = sorted(release)
         if zip_names != release_names:
-            missing = sorted(release_names - zip_names)
-            extra = sorted(zip_names - release_names)
+            missing = sorted(set(release_names) - set(zip_names))
+            extra = sorted(set(zip_names) - set(release_names))
             if missing:
                 errors.append("Zip is missing files: " + ", ".join(missing))
             if extra:
                 errors.append("Zip has extra files: " + ", ".join(extra))
-        for rel, info in zip_records:
-            if rel in release:
-                with zf.open(info) as handle:
-                    digest = sha256_bytes(handle.read())
-                if digest != sha256_file(release[rel]):
-                    errors.append(f"Zip content differs from release dir: {info.filename}")
+            if not missing and not extra:
+                errors.append("Zip member order differs from the release directory")
+
+        if not safety_errors:
+            archive_readable = True
+            try:
+                bad = zf.testzip()
+            except (OSError, RuntimeError, zipfile.BadZipFile) as exc:
+                errors.append(f"Could not test zip archive: {exc}")
+                bad = None
+                archive_readable = False
+            if bad is not None:
+                errors.append(f"Zip archive is corrupt at {bad}")
+                archive_readable = False
+            if archive_readable:
+                for rel, info in zip_records:
+                    if rel not in release:
+                        continue
+                    try:
+                        member_digest = sha256_zip_member(zf, info)
+                    except (OSError, RuntimeError, zipfile.BadZipFile) as exc:
+                        errors.append(f"Could not read zip member {info.filename}: {exc}")
+                        continue
+                    if member_digest != sha256_file(release[rel]):
+                        errors.append(f"Zip content differs from release dir: {info.filename}")
     summary = {
         "zip_path": str(zip_path),
         "zip_entries": len(infos),
-        "zip_bytes": zip_path.stat().st_size,
+        "zip_bytes": zip_bytes,
+        "zip_sha256": sha256_file(zip_path),
     }
     return errors, summary
 
 
+def _relative_artifact_path(target, base, label, errors):
+    try:
+        return Path(target).resolve().relative_to(Path(base).resolve()).as_posix()
+    except ValueError:
+        errors.append(f"{label} must be located below the RELEASE_ARTIFACTS.json directory")
+        return None
+
+
 def validate_artifacts(path, release_summary, zip_summary):
     errors = []
-    path = path.resolve()
-    if not path.exists():
+    path_arg = Path(path)
+    if path_arg.is_symlink():
+        return [f"RELEASE_ARTIFACTS.json must not be a symbolic link: {path_arg}"]
+    path = path_arg.resolve()
+    if not path.is_file():
         return [f"Release artifact metadata not found: {path}"]
     try:
         artifact = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError) as exc:
         return [f"Could not read release artifact metadata: {exc}"]
+    if not isinstance(artifact, dict):
+        return ["RELEASE_ARTIFACTS.json top-level value must be an object"]
+    if not release_summary or not zip_summary:
+        return ["Release and zip summaries are required to validate RELEASE_ARTIFACTS.json"]
 
-    if release_summary:
-        expected_release = {
-            "release_file_count": release_summary["file_count"],
-            "release_total_bytes": release_summary["total_bytes"],
-        }
-        for key, expected in expected_release.items():
-            if artifact.get(key) != expected:
-                errors.append(
-                    f"RELEASE_ARTIFACTS.json {key} mismatch: "
-                    f"expected {expected}, found {artifact.get(key)}"
-                )
-    if zip_summary:
-        zip_path = Path(zip_summary["zip_path"])
-        expected_zip = {
-            "zip_entries": zip_summary["zip_entries"],
-            "zip_bytes": zip_summary["zip_bytes"],
-            "zip_sha256": sha256_file(zip_path),
-        }
-        for key, expected in expected_zip.items():
-            if artifact.get(key) != expected:
-                errors.append(
-                    f"RELEASE_ARTIFACTS.json {key} mismatch: "
-                    f"expected {expected}, found {artifact.get(key)}"
-                )
+    release_dir = Path(release_summary["release_dir"])
+    version, metadata, metadata_errors = read_release_metadata(release_dir)
+    errors.extend(metadata_errors)
+    release_rel = _relative_artifact_path(release_dir, path.parent, "release_dir", errors)
+    zip_rel = _relative_artifact_path(zip_summary["zip_path"], path.parent, "zip_path", errors)
+    zip_digest = zip_summary["zip_sha256"]
+    expected = {
+        "schema_version": RELEASE_SCHEMA_VERSION,
+        "version": version,
+        "release_date": metadata.get("release_date") if metadata else None,
+        "release_dir": release_rel,
+        "release_file_count": release_summary["file_count"],
+        "release_total_bytes": release_summary["total_bytes"],
+        "zip_path": zip_rel,
+        "zip_entries": zip_summary["zip_entries"],
+        "zip_bytes": zip_summary["zip_bytes"],
+        "zip_sha256": zip_digest,
+        "validation_command": RELEASE_VALIDATION_COMMAND,
+        "zip_acceptance_command": (
+            f"{ZIP_ACCEPTANCE_COMMAND} --expected-sha256 {zip_digest}"
+        ),
+    }
+    required_keys = set(expected)
+    missing = sorted(required_keys - set(artifact))
+    if missing:
+        errors.append("RELEASE_ARTIFACTS.json missing keys: " + ", ".join(missing))
+    integer_keys = {
+        "release_file_count",
+        "release_total_bytes",
+        "zip_entries",
+        "zip_bytes",
+    }
+    for key, expected_value in expected.items():
+        actual = artifact.get(key)
+        if key in integer_keys and (
+            not isinstance(actual, int) or isinstance(actual, bool) or actual < 0
+        ):
+            errors.append(f"RELEASE_ARTIFACTS.json {key} must be a non-negative integer")
+            continue
+        if actual != expected_value:
+            errors.append(
+                f"RELEASE_ARTIFACTS.json {key} mismatch: "
+                f"expected {expected_value!r}, found {actual!r}"
+            )
     return errors
 
 
 def run_smoke(release_dir, timeout_seconds):
     env = dict(os.environ)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    env["PYTHONUTF8"] = "1"
     try:
         result = subprocess.run(
             [sys.executable, "run_smoke_tests.py"],
@@ -481,32 +634,53 @@ def run_smoke(release_dir, timeout_seconds):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Validate release-lite and optional zip.")
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release-dir", default="release-lite")
     parser.add_argument("--zip", dest="zip_path", default=RELEASE_ZIP_NAME)
     parser.add_argument("--no-zip", action="store_true")
-    parser.add_argument("--smoke", action="store_true",
-                        help="run run_smoke_tests.py inside the release directory")
+    parser.add_argument("--smoke", action="store_true")
     parser.add_argument("--max-file-bytes", type=int, default=5_000_000)
-    parser.add_argument("--source-root",
-                        help="optional full deliverables root; fail if payload files differ")
-    parser.add_argument("--artifacts",
-                        help="optional RELEASE_ARTIFACTS.json sidecar to validate")
-    parser.add_argument("--timeout-seconds", type=int, default=300,
-                        help="subprocess timeout for --smoke (default: 300)")
+    parser.add_argument("--max-zip-entries", type=int, default=DEFAULT_MAX_ZIP_ENTRIES)
+    parser.add_argument(
+        "--max-zip-archive-bytes", type=int, default=DEFAULT_MAX_ZIP_ARCHIVE_BYTES
+    )
+    parser.add_argument(
+        "--max-zip-member-bytes", type=int, default=DEFAULT_MAX_ZIP_MEMBER_BYTES
+    )
+    parser.add_argument(
+        "--max-zip-total-bytes", type=int, default=DEFAULT_MAX_ZIP_TOTAL_BYTES
+    )
+    parser.add_argument(
+        "--max-zip-compression-ratio",
+        type=float,
+        default=DEFAULT_MAX_ZIP_COMPRESSION_RATIO,
+    )
+    parser.add_argument("--source-root")
+    parser.add_argument("--artifacts")
+    parser.add_argument("--timeout-seconds", type=int, default=300)
     args = parser.parse_args(argv)
 
     release_dir = Path(args.release_dir)
-    errors, warnings, release_summary = validate_release_dir(release_dir, args.max_file_bytes)
+    errors, warnings, release_summary = validate_release_dir(
+        release_dir, args.max_file_bytes
+    )
     manifest = None
     if release_dir.exists() and not errors:
         manifest, manifest_errors = load_manifest_for_validation(release_dir.resolve())
         errors.extend(manifest_errors)
     if args.source_root and not errors:
-        errors.extend(validate_source_parity(release_dir.resolve(), Path(args.source_root), manifest))
+        errors.extend(validate_source_parity(release_dir, Path(args.source_root), manifest))
     zip_summary = None
     if not args.no_zip:
-        zip_errors, zip_summary = validate_zip(Path(args.zip_path), release_dir)
+        zip_errors, zip_summary = validate_zip(
+            Path(args.zip_path),
+            release_dir,
+            max_archive_bytes=args.max_zip_archive_bytes,
+            max_entries=args.max_zip_entries,
+            max_member_bytes=args.max_zip_member_bytes,
+            max_total_bytes=args.max_zip_total_bytes,
+            max_compression_ratio=args.max_zip_compression_ratio,
+        )
         errors.extend(zip_errors)
     if args.artifacts and not errors:
         errors.extend(validate_artifacts(Path(args.artifacts), release_summary, zip_summary))

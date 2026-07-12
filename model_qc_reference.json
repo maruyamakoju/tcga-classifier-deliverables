@@ -379,7 +379,7 @@
       }
     }
   },
-  "reference_source": "Rules use the model training scaler plus empirical summaries from the bundled TCGA example and CPTAC-3/GDC STAR-Counts smoke validation. Toil/RSEM/GTEx summaries are included as known cross-platform boundary checks.",
+  "reference_source": "Rules use the model training scaler plus empirical summaries from the reviewed historical TCGA example and CPTAC-3/GDC STAR-Counts smoke validation. Toil/RSEM/GTEx summaries are historical cross-platform boundary checks, not a post-fix live rerun.",
   "rules": {
     "abs_z_gt_10_fraction_warn": 0.001,
     "abs_z_gt_6_fraction_warn": 0.005,

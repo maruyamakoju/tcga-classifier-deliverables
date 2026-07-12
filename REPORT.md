@@ -1,6 +1,6 @@
 # Pan-cancer tumor-vs-normal classifier from TCGA RNA-seq
 
-Release: `v1.1.22-gdc-starcounts` (`2026-07-10`)
+Release: `v2.0.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 ## Data
 
@@ -52,9 +52,10 @@ genes were retained as features. Three classifiers were trained on this
 
 Logistic regression edges out on AUC; XGBoost on accuracy/F1/precision — all
 three are within a fraction of a percent of each other. 5-fold grouped
-cross-validation on the training set alone confirms this is not a lucky split:
+cross-validation within the training cohort gives a similar estimate:
 logistic regression 0.996 ± 0.003 AUC, random forest 0.996 ± 0.002 AUC across
-folds.
+folds. This consistency reduces dependence on the single held-out split, but
+does not constitute external or prospective validation.
 
 Per-cancer-type breakdown (logistic regression) shows AUC = 1.000 on 15 of 17
 cancer types in the test set, with the two exceptions — TCGA-PRAD (0.965) and
@@ -73,10 +74,10 @@ HAGHL, ESM1 — again dominated by extracellular-matrix and vasculature genes
 (COL10A1, COMP, MMRN1), a signature broadly reported for pan-cancer stromal
 activation.
 
-## Leave-one-cancer-type-out (LOCO) generalization
+## Leave-one-cancer-type-out (LOCO) sensitivity analysis
 
-To test generalization to a cancer type never seen during training (the gap
-noted in the original caveats below), the pipeline was retrained 17 times,
+To measure performance when a TCGA cancer project is omitted from fitting, the
+pipeline was retrained 17 times,
 each time holding out one entire cancer type from training (feature
 selection, scaling, and logistic regression all refit on the remaining 16
 cancer types) and testing exclusively on the excluded type.
@@ -88,13 +89,14 @@ cancer types) and testing exclusively on the excluded type.
   0.847, PRAD 0.750, UCEC 0.886) — but re-thresholding per cancer type at its
   own Youden's-J-optimal cutoff recovers accuracy to within a few points of
   the AUC (LIHC 0.847→0.993, STAD 0.907→1.000, PRAD 0.750→0.936). This shows
-  the drop in raw accuracy for a few cancer types is a **threshold
-  miscalibration** issue (the decision boundary learned on 16 other cancer
-  types doesn't perfectly transfer), not a failure to rank tumor vs. normal
-  correctly for the unseen type.
-- Prostate (PRAD) is the hardest case to generalize to (AUC 0.950),
-  consistent with prostate adenocarcinoma's comparatively subtle
-  transcriptomic tumor/normal contrast relative to other solid tumors.
+  that a different threshold can fit the observed held-out labels, not that
+  threshold shift is the sole cause of the default-threshold errors. Because
+  the same held-out labels select and evaluate the cutoff, those improved
+  accuracies are apparent/resubstitution results. The AUC supports ranking
+  within the observed project but does not identify the source of that ranking.
+- Prostate (PRAD) has the lowest observed LOCO AUC (0.950). A comparatively
+  subtle tumor/normal transcriptional contrast is one possible explanation,
+  not a conclusion established by this analysis.
 
 Detailed LOCO artifacts are retained in the full development repository, not
 inside the lightweight zip, under `cross-cancer-holdout/`:
@@ -102,6 +104,11 @@ inside the lightweight zip, under `cross-cancer-holdout/`:
 `loco_pooled_summary.csv`, `loco_vs_within_comparison.csv`, and
 `loco_predictions.pkl`. (The raw `loco_generalization*` figure/CSVs from the
 original workbench run live in `from-workbench-loco/`.)
+
+LOCO is a project-level holdout, not a causal transport experiment. Cancer type
+is entangled with GDC project, tissue procurement, center, and batch. The design
+does not remove those confounders and must not be described as proving
+biological generalization to every unseen cancer type or deployment setting.
 
 ## External CPTAC-3 smoke validation
 
@@ -156,6 +163,13 @@ not a plug-in classifier for arbitrary TPM/RSEM/GTEx/GEO matrices.
 See `external-validation/gtex_xena/GTEX_NORMAL_VALIDATION.md` and
 `external-validation/tcga_toil_xena/TCGA_TOIL_PIPELINE_CHECK.md`.
 
+The CPTAC, GTEx, and Toil metrics in this repository are committed historical
+snapshots. Version 2.0.0 adds locked cohort manifests, semantic cache
+fingerprints, content hashes, atomic cache publication, and run provenance, but
+no post-fix live-network rerun was performed. These values therefore document
+the earlier runs; they are not evidence that the corrected fetch/cache paths
+have already reproduced the metrics live.
+
 ## Input compatibility QC
 
 To reduce accidental misuse, the lightweight release includes
@@ -188,15 +202,21 @@ before output files are written unless a reviewed tolerance or explicit
 override is supplied. This prevents a malformed matched input column or sample
 from being silently neutral-imputed.
 
-## Cross-platform adaptation (restoring Toil accuracy)
+## Experimental cross-platform cohort adaptation
 
-The Toil/GTEx boundary above is a threshold- and scale-transfer failure, not a
-loss of biological signal. A label-free cohort standardization step aligns an
-incoming non-GDC matrix to the model's training distribution before scoring,
-which restores Toil accuracy from 0.515 to 0.935 without refitting the model.
-This is packaged in the lightweight release as `cohort_adapt_score.py`. The
-expanded method write-up and benchmark CSVs live in the full development
-repository under `cross-platform-adaptation/CROSS_PLATFORM_ADAPTATION.md`.
+The historical Toil benchmark found accuracy 0.935 after label-free cohort
+standardization, compared with 0.515 for unadapted 0.5-threshold calls. This is
+an exploratory, transductive result and does not prove that pipeline shift was
+the only failure or that biological signal was preserved. Adaptation is
+disabled by default (`--adapt none`). The `cohort_zscore` and `cohort_center`
+modes are explicit opt-ins, depend on the other samples and class composition
+in the batch, require at least `--min-samples` (default 20), and make scores
+from separately adapted batches non-comparable. They are unsuitable for
+single-sample inference and do not validate arbitrary non-GDC inputs.
+
+The implementation is packaged as `cohort_adapt_score.py`; the historical
+benchmark write-up lives under
+`cross-platform-adaptation/CROSS_PLATFORM_ADAPTATION.md` in the full tree.
 
 ## Cancer-type classifier (tissue of origin)
 
@@ -211,11 +231,9 @@ the lightweight tumor-vs-normal zip.
 
 - This is a **pan-cancer** tumor-vs-normal classifier, not a cancer-type
   classifier — it distinguishes malignant from non-malignant tissue across
-  cancer types, largely by picking up a shared stromal/ECM remodeling
-  signature. The LOCO analysis above confirms this signature generalizes to
-  entirely unseen cancer types (mean AUC 0.994), addressing the original
-  concern that held-out performance was measured only on cancer types also
-  seen in training.
+  cancer types. The LOCO result (mean AUC 0.994) is consistent with a shared
+  signal in these data, but does not remove project/procurement/batch
+  confounding or prove the proposed stromal/ECM mechanism.
 - CPTAC-3 provides an external non-TCGA cohort check (AUC 0.989), but it is
   still GDC harmonized STAR-Counts. Non-GDC / cross-platform RNA-seq was tested
   with UCSC Xena Toil/GTEx and failed as a direct hard-call deployment target.
@@ -225,10 +243,15 @@ the lightweight tumor-vs-normal zip.
   tumor-vs-adjacent-normal contrast but is a different (easier) comparison
   than tumor-vs-healthy-population.
 - No batch-effect correction across cancer types or sequencing centers was
-  applied beyond TPM normalization; the near-perfect per-cancer AUCs partly
-  reflect the strength of a shared cancer-vs-normal signal, which is common
-  and expected for this task on TCGA data (this exact contrast is
-  near-saturated in the field).
+  applied beyond TPM normalization. The high per-project AUCs may reflect a
+  shared cancer-vs-adjacent-normal signal, technical/project structure, or
+  both; this study does not separate those contributions.
+- `tumor_probability` is the logistic model score, not clinical risk or a
+  calibrated diagnostic probability. If a threshold is selected with
+  `calibrate_threshold.py`, its reported metrics are same-sample
+  apparent/resubstitution estimates; either class below 10 samples is warned.
+- Literature agreement of highly weighted genes provides qualitative context,
+  not causal mechanism proof or independent validation.
 
 ## Files
 

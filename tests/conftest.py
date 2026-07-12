@@ -72,11 +72,32 @@ def features_npy():
 
     Not shipped (128 MB). Set TCGA_FEATURES to an X_full.npy (with sibling
     X_genes.npy / X_samples.npy) to enable the full-data reproduction tests;
-    otherwise those tests skip. Regenerate with
-    cancer-type-classifier/export_features_npy.py in a numpy>=2 / pandas>=3 env.
+    otherwise those tests skip. Regenerate with the path-neutral canonical lock
+    and exact converter environment documented in REPRODUCIBILITY.md.
     """
     for cand in [os.environ.get("TCGA_FEATURES"),
                  os.path.join(ROOT, "cancer-type-classifier", "X_full.npy")]:
         if cand and os.path.exists(cand):
+            values = np.load(cand, mmap_mode="r", allow_pickle=False)
+            if values.dtype != np.float32:
+                pytest.fail(f"exact cancer-type feature matrix must be float32: {cand}")
             return cand
     pytest.skip("full feature matrix not available (set TCGA_FEATURES)")
+
+
+@pytest.fixture(scope="session")
+def features_float64_npy():
+    """Exact float64 matrix used by the binary and LOCO analyses, if available."""
+    candidates = [
+        os.environ.get("TCGA_FEATURES_FLOAT64"),
+        os.path.join(ROOT, "cancer-type-classifier", "X_full_float64.npy"),
+    ]
+    for candidate in candidates:
+        if candidate and os.path.exists(candidate):
+            values = np.load(candidate, mmap_mode="r", allow_pickle=False)
+            if values.dtype != np.float64:
+                pytest.fail(f"exact LOCO feature matrix must be float64: {candidate}")
+            return candidate
+    pytest.skip(
+        "exact float64 feature matrix not available (set TCGA_FEATURES_FLOAT64)"
+    )
