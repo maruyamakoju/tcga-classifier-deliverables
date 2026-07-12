@@ -1,6 +1,6 @@
 # Literature check — do the top genes match published pan-cancer signatures?
 
-Reviewed for release `v2.1.0-gdc-starcounts` (`2026-07-12`).
+Reviewed for release `v2.2.0-gdc-starcounts` (`2026-07-12`).
 
 **Verdict: the selected genes are qualitatively consistent with published
 stromal/ECM and normal-tissue architecture themes.**

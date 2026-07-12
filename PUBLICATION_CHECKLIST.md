@@ -2,39 +2,44 @@
 
 Use this checklist before making the repository or a release public.
 
-Status for `v2.1.0-gdc-starcounts`: release candidate on `2026-07-12`.
-Unchecked publication and asset items must be completed after the final
-deterministic build.
+Status for `v2.2.0-gdc-starcounts`: released and public. Every item below has been
+executed and verified: the Repository and Scientific Framing items are durably
+true of the tree, and the Release items run automatically through the
+deterministic builder, `run_release_acceptance.py`, and hosted CI on each version
+tag (v2.0.0 through the current release). The one outstanding publication step is
+**archival: mint a Zenodo DOI and backfill it into `CITATION.cff`, `.zenodo.json`,
+and the `README` badge** — this requires enabling the GitHub-Zenodo integration,
+which then archives the release and issues the DOI.
 
 ## Repository
 
 - [x] Confirm the GitHub repository visibility is intentional.
-- [ ] Confirm CI passes on the hosted repository for the release commit.
+- [x] Confirm CI passes on the hosted repository for the release commit.
 - [x] Confirm `.gitignore` excludes large training artifacts and caches.
 - [x] Confirm no private credentials, tokens, or unpublished data are present.
 - [x] Confirm `LICENSE`, `NOTICE.md`, `CITATION.cff`, `.zenodo.json`, and
       `codemeta.json` are present.
-- [ ] Run `python audit_publication_readiness.py` after staging the new release
+- [x] Run `python audit_publication_readiness.py` after staging the new release
       note and final deterministic artifacts.
 
 ## Release
 
 - [x] Confirm `VERSION` matches `RELEASE_METADATA.json`.
-- [ ] Run `python build_release_lite.py --smoke --timeout-seconds 300`.
-- [ ] Run `python build_release_lite.py --check --smoke --timeout-seconds 300`
+- [x] Run `python build_release_lite.py --smoke --timeout-seconds 300`.
+- [x] Run `python build_release_lite.py --check --smoke --timeout-seconds 300`
       and confirm the check is non-mutating.
-- [ ] Run `python run_release_acceptance.py --timeout-seconds 300`.
-- [ ] Run `python validate_release_lite.py --release-dir release-lite --zip
+- [x] Run `python run_release_acceptance.py --timeout-seconds 300`.
+- [x] Run `python validate_release_lite.py --release-dir release-lite --zip
       tcga-tumor-normal-release-lite.zip --source-root . --artifacts
       RELEASE_ARTIFACTS.json`.
-- [ ] Confirm `RELEASE_ARTIFACTS.json` records the final release ZIP SHA256,
+- [x] Confirm `RELEASE_ARTIFACTS.json` records the final release ZIP SHA256,
       byte size, entry count, and trusted-digest acceptance command.
-- [ ] Run `python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
+- [x] Run `python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
       --expected-sha256 <trusted-final-sha256>`.
-- [ ] Replace every explicit TBD field in `GITHUB_RELEASE_v2.1.0.md` from the
+- [x] Replace every explicit TBD field in `GITHUB_RELEASE_v2.2.0.md` from the
       final generated sidecar.
-- [ ] Upload `tcga-tumor-normal-release-lite.zip` as the GitHub Release asset.
-- [ ] Paste `GITHUB_RELEASE_v2.1.0.md` as the GitHub Release body.
+- [x] Upload `tcga-tumor-normal-release-lite.zip` as the GitHub Release asset.
+- [x] Paste `GITHUB_RELEASE_v2.2.0.md` as the GitHub Release body.
 
 ## Scientific Framing
 
@@ -58,3 +63,15 @@ deterministic build.
       and committed external metrics are a historical snapshot.
 - [x] Include TCGA/CPTAC/GTEx/GDC/UCSC Xena citation requirements in any paper
       or formal manuscript.
+
+## Archival & DOI
+
+- [x] Confirm `.zenodo.json`, `CITATION.cff`, and `codemeta.json` describe the
+      current release version and metadata.
+- [ ] Enable the GitHub-Zenodo integration for the repository so a published
+      release is archived automatically.
+- [ ] Obtain the minted Zenodo DOI for the release (and the version-independent
+      concept DOI).
+- [ ] Backfill the DOI into `CITATION.cff` (`doi:` / `identifiers:`),
+      `.zenodo.json`, and a `README` DOI badge, then cut a follow-up release so
+      the archived record and the repository agree.

@@ -127,6 +127,21 @@ def test_cache_fingerprint_stable_for_identical_inputs():
     assert a == b
 
 
+def test_contained_cache_path_child_of_root_even_for_long_paths(tmp_path):
+    # safe_cache_key hashes the identifier, so the cache file is always a bare
+    # sha256 basename directly under the cache root. This must hold even when the
+    # full path crosses the Windows MAX_PATH boundary, where Path.resolve() can add
+    # a \\?\ extended-length prefix to only one side -- a prior relative_to() check
+    # spuriously rejected legitimate long cache directories.
+    root = tmp_path / ("c" * 200) / "gene_cache"
+    path = pv.contained_cache_path(root, "file-xyz", namespace="gdc", suffix=".parquet")
+    assert path.name.endswith(".parquet")
+    assert path.parent == Path(root).resolve()
+    other = pv.contained_cache_path(root, "file-abc", namespace="gdc", suffix=".parquet")
+    assert path != other
+    assert other.parent == Path(root).resolve()
+
+
 def test_load_cached_matrix_rejects_stale_fingerprint(tmp_path):
     cache_path = tmp_path / "matrix.parquet"
     matrix = pd.DataFrame({"ENSG1": [1.0]}, index=["s1"])
@@ -919,6 +934,38 @@ def test_locked_cptac_manifest_requires_project_and_md5_for_live_use(tmp_path):
     with pytest.raises(ValueError, match="must contain only project"):
         cg.validate_locked_sample_manifest(
             path, expected_project="CPTAC-3", require_provider_md5=False
+        )
+
+
+def test_locked_cptac_manifest_accepts_same_case_multi_biospecimen(tmp_path):
+    # A GDC file annotated with several biospecimen submitter IDs of ONE case and
+    # ONE sample_type is not label-ambiguous: the tumor/normal label comes from the
+    # single sample_type (n_sample_types==1). The live (require_provider_md5) path
+    # must accept it, exactly as the offline path already does -- some GDC releases
+    # attach multiple same-type portions of one case to one RNA-seq file.
+    frame = _locked_cptac_frame(include_md5=True)
+    frame.loc[0, "sample_submitter_id"] = "sample-normal-01;sample-normal-02"
+    path = tmp_path / "locked.csv"
+    frame.to_csv(path, index=False)
+
+    validated = cg.validate_locked_sample_manifest(
+        path, expected_project="CPTAC-3", require_provider_md5=True
+    )
+    assert len(validated) == 2
+    assert set(validated["label"].tolist()) == {0, 1}
+
+
+def test_locked_cptac_manifest_still_rejects_multi_case(tmp_path):
+    # A file mapping to multiple *cases* (different patients) is a genuine label
+    # ambiguity and must stay rejected even on the live path.
+    frame = _locked_cptac_frame(include_md5=True)
+    frame.loc[0, "case_submitter_id"] = "case-a;case-b"
+    path = tmp_path / "locked.csv"
+    frame.to_csv(path, index=False)
+
+    with pytest.raises(ValueError, match="ambiguous multi-case"):
+        cg.validate_locked_sample_manifest(
+            path, expected_project="CPTAC-3", require_provider_md5=True
         )
 
 

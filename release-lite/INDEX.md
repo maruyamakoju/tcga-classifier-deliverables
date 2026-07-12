@@ -1,6 +1,6 @@
 # INDEX — a guided reading path
 
-Release: `v2.1.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
+Release: `v2.2.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 This lightweight release focuses on the deployable tumor-vs-normal classifier,
 its validation boundary, and the runnable scoring workflow. Read it in this

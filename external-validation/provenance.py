@@ -109,14 +109,16 @@ def contained_cache_path(
 ) -> Path:
     """Build a hashed cache path and prove that it remains below ``cache_root``."""
     root = Path(cache_root).resolve(strict=False)
-    candidate = (root / f"{safe_cache_key(identifier, namespace)}{suffix}").resolve(
-        strict=False
-    )
-    try:
-        candidate.relative_to(root)
-    except ValueError as exc:  # Defense in depth if path construction changes later.
-        raise ValueError(f"cache path escapes cache root: {candidate}") from exc
-    return candidate
+    key = f"{safe_cache_key(identifier, namespace)}{suffix}"
+    # safe_cache_key returns a bare sha256 hex digest, so ``key`` is a single path
+    # component with no separators or traversal, and ``root / key`` is contained by
+    # construction. Verify that directly instead of re-resolving the child and
+    # calling relative_to(): on Windows, Path.resolve() adds a \\?\ extended-length
+    # prefix to only one side once the full path crosses MAX_PATH, which made
+    # relative_to() spuriously reject legitimate long cache directories.
+    if key != os.path.basename(key) or key in {"", ".", ".."} or "/" in key or "\\" in key:
+        raise ValueError(f"cache path escapes cache root: {root / key}")
+    return root / key
 
 
 def validate_source_revision(source_revision: Any, *, live: bool) -> str:

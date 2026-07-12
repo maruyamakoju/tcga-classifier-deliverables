@@ -1,5 +1,21 @@
 # Release notes
 
+## v2.2.0-gdc-starcounts — 2026-07-13
+
+External-validation robustness release. Two real bugs fixed in the (non-shipped)
+external-validation tooling, and a post-fix live re-validation performed. The
+shipped scoring code, deployed weights, and headline metrics are unchanged.
+
+- CPTAC/GDC manifest validator no longer rejects a file mapped to several
+  biospecimen IDs of one case and one sample_type (label is unambiguous); only a
+  multi-*case* mapping is rejected. Unblocks live re-validation on current GDC.
+- Fixed a Windows long-path bug in provenance.contained_cache_path (an
+  extended-length path prefix past MAX_PATH could make the containment check
+  spuriously reject a legitimate long cache directory).
+- Live re-validation: a fresh CPTAC-3 fetch from GDC Data Release 45.0 reproduced
+  the committed AUC exactly (0.9886). Toil/GTEx remain historical snapshots.
+- Finalized the publication checklist; added an Archival & DOI section.
+
 ## v2.1.0-gdc-starcounts — 2026-07-12
 
 Type-safety release. The public `tcga_rnaseq` scoring API is now fully type-annotated

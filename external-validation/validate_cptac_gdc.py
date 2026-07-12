@@ -349,11 +349,13 @@ def _validate_cptac_sample_frame(
             f"{context} has no provider md5sum; historical manifests may be used only "
             "with --offline and valid caches, or refreshed from GDC metadata"
         )
-    if (
-        require_provider_md5
-        and sampled["sample_submitter_id"].str.contains(";", regex=False).any()
-    ):
-        raise ValueError(f"{context} contains ambiguous multi-biospecimen identifiers")
+    # A file mapping to several biospecimen submitter IDs of the same case and the
+    # same sample_type is not label-ambiguous: the tumor/normal label is derived
+    # from sample_type, which the n_sample_types==1 check below guarantees is
+    # single-valued. Some GDC releases annotate one RNA-seq file with multiple
+    # same-type portions/samples of one case, so accept those exactly as the
+    # offline/cache path already does. Only a multi-*case* mapping (different
+    # patients, hence an ambiguous label source) is a real ambiguity, rejected next.
     if require_provider_md5 and sampled["case_submitter_id"].str.contains(";", regex=False).any():
         raise ValueError(f"{context} contains ambiguous multi-case identifiers")
     if not sampled["sample_type"].isin(LABEL_MAP).all():

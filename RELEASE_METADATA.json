@@ -3,7 +3,13 @@
   "release_name": "Safety, provenance, and deterministic reproducibility release",
   "library_api_version": "3.0.0",
   "schema_version": "1.0",
-  "version": "v2.1.0-gdc-starcounts",
+  "version": "v2.2.0-gdc-starcounts",
+  "changes_since_v2_1_0": [
+    "Fixed the CPTAC/GDC live re-validation manifest validator: a file annotated with several biospecimen submitter IDs of one case and one sample_type is no longer rejected as ambiguous, because the tumor/normal label is unambiguous and already guaranteed by the n_sample_types==1 and multi-case checks. This unblocks --refresh-manifest against current GDC releases without ever guessing a label.",
+    "Fixed a Windows long-path robustness bug in external-validation provenance.contained_cache_path: it now verifies the hashed cache key is a bare basename instead of re-resolving the child path, which Path.resolve() could prefix with a backslash-question-mark extended-length marker on only one side past MAX_PATH and spuriously reject as escaping the cache root.",
+    "Performed a post-fix live re-validation: a fresh fetch of the locked 200-sample CPTAC-3 cohort from GDC Data Release 45.0 (2025-12-04), scored by the current code, reproduced the committed AUC exactly (0.9886; accuracy 0.96 vs 0.955, differing by one threshold-boundary sample). The cross-platform TCGA-Toil and GTEx summaries remain historical snapshots (not re-run live).",
+    "Finalized the publication checklist and added an Archival and DOI section tracking the outstanding Zenodo deposit and DOI backfill."
+  ],
   "changes_since_v2_0_2": [
     "Type-annotated the public tcga_rnaseq scoring API (io, align, score, metrics, validation) and shipped a PEP 561 py.typed marker so downstream type-checkers use the inline types.",
     "Added a scoped mypy configuration (disallow_untyped_defs; pandas treated as untyped, numpy typed) and a mypy continuous-integration gate on the public library. No scoring code, deployed weights, bundled payload logic, or headline metric changed; annotations are additive and the runtime API/behavior is unchanged (library API remains 3.0.0)."

@@ -1,6 +1,6 @@
 # Maintenance guide
 
-Current release: `v2.1.0-gdc-starcounts` (`2026-07-12`); public scoring-library
+Current release: `v2.2.0-gdc-starcounts` (`2026-07-12`); public scoring-library
 API `3.0.0`.
 
 This repository is public and research-only. Keep operational changes small,
