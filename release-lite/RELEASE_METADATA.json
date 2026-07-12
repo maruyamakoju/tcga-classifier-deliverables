@@ -3,7 +3,12 @@
   "release_name": "Safety, provenance, and deterministic reproducibility release",
   "library_api_version": "3.0.0",
   "schema_version": "1.0",
-  "version": "v2.0.1-gdc-starcounts",
+  "version": "v2.0.2-gdc-starcounts",
+  "changes_since_v2_0_1": [
+    "Configured dependabot to ignore the version-locked scientific reproduction stack (numpy/pandas/scipy/scikit-learn), which is bumped manually with a golden-metric re-verification, so automated PRs stop conflicting with the pins.",
+    "Raised development-tooling floors (pytest>=9.1.1, ruff>=0.15.21, requests>=2.34.2); CI already resolved to these ranges, so this is a lower-bound documentation change with no behavioral effect.",
+    "No shipped scoring code, deployed weights, or headline metric changed from v2.0.0/v2.0.1; the release-lite payload differs only in the committed VERSION/doc strings."
+  ],
   "changes_since_v2_0_0": [
     "Fixed test hygiene: the patient-disjoint train/test split regression test now skips when the gitignored full-data feature matrix is absent (via the features_npy fixture) instead of hard-failing on CI. No shipped code, model, or bundled artifact changed from v2.0.0."
   ],

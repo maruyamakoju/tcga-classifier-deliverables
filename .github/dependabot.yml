@@ -10,3 +10,15 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
+    ignore:
+      # The canonical scientific reproduction stack (requirements-training.txt)
+      # is version-locked so the shipped weights and golden metrics stay exactly
+      # reproducible. These libraries are bumped deliberately, together with a
+      # golden-metric re-verification -- not automatically by a bot -- so
+      # dependabot must not open PRs that fight the pins (e.g. pandas 3.x, which
+      # breaks the suite outright). Development tooling (pytest, ruff), pyarrow,
+      # requests, and GitHub Actions still receive automated updates.
+      - dependency-name: "numpy"
+      - dependency-name: "pandas"
+      - dependency-name: "scipy"
+      - dependency-name: "scikit-learn"

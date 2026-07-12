@@ -1,6 +1,6 @@
 # Model card: TCGA/GDC tumor-vs-normal RNA-seq classifier
 
-Release: `v2.0.1-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
+Release: `v2.0.2-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 ## Intended use
 

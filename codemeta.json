@@ -31,12 +31,12 @@
     "macOS"
   ],
   "programmingLanguage": "Python",
-  "releaseNotes": "https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v2.0.1-gdc-starcounts",
+  "releaseNotes": "https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v2.0.2-gdc-starcounts",
   "runtimePlatform": "Lightweight scoring: Python >=3.11 (CI: 3.11 and 3.13); exact refitting: canonical Python 3.11 stack",
   "softwareRequirements": [
     "numpy",
     "pandas",
     "pyarrow"
   ],
-  "version": "v2.0.1-gdc-starcounts"
+  "version": "v2.0.2-gdc-starcounts"
 }

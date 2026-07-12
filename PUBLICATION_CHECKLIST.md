@@ -2,7 +2,7 @@
 
 Use this checklist before making the repository or a release public.
 
-Status for `v2.0.1-gdc-starcounts`: release candidate on `2026-07-12`.
+Status for `v2.0.2-gdc-starcounts`: release candidate on `2026-07-12`.
 Unchecked publication and asset items must be completed after the final
 deterministic build.
 
@@ -31,10 +31,10 @@ deterministic build.
       byte size, entry count, and trusted-digest acceptance command.
 - [ ] Run `python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
       --expected-sha256 <trusted-final-sha256>`.
-- [ ] Replace every explicit TBD field in `GITHUB_RELEASE_v2.0.1.md` from the
+- [ ] Replace every explicit TBD field in `GITHUB_RELEASE_v2.0.2.md` from the
       final generated sidecar.
 - [ ] Upload `tcga-tumor-normal-release-lite.zip` as the GitHub Release asset.
-- [ ] Paste `GITHUB_RELEASE_v2.0.1.md` as the GitHub Release body.
+- [ ] Paste `GITHUB_RELEASE_v2.0.2.md` as the GitHub Release body.
 
 ## Scientific Framing
 

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-05
 **Model:** frozen `deployable_lr_weights.npz` (weights unchanged in
-`v2.0.1-gdc-starcounts`)
+`v2.0.2-gdc-starcounts`)
 **Status:** retrospective research benchmark; not a calibrated deployment mode
 
 ## Problem

@@ -1,5 +1,17 @@
 # Release notes
 
+## v2.0.2-gdc-starcounts — 2026-07-12
+
+Maintenance patch on top of v2.0.1. No shipped scoring code, deployed weights,
+or headline metric changed; the release-lite payload differs only in the
+committed VERSION/doc strings.
+
+- Locked the version-pinned scientific reproduction stack out of automated
+  dependabot bumps (numpy/pandas/scipy/scikit-learn are bumped manually with a
+  golden re-verification); tooling, pyarrow, requests, and Actions still update.
+- Raised development-tooling lower bounds (pytest>=9.1.1, ruff>=0.15.21,
+  requests>=2.34.2); CI already used these ranges, so there is no behavior change.
+
 ## v2.0.1-gdc-starcounts — 2026-07-12
 
 Test-hygiene patch on top of v2.0.0. No shipped code, deployed weights, bundled
