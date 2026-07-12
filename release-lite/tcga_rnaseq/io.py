@@ -1,4 +1,6 @@
 """Model and data I/O for tcga_rnaseq. numpy + pandas only."""
+from __future__ import annotations
+
 import json
 import os
 import pickle
@@ -7,6 +9,7 @@ import csv
 import numbers
 from collections.abc import Mapping
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -19,7 +22,7 @@ _MODEL_REQUIRED_KEYS = {
 }
 
 
-def _model_text(value, field_name):
+def _model_text(value: Any, field_name: str) -> str:
     if isinstance(value, (bytes, np.bytes_)):
         try:
             return bytes(value).decode("utf-8")
@@ -28,7 +31,7 @@ def _model_text(value, field_name):
     return str(value)
 
 
-def _validate_class_labels(classes, expected_count):
+def _validate_class_labels(classes: Any, expected_count: int) -> np.ndarray:
     classes = np.asarray(classes)
     if classes.ndim != 1 or classes.shape != (expected_count,):
         raise ValueError(
@@ -56,7 +59,7 @@ def _validate_class_labels(classes, expected_count):
     return classes
 
 
-def validate_lr_model(model):
+def validate_lr_model(model: Any) -> dict[str, Any]:
     """Return a canonical, fully validated logistic-regression model dict."""
     if not isinstance(model, dict):
         raise ValueError("Model must be a dictionary")
@@ -117,7 +120,7 @@ def validate_lr_model(model):
             )
         if intercept_array.shape != ():
             raise ValueError("Binary intercept must be a scalar")
-        intercept = float(intercept_array)
+        intercept: float | np.ndarray = float(intercept_array)
         classes = _validate_class_labels(model.get("classes", np.array([0, 1])), 2)
     elif coef.ndim == 2:
         kind = "multiclass"
@@ -159,7 +162,7 @@ def validate_lr_model(model):
     }
 
 
-def load_lr_model(path):
+def load_lr_model(path: str | os.PathLike[str]) -> dict[str, Any]:
     """Load a deployable logistic-regression model from a .npz file.
 
     Handles both the binary tumor-vs-normal export and the multi-class
@@ -236,21 +239,21 @@ def load_lr_model(path):
 class _XgbStub:
     """Absorbs a pickled xgboost model so unpickling never triggers
     `import xgboost` (which segfaults in the project conda env). Never scored."""
-    def __init__(self, *a, **k):
+    def __init__(self, *a: Any, **k: Any) -> None:
         pass
 
-    def __setstate__(self, state):
+    def __setstate__(self, state: Any) -> None:
         self._state = state
 
 
 class _SafeUnpickler(pickle.Unpickler):
-    def find_class(self, module, name):
+    def find_class(self, module: str, name: str) -> Any:
         if module.startswith("xgboost"):
             return _XgbStub
         return super().find_class(module, name)
 
 
-def load_pipeline(path, *, trusted=False):
+def load_pipeline(path: str | os.PathLike[str], *, trusted: bool = False) -> Any:
     """Load a *trusted* legacy pickle, stubbing xgboost imports.
 
     Pickle can execute arbitrary code.  The xgboost stub prevents an unwanted
@@ -269,13 +272,13 @@ def load_pipeline(path, *, trusted=False):
         raise ValueError(f"could not load trusted legacy pipeline {path}: {exc}") from exc
 
 
-def _looks_like_ensembl_gene_id(value):
+def _looks_like_ensembl_gene_id(value: Any) -> bool:
     text = str(value).strip()
     base = text.rsplit(".", 1)[0] if text.rsplit(".", 1)[-1].isdigit() else text
     return base.startswith("ENSG") and base[4:].isdigit()
 
 
-def _read_delimited_header(path, delimiter):
+def _read_delimited_header(path: str | os.PathLike[str], delimiter: str) -> list[str]:
     try:
         with open(path, "r", encoding="utf-8-sig", newline="") as handle:
             header = next(csv.reader(handle, delimiter=delimiter), None)
@@ -286,27 +289,27 @@ def _read_delimited_header(path, delimiter):
     return header
 
 
-def _validate_delimited_header(path, delimiter):
+def _validate_delimited_header(path: str | os.PathLike[str], delimiter: str) -> None:
     """Detect headers pandas would otherwise silently mangle (``x`` -> ``x.1``)."""
     header = _read_delimited_header(path, delimiter)
     genes = [str(value).strip() for value in header[1:]]
     if any(value == "" for value in genes):
         raise ValueError("expression matrix gene identifiers must be non-empty")
-    seen = set()
-    duplicates = set()
+    seen: set[str] = set()
+    duplicates: set[str] = set()
     for value in genes:
         if value in seen:
             duplicates.add(value)
         seen.add(value)
-    duplicates = sorted(duplicates)
-    if duplicates:
+    sorted_duplicates = sorted(duplicates)
+    if sorted_duplicates:
         raise ValueError(
             "expression matrix contains duplicate gene columns: "
-            + ", ".join(duplicates[:5])
+            + ", ".join(sorted_duplicates[:5])
         )
 
 
-def _promote_parquet_row_identifier(df):
+def _promote_parquet_row_identifier(df: Any) -> Any:
     """Restore the documented first-column row identifier for indexless Parquet.
 
     Pandas restores an index that was written into Parquet metadata.  With
@@ -342,7 +345,7 @@ def _promote_parquet_row_identifier(df):
     return df.set_index(first_column, drop=True)
 
 
-def read_matrix(path, transpose=False, allow_pickle=False):
+def read_matrix(path: str | os.PathLike[str], transpose: bool = False, allow_pickle: bool = False) -> pd.DataFrame:
     """Read an expression matrix by extension.
 
     Supported public input formats are .csv, .tsv, .txt, and .parquet. Pickled
@@ -401,7 +404,7 @@ def read_matrix(path, transpose=False, allow_pickle=False):
     return validate_expression_matrix(result, f"expression matrix {path}")
 
 
-def read_expression_csv(path, index_col=0):
+def read_expression_csv(path: str | os.PathLike[str], index_col: int | str = 0) -> pd.DataFrame:
     """Read an expression matrix CSV (rows=samples, cols=Ensembl gene IDs)."""
     if index_col == 0:
         return read_matrix(path)
@@ -428,7 +431,7 @@ def read_expression_csv(path, index_col=0):
     return validate_expression_matrix(frame, f"expression matrix {path}")
 
 
-def read_csv_table(path, string_columns=()):
+def read_csv_table(path: str | os.PathLike[str], string_columns: tuple[str, ...] = ()) -> pd.DataFrame:
     """Read a public CSV while preserving selected identifier columns."""
     path = os.fspath(path)
     if not os.path.exists(path):
@@ -453,11 +456,11 @@ def read_csv_table(path, string_columns=()):
         raise ValueError(f"could not read CSV {path}: {exc}") from exc
 
 
-def _canonical_path(path):
+def _canonical_path(path: str | os.PathLike[str]) -> str:
     return os.path.normcase(os.path.realpath(os.path.abspath(os.fspath(path))))
 
 
-def ensure_distinct_paths(outputs, inputs=None):
+def ensure_distinct_paths(outputs: Any, inputs: Any = None) -> None:
     """Reject output/output and output/input path collisions.
 
     ``outputs`` and ``inputs`` are mappings from human-readable names to paths;
@@ -471,7 +474,7 @@ def ensure_distinct_paths(outputs, inputs=None):
         raise ValueError("inputs must be a mapping of names to paths")
     output_items = [(name, path) for name, path in outputs.items() if path]
     input_items = [(name, path) for name, path in inputs.items() if path]
-    seen = {}
+    seen: dict[str, Any] = {}
     for name, path in output_items:
         canonical = _canonical_path(path)
         if canonical in seen:
@@ -504,7 +507,7 @@ def ensure_distinct_paths(outputs, inputs=None):
                 )
 
 
-def _atomic_text_write(path, text, encoding="utf-8"):
+def _atomic_text_write(path: str | os.PathLike[str], text: str, encoding: str = "utf-8") -> str | os.PathLike[str]:
     target = Path(path)
     try:
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -528,7 +531,7 @@ def _atomic_text_write(path, text, encoding="utf-8"):
     return path
 
 
-def write_dataframe_csv(df, path, index=False, **kwargs):
+def write_dataframe_csv(df: pd.DataFrame, path: str | os.PathLike[str], index: bool = False, **kwargs: Any) -> str | os.PathLike[str]:
     """Atomically write a DataFrame CSV, creating its parent directory."""
     target = Path(path)
     kwargs.setdefault("lineterminator", "\n")
@@ -557,12 +560,12 @@ def write_dataframe_csv(df, path, index=False, **kwargs):
     return path
 
 
-def write_text(path, text, encoding="utf-8"):
+def write_text(path: str | os.PathLike[str], text: str, encoding: str = "utf-8") -> str | os.PathLike[str]:
     """Atomically write text, creating its parent directory."""
     return _atomic_text_write(path, text, encoding=encoding)
 
 
-def write_json(obj, path, indent=2, sort_keys=False):
+def write_json(obj: Any, path: str | os.PathLike[str], indent: int = 2, sort_keys: bool = False) -> str | os.PathLike[str]:
     """Write a JSON report (trailing newline), creating parent dirs as needed."""
     try:
         content = json.dumps(

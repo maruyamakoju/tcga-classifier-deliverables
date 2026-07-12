@@ -1,14 +1,14 @@
 {
   "release_date": "2026-07-12",
   "release_dir": "release-lite",
-  "release_file_count": 75,
-  "release_total_bytes": 929242,
+  "release_file_count": 76,
+  "release_total_bytes": 933595,
   "schema_version": "1.0",
   "validation_command": "python validate_release_lite.py --release-dir release-lite --zip tcga-tumor-normal-release-lite.zip --source-root . --artifacts RELEASE_ARTIFACTS.json",
-  "version": "v2.0.2-gdc-starcounts",
-  "zip_acceptance_command": "python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip --expected-sha256 a521a49c0c38eb704e69a3505a1c285d70d72d185f6f4663be0c2336dce514fe",
-  "zip_bytes": 938822,
-  "zip_entries": 75,
+  "version": "v2.1.0-gdc-starcounts",
+  "zip_acceptance_command": "python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip --expected-sha256 2b8ee4456564aa73de5d664752369174e762894e2cddbc487d997c769c7a8e15",
+  "zip_bytes": 943291,
+  "zip_entries": 76,
   "zip_path": "tcga-tumor-normal-release-lite.zip",
-  "zip_sha256": "a521a49c0c38eb704e69a3505a1c285d70d72d185f6f4663be0c2336dce514fe"
+  "zip_sha256": "2b8ee4456564aa73de5d664752369174e762894e2cddbc487d997c769c7a8e15"
 }

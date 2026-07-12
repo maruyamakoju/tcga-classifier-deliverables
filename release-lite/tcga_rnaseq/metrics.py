@@ -6,10 +6,14 @@ external validation, while failing closed on malformed arrays instead of
 silently truncating, sorting NaNs, or accepting non-binary labels.
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import numpy as np
 
 
-def _as_1d(values, name):
+def _as_1d(values: Any, name: str) -> np.ndarray:
     array = np.asarray(values)
     if array.ndim != 1:
         raise ValueError(f"{name} must be a one-dimensional array")
@@ -18,7 +22,7 @@ def _as_1d(values, name):
     return array
 
 
-def _validate_same_length(left, right, left_name="y_true", right_name="y_pred"):
+def _validate_same_length(left: Any, right: Any, left_name: str = "y_true", right_name: str = "y_pred") -> tuple[np.ndarray, np.ndarray]:
     left = _as_1d(left, left_name)
     right = _as_1d(right, right_name)
     if left.size != right.size:
@@ -29,7 +33,7 @@ def _validate_same_length(left, right, left_name="y_true", right_name="y_pred"):
     return left, right
 
 
-def _has_missing_label(values):
+def _has_missing_label(values: np.ndarray) -> bool:
     for value in values.tolist():
         if value is None:
             return True
@@ -43,14 +47,14 @@ def _has_missing_label(values):
     return False
 
 
-def _classification_arrays(y_true, y_pred):
+def _classification_arrays(y_true: Any, y_pred: Any) -> tuple[np.ndarray, np.ndarray]:
     y, pred = _validate_same_length(y_true, y_pred)
     if _has_missing_label(y) or _has_missing_label(pred):
         raise ValueError("class labels must not contain missing values")
     return y, pred
 
 
-def _binary_arrays(y_true, scores, require_both_classes=False):
+def _binary_arrays(y_true: Any, scores: Any, require_both_classes: bool = False) -> tuple[np.ndarray, np.ndarray]:
     y_raw, score_raw = _validate_same_length(y_true, scores, "y_true", "scores")
     try:
         y_numeric = y_raw.astype(float)
@@ -70,7 +74,7 @@ def _binary_arrays(y_true, scores, require_both_classes=False):
     return y, score_values
 
 
-def _finite_threshold(threshold):
+def _finite_threshold(threshold: Any) -> float:
     try:
         value = float(threshold)
     except (TypeError, ValueError) as exc:
@@ -80,7 +84,7 @@ def _finite_threshold(threshold):
     return value
 
 
-def roc_auc(y_true, scores):
+def roc_auc(y_true: Any, scores: Any) -> float:
     """Binary ROC AUC via the rank statistic (Mann-Whitney U).
 
     A single-class target has no defined ROC AUC and returns ``nan``.  Invalid
@@ -108,7 +112,7 @@ def roc_auc(y_true, scores):
     return float((ranks[y == 1].sum() - n_pos * (n_pos + 1) / 2.0) / (n_pos * n_neg))
 
 
-def average_precision(y_true, scores):
+def average_precision(y_true: Any, scores: Any) -> float:
     """Binary average precision, grouping tied scores at one threshold.
 
     This matches ``sklearn.metrics.average_precision_score`` for a target that
@@ -132,18 +136,18 @@ def average_precision(y_true, scores):
     return float(np.sum(recall_increments * precision))
 
 
-def accuracy(y_true, y_pred):
+def accuracy(y_true: Any, y_pred: Any) -> float:
     y, pred = _classification_arrays(y_true, y_pred)
     return float(np.mean(y == pred))
 
 
-def balanced_accuracy(y_true, y_pred):
+def balanced_accuracy(y_true: Any, y_pred: Any) -> float:
     y, pred = _classification_arrays(y_true, y_pred)
     recalls = [np.mean(pred[y == label] == label) for label in np.unique(y)]
     return float(np.mean(recalls))
 
 
-def confusion_matrix(y_true, y_pred, labels=None):
+def confusion_matrix(y_true: Any, y_pred: Any, labels: Any = None) -> tuple[np.ndarray, list[Any]]:
     y, pred = _classification_arrays(y_true, y_pred)
     if labels is None:
         labels = np.unique(np.concatenate([y, pred])).tolist()
@@ -163,7 +167,7 @@ def confusion_matrix(y_true, y_pred, labels=None):
     return matrix, labels
 
 
-def per_class_prf(y_true, y_pred, labels=None):
+def per_class_prf(y_true: Any, y_pred: Any, labels: Any = None) -> list[dict[str, Any]]:
     """Per-class precision/recall/F1/support. Returns a list of dicts."""
     matrix, labels = confusion_matrix(y_true, y_pred, labels)
     output = []
@@ -184,11 +188,11 @@ def per_class_prf(y_true, y_pred, labels=None):
     return output
 
 
-def macro_f1(y_true, y_pred, labels=None):
+def macro_f1(y_true: Any, y_pred: Any, labels: Any = None) -> float:
     return float(np.mean([row["f1"] for row in per_class_prf(y_true, y_pred, labels)]))
 
 
-def confusion_at(y_true, scores, threshold):
+def confusion_at(y_true: Any, scores: Any, threshold: Any) -> tuple[int, int, int, int]:
     """Binary confusion counts ``(tn, fp, fn, tp)`` at a threshold."""
     y, score_values = _binary_arrays(y_true, scores)
     threshold = _finite_threshold(threshold)
@@ -200,7 +204,7 @@ def confusion_at(y_true, scores, threshold):
     return tn, fp, fn, tp
 
 
-def classification_metrics(y_true, scores, threshold=0.5, name=None):
+def classification_metrics(y_true: Any, scores: Any, threshold: Any = 0.5, name: str | None = None) -> dict[str, Any]:
     """Binary threshold metrics plus threshold-independent ROC AUC."""
     y, score_values = _binary_arrays(y_true, scores)
     threshold = _finite_threshold(threshold)
@@ -235,7 +239,7 @@ def classification_metrics(y_true, scores, threshold=0.5, name=None):
     return output
 
 
-def youden_threshold(y_true, scores):
+def youden_threshold(y_true: Any, scores: Any) -> dict[str, Any]:
     """Choose a probability cutoff by J, accuracy, then lower-threshold tie-break.
 
     Candidate cutoffs include the closed probability-domain boundaries.  This
@@ -264,6 +268,6 @@ def youden_threshold(y_true, scores):
     return best_metrics
 
 
-def threshold_sweep(y_true, scores, thresholds):
+def threshold_sweep(y_true: Any, scores: Any, thresholds: Any) -> list[dict[str, Any]]:
     """Return classification metrics across the requested thresholds."""
     return [classification_metrics(y_true, scores, threshold) for threshold in thresholds]

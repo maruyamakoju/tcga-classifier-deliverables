@@ -1,3 +1,20 @@
+[tool.mypy]
+# Type-check the shipped public scoring library. The core is deliberately
+# numpy + pandas only; numpy ships py.typed, pandas does not, so pandas imports
+# are treated as untyped rather than pulling in a stub package.
+python_version = "3.11"
+files = ["tcga_rnaseq"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = ["pandas", "pandas.*"]
+ignore_missing_imports = true
+
 [tool.ruff]
 line-length = 110
 

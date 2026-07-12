@@ -3,7 +3,11 @@
   "release_name": "Safety, provenance, and deterministic reproducibility release",
   "library_api_version": "3.0.0",
   "schema_version": "1.0",
-  "version": "v2.0.2-gdc-starcounts",
+  "version": "v2.1.0-gdc-starcounts",
+  "changes_since_v2_0_2": [
+    "Type-annotated the public tcga_rnaseq scoring API (io, align, score, metrics, validation) and shipped a PEP 561 py.typed marker so downstream type-checkers use the inline types.",
+    "Added a scoped mypy configuration (disallow_untyped_defs; pandas treated as untyped, numpy typed) and a mypy continuous-integration gate on the public library. No scoring code, deployed weights, bundled payload logic, or headline metric changed; annotations are additive and the runtime API/behavior is unchanged (library API remains 3.0.0)."
+  ],
   "changes_since_v2_0_1": [
     "Configured dependabot to ignore the version-locked scientific reproduction stack (numpy/pandas/scipy/scikit-learn), which is bumped manually with a golden-metric re-verification, so automated PRs stop conflicting with the pins.",
     "Raised development-tooling floors (pytest>=9.1.1, ruff>=0.15.21, requests>=2.34.2); CI already resolved to these ranges, so this is a lower-bound documentation change with no behavioral effect.",

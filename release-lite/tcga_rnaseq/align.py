@@ -1,15 +1,19 @@
 """Gene-column alignment for tcga_rnaseq."""
+from __future__ import annotations
+
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
 
-def _preview(values, limit=5):
+def _preview(values: Any, limit: int = 5) -> str:
     text = [str(value) for value in values[:limit]]
     suffix = ", ..." if len(values) > limit else ""
     return ", ".join(text) + suffix
 
 
-def strip_version(gene_id):
+def strip_version(gene_id: Any) -> str:
     """Drop a trailing numeric version suffix only.
 
     ``ENSG00000005.6`` becomes ``ENSG00000005`` while identifiers containing
@@ -23,7 +27,7 @@ def strip_version(gene_id):
     return text
 
 
-def build_gene_column_lookups(columns):
+def build_gene_column_lookups(columns: Any) -> tuple[dict[str, Any], dict[str, Any]]:
     """Build exact and version-stripped lookups for input gene columns.
 
     The model accepts Ensembl IDs with or without ``.version`` suffixes, but
@@ -42,8 +46,8 @@ def build_gene_column_lookups(columns):
             "Duplicate gene columns are not allowed: " + _preview(sorted(set(duplicate_exact)))
         )
 
-    stripped = {}
-    collisions = {}
+    stripped: dict[str, Any] = {}
+    collisions: dict[str, list[str]] = {}
     for column in columns:
         base = strip_version(column)
         if base in stripped:
@@ -63,11 +67,11 @@ def build_gene_column_lookups(columns):
     return exact, stripped
 
 
-def _fraction(numerator, denominator):
+def _fraction(numerator: float, denominator: float) -> float:
     return float(numerator) / float(denominator) if denominator else 0.0
 
 
-def align_to_genes_with_report(X, genes, impute_mean=None):
+def align_to_genes_with_report(X: pd.DataFrame, genes: Any, impute_mean: np.ndarray | None = None) -> tuple[np.ndarray, dict[str, Any]]:
     """Reindex an expression DataFrame to the model's gene order.
 
     Matches Ensembl IDs with OR without the ``.version`` suffix (so a user CSV
@@ -175,10 +179,10 @@ def align_to_genes_with_report(X, genes, impute_mean=None):
     return out, report
 
 
-def validate_alignment_report(report, max_invalid_cell_fraction=0.0):
+def validate_alignment_report(report: dict[str, Any], max_invalid_cell_fraction: float = 0.0) -> list[str]:
     """Return blocking issues for invalid values in matched model-gene cells."""
     max_invalid_cell_fraction = float(max_invalid_cell_fraction)
-    issues = []
+    issues: list[str] = []
     invalid_cells = int(report.get("invalid_matched_cells", 0))
     if invalid_cells <= 0:
         return issues
@@ -216,7 +220,7 @@ def validate_alignment_report(report, max_invalid_cell_fraction=0.0):
     return issues
 
 
-def validate_gene_match_report(report, min_match_rate=0.5):
+def validate_gene_match_report(report: dict[str, Any], min_match_rate: float = 0.5) -> list[str]:
     """Return blocking issues for low model-gene coverage."""
     min_match_rate = float(min_match_rate)
     n_model_genes = int(report.get("n_model_genes", 0))
@@ -237,7 +241,7 @@ def validate_gene_match_report(report, min_match_rate=0.5):
     ]
 
 
-def format_gene_match_issues(report, min_match_rate=0.5):
+def format_gene_match_issues(report: dict[str, Any], min_match_rate: float = 0.5) -> str:
     """Return a single ValueError-ready message for low model-gene coverage."""
     issues = validate_gene_match_report(report, min_match_rate=min_match_rate)
     if not issues:
@@ -245,7 +249,7 @@ def format_gene_match_issues(report, min_match_rate=0.5):
     return "low model-gene coverage: " + " ".join(issues)
 
 
-def format_alignment_issues(report, max_invalid_cell_fraction=0.0):
+def format_alignment_issues(report: dict[str, Any], max_invalid_cell_fraction: float = 0.0) -> str:
     """Return a single ValueError-ready message for invalid matched values."""
     issues = validate_alignment_report(
         report,
@@ -256,7 +260,7 @@ def format_alignment_issues(report, max_invalid_cell_fraction=0.0):
     return "invalid matched values: " + " ".join(issues)
 
 
-def print_invalid_alignment_summary(report, stream, prefix="[score]"):
+def print_invalid_alignment_summary(report: dict[str, Any], stream: Any, prefix: str = "[score]") -> None:
     """Print a concise invalid matched-value summary to ``stream``."""
     invalid_cells = int(report.get("invalid_matched_cells", 0))
     if invalid_cells <= 0:
@@ -287,12 +291,12 @@ def print_invalid_alignment_summary(report, stream, prefix="[score]"):
 
 
 def align_to_genes(
-    X,
-    genes,
-    impute_mean=None,
-    max_invalid_cell_fraction=0.0,
-    allow_invalid_values=False,
-):
+    X: pd.DataFrame,
+    genes: Any,
+    impute_mean: np.ndarray | None = None,
+    max_invalid_cell_fraction: float = 0.0,
+    allow_invalid_values: bool = False,
+) -> tuple[np.ndarray, int, list[str]]:
     """Reindex an expression DataFrame to the model's gene order.
 
     Returns ``(values ndarray (n_samples, g), n_matched int, missing list)``.

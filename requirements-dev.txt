@@ -4,3 +4,4 @@
 -r requirements-training.txt
 pytest>=9.1.1,<10
 ruff>=0.15.21,<0.16
+mypy>=1.15,<2

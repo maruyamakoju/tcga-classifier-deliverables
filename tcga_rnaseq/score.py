@@ -1,5 +1,10 @@
 """Standardization (with cross-platform domain adaptation) and logistic scoring."""
+from __future__ import annotations
+
+from typing import Any, cast
+
 import numpy as np
+import pandas as pd
 
 from .align import (
     align_to_genes_with_report,
@@ -12,7 +17,7 @@ from .validation import validate_expression_matrix, validate_threshold
 ADAPT_MODES = ("none", "cohort_zscore", "cohort_center")
 
 
-def sigmoid(x):
+def sigmoid(x: Any) -> np.ndarray:
     """Numerically stable logistic sigmoid (no overflow at large |x|)."""
     x = np.asarray(x, dtype=float)
     out = np.empty_like(x)
@@ -23,7 +28,7 @@ def sigmoid(x):
     return out
 
 
-def softmax(logits, axis=1):
+def softmax(logits: Any, axis: int = 1) -> np.ndarray:
     logits = np.asarray(logits, dtype=float)
     if logits.ndim < 1:
         raise ValueError("softmax logits must have at least one dimension")
@@ -34,7 +39,7 @@ def softmax(logits, axis=1):
     return e / e.sum(axis=axis, keepdims=True)
 
 
-def standardize(values, model, adapt="none"):
+def standardize(values: Any, model: dict[str, Any], adapt: str = "none") -> np.ndarray:
     """Standardize aligned feature values before the linear model.
 
     none           z = (x - train_mean) / train_scale        (deployed)
@@ -58,7 +63,7 @@ def standardize(values, model, adapt="none"):
     return (v - mu) / sd  # cohort_zscore
 
 
-def _validate_aligned_values(model, values):
+def _validate_aligned_values(model: dict[str, Any], values: np.ndarray) -> None:
     if values.ndim != 2:
         raise ValueError("aligned values must be a 2-D samples x genes matrix")
     n_genes = len(model["genes"])
@@ -72,7 +77,7 @@ def _validate_aligned_values(model, values):
         raise ValueError("aligned values must contain at least one sample")
 
 
-def _binary_role(value):
+def _binary_role(value: Any) -> str | None:
     text = str(value).strip().lower()
     if text in {"0", "0.0", "false", "normal", "healthy", "negative", "neg"}:
         return "normal"
@@ -81,7 +86,7 @@ def _binary_role(value):
     return None
 
 
-def validate_tumor_binary_model(model):
+def validate_tumor_binary_model(model: dict[str, Any]) -> dict[str, Any]:
     """Validate that binary class 1 really denotes tumor probability."""
     model = validate_lr_model(model)
     if model["kind"] != "binary":
@@ -95,7 +100,7 @@ def validate_tumor_binary_model(model):
     return model
 
 
-def predict_proba_from_aligned(model, values, adapt="none", validate_values=True):
+def predict_proba_from_aligned(model: dict[str, Any], values: Any, adapt: str = "none", validate_values: bool = True) -> np.ndarray:
     """Score already-aligned feature values.
 
     ``values`` must be samples x model genes in ``model["genes"]`` order.
@@ -130,7 +135,7 @@ def predict_proba_from_aligned(model, values, adapt="none", validate_values=True
     return proba
 
 
-def _raise_for_invalid_alignment(report, max_invalid_cell_fraction):
+def _raise_for_invalid_alignment(report: dict[str, Any], max_invalid_cell_fraction: float) -> None:
     message = format_alignment_issues(
         report,
         max_invalid_cell_fraction=max_invalid_cell_fraction,
@@ -140,15 +145,15 @@ def _raise_for_invalid_alignment(report, max_invalid_cell_fraction):
 
 
 def predict_proba(
-    model,
-    X,
-    adapt="none",
-    max_invalid_cell_fraction=0.0,
-    allow_invalid_values=False,
-    return_alignment_report=False,
-    min_model_gene_match_rate=0.5,
-    allow_low_gene_coverage=False,
-):
+    model: dict[str, Any],
+    X: pd.DataFrame,
+    adapt: str = "none",
+    max_invalid_cell_fraction: float = 0.0,
+    allow_invalid_values: bool = False,
+    return_alignment_report: bool = False,
+    min_model_gene_match_rate: float = 0.5,
+    allow_low_gene_coverage: bool = False,
+) -> np.ndarray | tuple[np.ndarray, dict[str, Any]]:
     """Score an expression DataFrame.
 
     Returns P(positive class) as a 1-D array for a binary model, or an
@@ -185,19 +190,19 @@ def predict_proba(
 
 
 def score_binary_dataframe(
-    model,
-    X,
-    threshold=0.5,
-    adapt="none",
-    positive_label="tumor",
-    negative_label="normal",
-    round_digits=None,
-    max_invalid_cell_fraction=0.0,
-    allow_invalid_values=False,
-    return_alignment_report=False,
-    min_model_gene_match_rate=0.5,
-    allow_low_gene_coverage=False,
-):
+    model: dict[str, Any],
+    X: pd.DataFrame,
+    threshold: float = 0.5,
+    adapt: str = "none",
+    positive_label: str = "tumor",
+    negative_label: str = "normal",
+    round_digits: int | None = None,
+    max_invalid_cell_fraction: float = 0.0,
+    allow_invalid_values: bool = False,
+    return_alignment_report: bool = False,
+    min_model_gene_match_rate: float = 0.5,
+    allow_low_gene_coverage: bool = False,
+) -> tuple[Any, ...]:
     """Return the stable public scoring CSV shape for a binary model.
 
     Returns ``(dataframe, n_matched, missing)``. The DataFrame columns are
@@ -231,7 +236,6 @@ def score_binary_dataframe(
         _raise_for_invalid_alignment(report, max_invalid_cell_fraction)
     proba = predict_proba_from_aligned(model, values, adapt=adapt)
     calls = np.where(proba >= threshold, positive_label, negative_label)
-    import pandas as pd
 
     displayed_proba = proba if round_digits is None else np.round(proba, round_digits)
     if round_digits is not None:
@@ -247,15 +251,15 @@ def score_binary_dataframe(
 
 
 def predict(
-    model,
-    X,
-    adapt="none",
-    threshold=0.5,
-    max_invalid_cell_fraction=0.0,
-    allow_invalid_values=False,
-    min_model_gene_match_rate=0.5,
-    allow_low_gene_coverage=False,
-):
+    model: dict[str, Any],
+    X: pd.DataFrame,
+    adapt: str = "none",
+    threshold: float = 0.5,
+    max_invalid_cell_fraction: float = 0.0,
+    allow_invalid_values: bool = False,
+    min_model_gene_match_rate: float = 0.5,
+    allow_low_gene_coverage: bool = False,
+) -> np.ndarray:
     """Return hard class calls.
 
     Binary: array of the two class labels using `threshold` on P(positive).
@@ -263,7 +267,7 @@ def predict(
     """
     model = validate_lr_model(model)
     threshold = validate_threshold(threshold)
-    proba = predict_proba(
+    proba = cast(np.ndarray, predict_proba(
         model,
         X,
         adapt=adapt,
@@ -271,7 +275,7 @@ def predict(
         allow_invalid_values=allow_invalid_values,
         min_model_gene_match_rate=min_model_gene_match_rate,
         allow_low_gene_coverage=allow_low_gene_coverage,
-    )
+    ))
     classes = model["classes"]
     if model["kind"] == "binary":
         return np.where(proba >= threshold, classes[1], classes[0])

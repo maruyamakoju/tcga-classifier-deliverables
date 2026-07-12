@@ -1,5 +1,15 @@
 # Release notes
 
+## v2.1.0-gdc-starcounts — 2026-07-12
+
+Type-safety release. The public `tcga_rnaseq` scoring API is now fully type-annotated
+and ships a PEP 561 `py.typed` marker, and a mypy gate runs in CI. No scoring code,
+deployed weights, bundled payload logic, or headline metric changed; the runtime API
+and behavior are identical to v2.0.x (library API stays 3.0.0).
+
+- Annotated every function across io/align/score/metrics/validation.
+- Added scoped mypy config + `py.typed`; wired `python -m mypy` into the CI gate.
+
 ## v2.0.2-gdc-starcounts — 2026-07-12
 
 Maintenance patch on top of v2.0.1. No shipped scoring code, deployed weights,

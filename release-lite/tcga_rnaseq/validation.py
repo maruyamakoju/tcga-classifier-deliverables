@@ -3,11 +3,15 @@
 These were previously duplicated (or cross-imported from one leaf CLI script,
 calibrate_threshold.py, into five others) across the scoring CLI suite.
 """
+from __future__ import annotations
+
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
 
-def validate_threshold(value, name="threshold"):
+def validate_threshold(value: Any, name: str = "threshold") -> float:
     """Validate a 0-1 probability/fraction argument shared by the scoring CLIs.
 
     Used for --threshold, --max-invalid-cell-fraction, --min-model-gene-match-rate,
@@ -24,7 +28,7 @@ def validate_threshold(value, name="threshold"):
     return value
 
 
-def normalize_label(value):
+def normalize_label(value: Any) -> int:
     """Map a tumor/normal label value (string or 0/1) to a binary int."""
     if isinstance(value, (int, float, np.integer, np.floating, bool, np.bool_)):
         numeric = float(value)
@@ -38,7 +42,7 @@ def normalize_label(value):
     raise ValueError(f"Unrecognized label: {value!r}")
 
 
-def sample_key(series, source_name="sample identifiers"):
+def sample_key(series: Any, source_name: str = "sample identifiers") -> pd.Series:
     """Return canonical string sample identifiers.
 
     Public outputs promise non-empty identifiers without leading/trailing
@@ -60,7 +64,7 @@ def sample_key(series, source_name="sample identifiers"):
     return keys
 
 
-def _reject_duplicate_keys(keys, source_name, kind):
+def _reject_duplicate_keys(keys: pd.Series, source_name: str, kind: str) -> None:
     """Raise ValueError if ``keys`` (a canonical string Series) has duplicates."""
     duplicated = sorted(keys[keys.duplicated()].unique())
     if duplicated:
@@ -68,7 +72,7 @@ def _reject_duplicate_keys(keys, source_name, kind):
         raise ValueError(f"{source_name} contains duplicate {kind}: {preview}")
 
 
-def require_unique_samples(df, sample_col, source_name):
+def require_unique_samples(df: pd.DataFrame, sample_col: str, source_name: str) -> pd.Series:
     """sample_key(df[sample_col]), raising ValueError on any duplicate."""
     if sample_col not in df.columns:
         raise ValueError(f"{source_name} must contain {sample_col!r}")
@@ -77,7 +81,7 @@ def require_unique_samples(df, sample_col, source_name):
     return keys
 
 
-def validate_expression_matrix(df, source_name="expression matrix"):
+def validate_expression_matrix(df: Any, source_name: str = "expression matrix") -> pd.DataFrame:
     """Validate and canonicalize a samples-by-genes expression DataFrame.
 
     The returned frame is a shallow copy with string sample/gene axes.  Empty
