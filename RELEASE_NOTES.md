@@ -1,5 +1,15 @@
 # Release notes
 
+## v2.0.1-gdc-starcounts — 2026-07-12
+
+Test-hygiene patch on top of v2.0.0. No shipped code, deployed weights, bundled
+artifact, or headline metric changed; the release-lite bundle is byte-identical
+in payload to v2.0.0.
+
+- Fixed `test_train_test_split_is_patient_disjoint` to skip when the gitignored
+  full-data feature matrix is unavailable (it now depends on the `features_npy`
+  fixture), instead of hard-failing continuous integration.
+
 ## v2.0.0-gdc-starcounts — 2026-07-12
 
 Safety, provenance, and deterministic reproducibility release. The deployed

@@ -8,7 +8,7 @@ default deployable model is logistic regression over 2,000 selected genes,
 exported to `deployable_lr_weights.npz` so ordinary scoring uses only NumPy and
 pandas rather than scikit-learn pickle loading.
 
-Release version: `v2.0.0-gdc-starcounts`
+Release version: `v2.0.1-gdc-starcounts`
 Release date: `2026-07-12`
 Public scoring-library API: `3.0.0` (breaking safety hardening)
 

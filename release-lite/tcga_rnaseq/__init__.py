@@ -68,6 +68,6 @@ __all__ = [
 ]
 
 # tcga_rnaseq's own library version, independent of the release VERSION file
-# (currently v2.0.0-gdc-starcounts) -- this bumps only on changes to this
+# (currently v2.0.1-gdc-starcounts) -- this bumps only on changes to this
 # package's public API/behavior, not on every release.
 __version__ = "3.0.0"

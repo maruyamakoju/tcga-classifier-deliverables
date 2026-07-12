@@ -5,7 +5,7 @@ Lightweight scoring supports Python 3.11 or newer (CI exercises 3.11 and 3.13).
 Exact model refitting is a full-tree workflow pinned to Python 3.11 and is not
 part of the lite bundle.
 
-Release: `v2.0.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
+Release: `v2.0.1-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 ## Contents
 

@@ -6,27 +6,27 @@
     {
       "bytes": 1554,
       "path": ".zenodo.json",
-      "sha256": "fcce65085da8bca1ce8a41bc6fc7c79e6a45bf94a2bd66c9ea389400e74e2a90"
+      "sha256": "68f0bf4de066701e634f334626e88ede8c2e50452da628e5c717ef47cdb9b5cf"
     },
     {
       "bytes": 844,
       "path": "CITATION.cff",
-      "sha256": "dcbf44da996db073b5087697eed5319e9f6bd4d1be8fd6f8d88e5070d84bb0ad"
+      "sha256": "579a1edb20d36dd6f7348d8ac0e813018e265763c08a7bdc92f757ae686edc5e"
     },
     {
       "bytes": 5806,
       "path": "DATA_DICTIONARY.md",
-      "sha256": "76ef5172cedb375b7d740a65418a090408dfc78c94a20938f9f50088c19a1d30"
+      "sha256": "4c077cb447cf472bd55af95146bb4c1e19078e6e7fbbb0a7126b738618bb6557"
     },
     {
       "bytes": 6358,
       "path": "EXECUTIVE_SUMMARY.md",
-      "sha256": "e06ed4edd662404f2d30e9e70a651b46b8692707d9ecbf124577f4c94baa016a"
+      "sha256": "d1602fab568ea7b037d0c2dbb0dd25b1656976a8d9c03ac6cb798123f75e7c8c"
     },
     {
       "bytes": 3375,
       "path": "INDEX.md",
-      "sha256": "0f62502cf5979b9f421141ff699eb8125444f9796937b97c6591ed9df6e61f6f"
+      "sha256": "be51f50c2faec49e6917bd546e4ec272fbc7c00da07208df39a7a560a91de95a"
     },
     {
       "bytes": 1070,
@@ -36,12 +36,12 @@
     {
       "bytes": 5339,
       "path": "LITERATURE_CHECK.md",
-      "sha256": "dc1c2f9252e9a084a3dbd38119f8c61e2bfea36e803d888903b19b13d7942c0c"
+      "sha256": "fe0776771d30f18a3fad75a5422b1c1b3a426dbf78a799ec53bfc11dd2927580"
     },
     {
       "bytes": 5709,
       "path": "MODEL_CARD.md",
-      "sha256": "ddee233fd6a58e73c14db196733683ed98fcd01def21fa903eb4450c4eb6fbd2"
+      "sha256": "cb1c45b471da03369cba7ea3821a4b4ce5d8b68f8ca3f88dc20f9ab76495faef"
     },
     {
       "bytes": 700,
@@ -51,47 +51,47 @@
     {
       "bytes": 13436,
       "path": "README.md",
-      "sha256": "85671b4e8a605c91a9015544cbfbd4829bb9629260156c51b0f18133d8f59a4e"
+      "sha256": "f0a1f19683f5c1b2a00b151c47d312f99cfb01fb7c521c63497db7987052103c"
     },
     {
       "bytes": 5080,
       "path": "RELEASE_BUNDLE.md",
-      "sha256": "bc4aaef40ac86386cceabe0c7c3e6369dc525fe68483a559637d0faa34ab0ee4"
+      "sha256": "939d8b7d82763c99bbef37daa4e6945be4c046cb2c40ec69122c0ceba5190681"
     },
     {
-      "bytes": 14806,
+      "bytes": 15111,
       "path": "RELEASE_METADATA.json",
-      "sha256": "6329614090a6f3ab1e3810304c3f762860499b5e9dba957a94b27fe10c88c65f"
+      "sha256": "a14f1f126bbd298d51fe42e1774f3a72b6573198a1d4223b91e91bd41246e8af"
     },
     {
-      "bytes": 30030,
+      "bytes": 30475,
       "path": "RELEASE_NOTES.md",
-      "sha256": "67b21ff2ba23e6d7c1a64c49a0e5e4d055918c7e8b3551a8addbdf3328c4112d"
+      "sha256": "d9ef9c1e35d5017a53b9ffb7502a529c13b94340364fde26ea2436cad2d28e5c"
     },
     {
       "bytes": 18208,
       "path": "REPORT.md",
-      "sha256": "5b8e33b42603afb591ec477bef055461717a19bb52dee90cb58c1fbc653cf757"
+      "sha256": "5a8202815701c679847c4d73f06c51ecaefaa287ad85c34b0aeb8854dd700215"
     },
     {
       "bytes": 16424,
       "path": "REPRODUCIBILITY.md",
-      "sha256": "dcddaef353c11a64ed05cfa9f3804d184173d8252c6473344ae3f153b2d377c1"
+      "sha256": "337ccd4ed344631cb113c3da8375f26fd0c5583fec8176a4fa8197ee59702525"
     },
     {
       "bytes": 10676,
       "path": "TROUBLESHOOTING.md",
-      "sha256": "4b57ef15f78f24d454454347b68c4c58d8bada2b160afc3046d34462957472a7"
+      "sha256": "4281a02b421843f6bd5e500f8e04e3607c5b6c28e8cb10cf6443ffc70ba4b012"
     },
     {
       "bytes": 8041,
       "path": "USER_GUIDE.md",
-      "sha256": "74c56b526e54fe8e2166cab86933329865b05e75bf76a2346426a03dcb54d072"
+      "sha256": "ae1c4427e15e2c22fc0353a328af2011f00bf901e91dd4ffab54473e8b742a91"
     },
     {
       "bytes": 22,
       "path": "VERSION",
-      "sha256": "7d522b19c5cc33ef778346532043092fa72202e4c952e30762129f2462826985"
+      "sha256": "4460be090c608262a4ae0dffba3a0a2e1b404de5c1182e6d20df146ef493d989"
     },
     {
       "bytes": 4845,
@@ -121,7 +121,7 @@
     {
       "bytes": 1530,
       "path": "codemeta.json",
-      "sha256": "3c5cea4dc7485df9159bbd57fefc5be41d79135be4491da218a392f60578c3ee"
+      "sha256": "879af46416af8008789ca864b57949a99055d5f90d9ef70b63e5d7627e496a19"
     },
     {
       "bytes": 12013,
@@ -301,7 +301,7 @@
     {
       "bytes": 2360,
       "path": "tcga_rnaseq/__init__.py",
-      "sha256": "96552663082855b9dde3aa90671c4c365f039f807ca24dad34cc062786d48da5"
+      "sha256": "e1a21e7e825303dfc78ed89576b0565a478d9199c982f3bc24e0a3ec4f732234"
     },
     {
       "bytes": 12378,
@@ -391,5 +391,5 @@
   "release_date": "2026-07-12",
   "schema_version": "1.0",
   "validation_command": "python validate_release_lite.py --release-dir release-lite --zip tcga-tumor-normal-release-lite.zip --source-root . --artifacts RELEASE_ARTIFACTS.json",
-  "version": "v2.0.0-gdc-starcounts"
+  "version": "v2.0.1-gdc-starcounts"
 }
