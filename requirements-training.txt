@@ -2,5 +2,5 @@
 # are verified with CPython 3.11 and these exact numerical-library versions.
 numpy==1.26.4
 pandas==2.3.3
-scipy==1.15.3
+scipy==1.18.0
 scikit-learn==1.8.0
