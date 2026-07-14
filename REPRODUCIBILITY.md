@@ -1,6 +1,6 @@
 # Reproducibility notes
 
-Release: `v2.3.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
+Release: `v2.4.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 ## Recommended scoring environment
 
@@ -333,10 +333,10 @@ Cross-platform checks are also available:
 
 These committed metrics are a historical snapshot. Version 2.0.0 fixed cache
 identity, empty/colliding data checks, atomic cache writes, locked-cohort
-handling, content hashes, and generated run-manifest provenance. In v2.2.0 a
-post-fix live re-fetch of CPTAC-3 from GDC Data Release 45.0 reproduced its
-committed AUC (0.9886) through the fixed scripts; the TCGA-Toil and GTEx
-cross-platform numbers have not been re-run live and remain historical snapshots.
+handling, content hashes, and generated run-manifest provenance. A post-fix live
+re-validation later re-fetched all three cohorts through the fixed scripts —
+CPTAC-3 (GDC Data Release 45.0) and TCGA-Toil / GTEx (UCSC Xena) — and reproduced
+their committed metrics; see `external-validation/REVALIDATION.md`.
 
 The validators distinguish two modes:
 

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-05
 **Model:** frozen `deployable_lr_weights.npz` (weights unchanged in
-`v2.3.0-gdc-starcounts`)
+`v2.4.0-gdc-starcounts`)
 **Status:** retrospective research benchmark; not a calibrated deployment mode
 
 ## Problem
@@ -21,9 +21,10 @@ boundary:
 The release therefore tells users *not* to make hard calls on non-GDC pipelines
 without separate validation. This document records an experimental, label-free
 transform evaluated on the frozen historical cohorts. It is not calibration in
-the statistical sense. These cross-platform TCGA-Toil and GTEx cohorts have not
-been re-run live; a v2.2.0 post-fix live re-fetch reconfirmed CPTAC-3 only (GDC
-Data Release 45.0, AUC 0.9886 reproduced).
+the statistical sense. A post-fix live re-validation reproduced all three external
+cohorts' committed metrics against current GDC/Xena sources — including these
+TCGA-Toil and GTEx cohorts — as recorded in the repository's
+external-validation/REVALIDATION.md.
 
 ## Method
 

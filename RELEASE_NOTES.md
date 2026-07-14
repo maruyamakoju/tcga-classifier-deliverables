@@ -1,5 +1,20 @@
 # Release notes
 
+## v2.4.0-gdc-starcounts — 2026-07-12
+
+Live external re-validation of all three cohorts, with archived provenance. No
+shipped scoring code, deployed weights, or headline metric changed.
+
+- A post-fix live re-fetch of CPTAC-3 (GDC Data Release 45.0) and TCGA-Toil / GTEx
+  (UCSC Xena) reproduced every committed metric: CPTAC AUC 0.9886, Toil AUC
+  0.9923, GTEx FPR 0.996. Provenance and summaries are archived under
+  external-validation/<cohort>/revalidation/, recorded in
+  external-validation/REVALIDATION.md.
+- Fixed the Xena log2(TPM+0.001) decode tolerance (1e-9 -> 1e-6) so a
+  truly-zero-expression gene's tiny round-trip negative TPM is clamped, not
+  rejected -- the third over-strict fail-closed check the live runs surfaced.
+- Updated the external-validation provenance disclosure across the docs.
+
 ## v2.3.0-gdc-starcounts — 2026-07-12
 
 Documentation release. The external-validation provenance disclosure across the

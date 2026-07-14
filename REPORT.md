@@ -1,6 +1,6 @@
 # Pan-cancer tumor-vs-normal classifier from TCGA RNA-seq
 
-Release: `v2.3.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
+Release: `v2.4.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 ## Data
 
@@ -165,11 +165,11 @@ See `external-validation/gtex_xena/GTEX_NORMAL_VALIDATION.md` and
 
 The CPTAC, GTEx, and Toil metrics in this repository are committed historical
 snapshots. Version 2.0.0 adds locked cohort manifests, semantic cache
-fingerprints, content hashes, atomic cache publication, and run provenance. In
-v2.2.0 a live re-fetch of CPTAC-3 from GDC Data Release 45.0 reproduced its
-committed AUC (0.9886) through the corrected fetch/cache paths; the TCGA-Toil and
-GTEx cross-platform values document the earlier runs and have not been re-run
-live.
+fingerprints, content hashes, atomic cache publication, and run provenance. A
+post-fix live re-validation later re-fetched all three cohorts through the
+corrected fetch/cache paths — CPTAC-3 (GDC Data Release 45.0) and TCGA-Toil / GTEx
+(UCSC Xena) — and reproduced their committed metrics; see
+`external-validation/REVALIDATION.md`.
 
 ## Input compatibility QC
 

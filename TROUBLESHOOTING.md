@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Release: `v2.3.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
+Release: `v2.4.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 Start with:
 

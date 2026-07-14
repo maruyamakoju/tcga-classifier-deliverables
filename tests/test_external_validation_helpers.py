@@ -127,6 +127,21 @@ def test_cache_fingerprint_stable_for_identical_inputs():
     assert a == b
 
 
+def test_xena_decode_tolerates_tiny_negative_but_rejects_real_negative_tpm():
+    # Xena stores log2(TPM+0.001) rounded, so a truly zero-expression gene decodes
+    # to a tiny negative TPM (~1e-8) from storage/float round-trip. That must pass
+    # and clamp to zero; a value decoding well below zero TPM (corruption) must
+    # still raise. (Regression: a 1e-9 tolerance rejected legitimate live Xena data.)
+    near_zero = np.log2(0.001 - 1e-8)          # -> TPM ~= -1e-8, within tolerance
+    out = gx.xena_log2_tpm001_to_model_scale(np.array([near_zero, np.log2(1.001)]))
+    assert np.isfinite(out).all()
+    assert out[0] == 0.0                        # clamped to zero
+    assert out[1] == pytest.approx(1.0)         # TPM 1.0 -> log2(2)
+    bad = np.log2(0.001 - 1e-5)                 # -> TPM = -1e-5, below tolerance
+    with pytest.raises(ValueError, match="decode below zero TPM"):
+        gx.xena_log2_tpm001_to_model_scale(np.array([bad, np.log2(1.001)]))
+
+
 def test_contained_cache_path_child_of_root_even_for_long_paths(tmp_path):
     # safe_cache_key hashes the identifier, so the cache file is always a bare
     # sha256 basename directly under the cache root. This must hold even when the

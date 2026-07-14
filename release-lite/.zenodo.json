@@ -16,9 +16,9 @@
     "cancer genomics"
   ],
   "license": "MIT",
-  "notes": "Validated input boundary: GDC STAR-Counts-style log2(TPM+1) bulk RNA-seq matrices for TCGA/CPTAC-like tumor-vs-adjacent-normal contrasts. tumor_probability is a model logistic score, not clinical risk or a diagnostic probability. Cohort adaptation is disabled by default and is an explicit, transductive, composition-dependent opt-in. Calibration summaries are apparent/resubstitution estimates on the same labeled samples. Committed external-validation metrics are a historical snapshot; in v2.2.0 a live re-fetch of CPTAC-3 from GDC Data Release 45.0 reproduced its committed AUC (0.9886), while the Toil/RSEM and GTEx cross-platform summaries remain historical snapshots not re-run live. Direct hard calls on Toil/RSEM, GTEx, GEO, raw counts, FPKM, microarray, single-cell, or spatial data are not validated without pipeline-specific recalibration or refitting.",
+  "notes": "Validated input boundary: GDC STAR-Counts-style log2(TPM+1) bulk RNA-seq matrices for TCGA/CPTAC-like tumor-vs-adjacent-normal contrasts. tumor_probability is a model logistic score, not clinical risk or a diagnostic probability. Cohort adaptation is disabled by default and is an explicit, transductive, composition-dependent opt-in. Calibration summaries are apparent/resubstitution estimates on the same labeled samples. Committed external-validation metrics are a historical snapshot; a post-fix live re-validation reproduced all three external cohorts' committed metrics against current GDC (Data Release 45.0) and UCSC Xena sources (see external-validation/REVALIDATION.md in the repository). Direct hard calls on Toil/RSEM, GTEx, GEO, raw counts, FPKM, microarray, single-cell, or spatial data are not validated without pipeline-specific recalibration or refitting.",
   "publication_date": "2026-07-12",
   "title": "TCGA/GDC tumor-vs-normal RNA-seq classifier",
   "upload_type": "software",
-  "version": "v2.3.0-gdc-starcounts"
+  "version": "v2.4.0-gdc-starcounts"
 }

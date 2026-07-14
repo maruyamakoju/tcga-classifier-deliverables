@@ -254,7 +254,11 @@ def xena_log2_tpm001_to_model_scale(values: np.ndarray) -> np.ndarray:
         tpm = np.exp2(values) - 0.001
     if not np.isfinite(tpm).all():
         raise ValueError("Xena expression values overflow while converting to TPM")
-    tolerance = 1e-9
+    # Xena stores log2(TPM+0.001) rounded, so a truly zero-expression gene decodes
+    # to a tiny negative TPM (observed ~-1e-8) purely from storage/float round-trip.
+    # Reject only genuinely negative TPM (data corruption is orders of magnitude
+    # larger); clamp the sub-tolerance round-trip noise to exactly zero below.
+    tolerance = 1e-6
     if bool((tpm < -tolerance).any()):
         minimum = float(tpm.min())
         raise ValueError(

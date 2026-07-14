@@ -3,7 +3,12 @@
   "release_name": "Safety, provenance, and deterministic reproducibility release",
   "library_api_version": "3.0.0",
   "schema_version": "1.0",
-  "version": "v2.3.0-gdc-starcounts",
+  "version": "v2.4.0-gdc-starcounts",
+  "changes_since_v2_3_0": [
+    "Performed a post-fix live re-validation of all three external cohorts and reproduced every committed metric: CPTAC-3 (GDC Data Release 45.0) AUC 0.9886; TCGA-Toil (UCSC Xena) AUC 0.9923, accuracy 0.515; GTEx normals (UCSC Xena) FPR 0.9963. Archived each run's provenance (run_manifest.json plus reproduced summary and threshold sweep) under external-validation/<cohort>/revalidation/ and added external-validation/REVALIDATION.md as the canonical record.",
+    "Widened the Xena log2(TPM+0.001) decode tolerance from 1e-9 to 1e-6, clamping the tiny negative TPM (~1e-8) that a truly-zero-expression gene produces from Xena storage rounding, so live TCGA-Toil and GTEx re-validation is not falsely rejected. External-validation tooling only; no shipped scoring change.",
+    "Updated the external-validation provenance disclosure across the docs to point at REVALIDATION.md and state that all three cohorts were live-reproduced (previously CPTAC only). Historical changelog entries are unchanged."
+  ],
   "changes_since_v2_2_0": [
     "Updated the external-validation provenance disclosure across README, MODEL_CARD, EXECUTIVE_SUMMARY, REPORT, REPRODUCIBILITY, INDEX, MAINTENANCE, RELEASE_BUNDLE, CROSS_PLATFORM_ADAPTATION, .zenodo.json, and model_qc_reference.json to reflect the v2.2.0 live re-validation: a post-fix live re-fetch of the locked CPTAC-3 cohort from GDC Data Release 45.0 reproduced its committed AUC (0.9886). The TCGA-Toil and GTEx cross-platform summaries remain historical snapshots not re-run live. No shipped scoring code, deployed weights, or headline metric changed."
   ],

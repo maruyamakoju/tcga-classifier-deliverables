@@ -8,7 +8,7 @@ default deployable model is logistic regression over 2,000 selected genes,
 exported to `deployable_lr_weights.npz` so ordinary scoring uses only NumPy and
 pandas rather than scikit-learn pickle loading.
 
-Release version: `v2.3.0-gdc-starcounts`
+Release version: `v2.4.0-gdc-starcounts`
 Release date: `2026-07-12`
 Public scoring-library API: `3.0.0` (breaking safety hardening)
 
@@ -24,9 +24,10 @@ Use this release for expression matrices with:
 The model is strongest inside the GDC STAR-Counts ecosystem. Internal TCGA
 validation and an external CPTAC-3/GDC smoke validation support this boundary.
 The committed external metrics are historical snapshots: v2.0.0 adds locked
-cohort manifests and cache/run provenance, and in v2.2.0 a live re-fetch of
-CPTAC-3 from GDC Data Release 45.0 reproduced its committed AUC (0.9886). The
-TCGA-Toil and GTEx cross-platform summaries remain historical snapshots.
+cohort manifests and cache/run provenance, and a post-fix live re-validation
+re-fetched all three cohorts (CPTAC-3 via GDC Data Release 45.0; TCGA-Toil and
+GTEx via UCSC Xena) and reproduced their committed metrics; see
+`external-validation/REVALIDATION.md`.
 
 ## Key results
 

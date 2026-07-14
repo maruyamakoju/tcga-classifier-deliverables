@@ -153,6 +153,7 @@ FULL_DELIVERABLE_ONLY_PREFIXES = (
     "cancer-type-classifier/",
     "cross-cancer-holdout/",
     "cross-platform-adaptation/",
+    "external-validation/",
     "from-workbench-loco/",
     "tests/",
     "training_tools/",
