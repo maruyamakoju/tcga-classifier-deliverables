@@ -1,6 +1,6 @@
 # User guide
 
-Release: `v2.2.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
+Release: `v2.3.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 This guide is for people who want to run the lightweight classifier on a new
 expression matrix. For a short project-level handoff, read

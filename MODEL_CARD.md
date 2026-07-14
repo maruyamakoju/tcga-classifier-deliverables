@@ -1,6 +1,6 @@
 # Model card: TCGA/GDC tumor-vs-normal RNA-seq classifier
 
-Release: `v2.2.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
+Release: `v2.3.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 ## Intended use
 
@@ -72,8 +72,10 @@ issues for ordinary scoring.
 
 External-validation numbers above are committed historical snapshots. Cache
 fingerprints, locked cohort manifests, content hashes, atomic cache writes, and
-run manifests were added in v2.0.0, but no post-fix live-network rerun was
-performed.
+run manifests were added in v2.0.0. In v2.2.0 a post-fix live re-fetch of the
+CPTAC-3 cohort from GDC Data Release 45.0 reproduced its committed AUC (0.9886);
+the TCGA-Toil and GTEx cross-platform summaries remain historical snapshots (not
+re-run live).
 
 ## Key limitations
 

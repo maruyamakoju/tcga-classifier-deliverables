@@ -1,5 +1,13 @@
 # Release notes
 
+## v2.3.0-gdc-starcounts — 2026-07-12
+
+Documentation release. The external-validation provenance disclosure across the
+docs now reflects the v2.2.0 live CPTAC-3 re-validation: a live re-fetch from GDC
+Data Release 45.0 reproduced the committed AUC (0.9886). The TCGA-Toil and GTEx
+cross-platform summaries remain historical snapshots not re-run live. No shipped
+scoring code, deployed weights, or headline metric changed.
+
 ## v2.2.0-gdc-starcounts — 2026-07-13
 
 External-validation robustness release. Two real bugs fixed in the (non-shipped)

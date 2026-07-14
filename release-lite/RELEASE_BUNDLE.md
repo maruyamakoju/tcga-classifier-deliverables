@@ -5,7 +5,7 @@ Lightweight scoring supports Python 3.11 or newer (CI exercises 3.11 and 3.13).
 Exact model refitting is a full-tree workflow pinned to Python 3.11 and is not
 part of the lite bundle.
 
-Release: `v2.2.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
+Release: `v2.3.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 ## Contents
 
@@ -84,7 +84,8 @@ composition-dependent opt-ins, require at least 20 samples by default, and
 produce scores that cannot be compared across separately adapted batches.
 Calibration metrics are same-sample apparent/resubstitution estimates. The
 committed external metrics are historical; v2.0.0 adds locked cohorts and
-cache/run provenance but has no post-fix live-network rerun.
+cache/run provenance, and v2.2.0 live-reconfirmed CPTAC-3 (GDC Data Release 45.0,
+AUC 0.9886 reproduced) while TCGA-Toil and GTEx remain historical snapshots.
 
 Never extract or execute a downloaded ZIP based only on its filename. Supply a
 trusted published digest with `--expected-sha256`; if no trusted digest is

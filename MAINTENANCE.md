@@ -1,6 +1,6 @@
 # Maintenance guide
 
-Current release: `v2.2.0-gdc-starcounts` (`2026-07-12`); public scoring-library
+Current release: `v2.3.0-gdc-starcounts` (`2026-07-12`); public scoring-library
 API `3.0.0`.
 
 This repository is public and research-only. Keep operational changes small,
@@ -85,8 +85,9 @@ Use the committed sample manifests as locked cohorts, provide a real
 `--source-revision`, refresh caches explicitly, write to a fresh output
 directory, and archive the generated run manifest. Review semantic cache
 fingerprints, content hashes, cohort identity, and metric diffs before updating
-committed results. Cache/provenance fixes in v2.0.0 have not yet been followed
-by a live-network rerun, so current external metrics remain historical.
+committed results. Cache/provenance fixes in v2.0.0 were followed in v2.2.0 by a live CPTAC-3
+re-fetch from GDC Data Release 45.0 that reproduced its committed AUC (0.9886);
+the TCGA-Toil and GTEx external metrics remain historical snapshots.
 
 Live validation must not use `unversioned`. CPTAC downloads require provider
 MD5; the committed historical locked manifest lacks that field, so use

@@ -2,7 +2,7 @@
 
 Use this checklist before making the repository or a release public.
 
-Status for `v2.2.0-gdc-starcounts`: released and public. Every item below has been
+Status for `v2.3.0-gdc-starcounts`: released and public. Every item below has been
 executed and verified: the Repository and Scientific Framing items are durably
 true of the tree, and the Release items run automatically through the
 deterministic builder, `run_release_acceptance.py`, and hosted CI on each version
@@ -36,10 +36,10 @@ which then archives the release and issues the DOI.
       byte size, entry count, and trusted-digest acceptance command.
 - [x] Run `python validate_zip_bundle.py tcga-tumor-normal-release-lite.zip
       --expected-sha256 <trusted-final-sha256>`.
-- [x] Replace every explicit TBD field in `GITHUB_RELEASE_v2.2.0.md` from the
+- [x] Replace every explicit TBD field in `GITHUB_RELEASE_v2.3.0.md` from the
       final generated sidecar.
 - [x] Upload `tcga-tumor-normal-release-lite.zip` as the GitHub Release asset.
-- [x] Paste `GITHUB_RELEASE_v2.2.0.md` as the GitHub Release body.
+- [x] Paste `GITHUB_RELEASE_v2.3.0.md` as the GitHub Release body.
 
 ## Scientific Framing
 
@@ -59,8 +59,9 @@ which then archives the release and issues the DOI.
       warning.
 - [x] State that LOCO does not remove project/procurement/center/batch
       confounding and literature consistency is not causal-mechanism proof.
-- [x] State that external cache/provenance fixes have no post-fix live rerun
-      and committed external metrics are a historical snapshot.
+- [x] State external-metric provenance: committed metrics are a historical
+      snapshot; v2.2.0 live-reconfirmed CPTAC-3 (GDC Data Release 45.0, AUC
+      reproduced) while Toil/GTEx remain snapshots.
 - [x] Include TCGA/CPTAC/GTEx/GDC/UCSC Xena citation requirements in any paper
       or formal manuscript.
 

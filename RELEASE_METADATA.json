@@ -3,7 +3,10 @@
   "release_name": "Safety, provenance, and deterministic reproducibility release",
   "library_api_version": "3.0.0",
   "schema_version": "1.0",
-  "version": "v2.2.0-gdc-starcounts",
+  "version": "v2.3.0-gdc-starcounts",
+  "changes_since_v2_2_0": [
+    "Updated the external-validation provenance disclosure across README, MODEL_CARD, EXECUTIVE_SUMMARY, REPORT, REPRODUCIBILITY, INDEX, MAINTENANCE, RELEASE_BUNDLE, CROSS_PLATFORM_ADAPTATION, .zenodo.json, and model_qc_reference.json to reflect the v2.2.0 live re-validation: a post-fix live re-fetch of the locked CPTAC-3 cohort from GDC Data Release 45.0 reproduced its committed AUC (0.9886). The TCGA-Toil and GTEx cross-platform summaries remain historical snapshots not re-run live. No shipped scoring code, deployed weights, or headline metric changed."
+  ],
   "changes_since_v2_1_0": [
     "Fixed the CPTAC/GDC live re-validation manifest validator: a file annotated with several biospecimen submitter IDs of one case and one sample_type is no longer rejected as ambiguous, because the tumor/normal label is unambiguous and already guaranteed by the n_sample_types==1 and multi-case checks. This unblocks --refresh-manifest against current GDC releases without ever guessing a label.",
     "Fixed a Windows long-path robustness bug in external-validation provenance.contained_cache_path: it now verifies the hashed cache key is a bare basename instead of re-resolving the child path, which Path.resolve() could prefix with a backslash-question-mark extended-length marker on only one side past MAX_PATH and spuriously reject as escaping the cache root.",

@@ -1,11 +1,11 @@
 # TCGA tumor-vs-normal classifier — deliverables
 
 [![CI](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml/badge.svg)](https://github.com/maruyamakoju/tcga-classifier-deliverables/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v2.2.0-gdc-starcounts)
+[![Release](https://img.shields.io/github/v/release/maruyamakoju/tcga-classifier-deliverables?display_name=tag)](https://github.com/maruyamakoju/tcga-classifier-deliverables/releases/tag/v2.3.0-gdc-starcounts)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Citation](https://img.shields.io/badge/citation-CITATION.cff-blue.svg)](CITATION.cff)
 
-Release: `v2.2.0-gdc-starcounts` (`2026-07-12`; public scoring-library API
+Release: `v2.3.0-gdc-starcounts` (`2026-07-12`; public scoring-library API
 `3.0.0`). For a single guided path
 through the public lightweight bundle, start with `INDEX.md`. Otherwise start
 with `EXECUTIVE_SUMMARY.md` if you need a short
@@ -136,8 +136,10 @@ threshold evaluation.
 
 The committed CPTAC/GTEx/Toil metrics are historical snapshots. Version 2.0.0
 adds locked cohort manifests, cache fingerprints, hashes, atomic cache writes,
-and run manifests, but no post-fix live-network validation rerun was performed;
-do not describe those committed numbers as a newly reproduced live run.
+and run manifests. In v2.2.0 a post-fix live re-fetch of the locked CPTAC-3
+cohort from GDC Data Release 45.0 reproduced its committed AUC (0.9886); the
+TCGA-Toil and GTEx cross-platform summaries have not been re-run live and remain
+historical snapshots.
 External validators now require a concrete provider revision for live access,
 offer explicit `--offline` / `--cache-only` operation, strictly bind locked
 cohort semantics, and publish derived outputs as a staged set with the manifest

@@ -1,6 +1,6 @@
 # INDEX — a guided reading path
 
-Release: `v2.2.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
+Release: `v2.3.0-gdc-starcounts` (`2026-07-12`; public scoring-library API `3.0.0`)
 
 This lightweight release focuses on the deployable tumor-vs-normal classifier,
 its validation boundary, and the runnable scoring workflow. Read it in this
@@ -9,8 +9,9 @@ training, leave-one-cancer-out, cross-platform benchmark, and cancer-type
 classifier sources that are intentionally outside the lite bundle.
 
 The numeric external-validation artifacts are a historical snapshot. Version
-2.0.0 fixes cache identity/provenance and adds locked cohort/run manifests, but
-no post-fix live-network rerun was performed.
+2.0.0 fixes cache identity/provenance and adds locked cohort/run manifests, and
+in v2.2.0 a live CPTAC-3 re-fetch from GDC Data Release 45.0 reproduced its
+committed AUC (0.9886); TCGA-Toil and GTEx remain historical snapshots.
 
 ## 1. Base tumor-vs-normal model
 
